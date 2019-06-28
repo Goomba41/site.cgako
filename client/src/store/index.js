@@ -94,8 +94,8 @@ const actions = {
       {
         headers: { Authorization: `Bearer: ${context.state.jwt}` },
         params: {
-          limit: payload.limit,
-          start: payload.start,
+          limit: payload.limit || 20,
+          start: payload.start || 1,
         },
       })
       .then((response) => {
@@ -104,6 +104,18 @@ const actions = {
       .catch((error) => {
         // eslint-disable-next-line
         console.error(error);
+      });
+  },
+  // Удалить пользователя
+  deleteUser(context, payload) {
+    return axios.delete(`/api/users/${payload.id}`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        EventBus.$emit('message', error.response.data);
       });
   },
 };

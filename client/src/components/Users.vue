@@ -74,7 +74,9 @@
       <table class="table table-hover td-align-middle">
         <thead>
           <tr class="text-center">
-            <th scope="col"><input type="checkbox" v-model="selectAll" @click="select"></th>
+            <th scope="col">
+              <b-form-checkbox v-model="selectAll" @change="select"></b-form-checkbox>
+            </th>
             <th scope="col">Статус</th>
             <th scope="col">Фотокарточка</th>
             <th scope="col">
@@ -98,12 +100,21 @@
         </thead>
         <tbody>
           <tr v-for="user in orderedList" v-bind:key="user.id">
-            <td><input type="checkbox" :value="user.id" v-model="selected"></td>
+            <td>
+              <b-form-checkbox
+                v-if="uid != user.id"
+                v-model="selected"
+                :value="user.id"></b-form-checkbox>
+            </td>
             <td class="column">
               <font-awesome-icon icon="shield-alt"
               fixed-width title="Подтверждение учетной записи" />
               <font-awesome-icon icon="power-off"
               fixed-width title="Отключить учетную запись" />
+<!--
+              <b-form-checkbox v-model="user.status" name="status" switch>
+              </b-form-checkbox>
+-->
               <font-awesome-icon icon="key"
               fixed-width title="Пароль учетной записи" />
             </td>
@@ -134,12 +145,16 @@
               <b-button size="sm" title="Изменить досье" variant="warning" v-b-modal.password-modal>
                 <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
               </b-button>
-              <b-button size="sm" title="Удалить товарища" variant="danger">
-                <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
-              </b-button>
+
               <b-button size="sm" title="Экстренная связь" variant="info" v-b-modal.contacts-modal
               @click="selectUser(user.id)">
                 <font-awesome-icon :icon="['fa', 'info']" fixed-width />
+              </b-button>
+
+              <b-button class="ml-3" v-if="uid != user.id"
+              size="sm" title="Уничтожить досье" variant="danger"
+              @click="deleteUser(user.id)">
+                <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
               </b-button>
             </td>
           </tr>
@@ -183,7 +198,7 @@ export default {
         start: 1,
         limit: 20,
         orderBy: {
-          field: 'surname',
+          field: 'id',
           asc: true,
         },
       },
@@ -192,6 +207,7 @@ export default {
   components: { Breadcumbs },
   computed: mapState({
     users: state => state.users,
+    uid: state => state.uid,
     orderedList() {
       return _.orderBy(this.users.results,
         this.listControl.orderBy.field,
@@ -206,9 +222,35 @@ export default {
       this.selected = [];
       if (!this.selectAll) {
         for (let i = 0; i < this.users.results.length; i += 1) {
-          this.selected.push(this.users.results[i].id);
+          if (this.uid !== this.users.results[i].id) {
+            this.selected.push(this.users.results[i].id);
+          }
         }
       }
+    },
+    deleteUser(id) {
+      this.$bvModal.msgBoxConfirm('Вы подтверждаете, что досье товарища должно быть уничтожено?', {
+        title: 'Уничтожение досье',
+        size: 'sm',
+        buttonSize: 'sm',
+        okVariant: 'danger',
+        okTitle: 'Да',
+        cancelTitle: 'Нет',
+        footerClass: 'p-2',
+        headerBgVariant: 'danger',
+        headerTextVariant: 'white',
+        hideHeaderClose: false,
+        headerBorderVariant: 'danger',
+        centered: true,
+      })
+        .then((value) => {
+          if (value) {
+            this.$store.dispatch('deleteUser', { id });
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
     selectUser(id) {
       this.user = _.find(this.users.results, { id });
