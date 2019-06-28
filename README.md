@@ -4,5 +4,5 @@
 Сайт ЦГАКО, разработка
 
 
-## License
+## Лицензирование
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FGoomba41%2Fsite.cgako.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FGoomba41%2Fsite.cgako?ref=badge_large)
