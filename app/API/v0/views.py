@@ -14,7 +14,7 @@ import math
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
 from flask import current_app, json, Blueprint, \
-    request, Response, url_for, abort
+    request, Response, url_for
 from functools import wraps
 
 from app import bcrypt, db
@@ -105,12 +105,28 @@ def pagination_of_list(query_result, url, start, limit):
 
     records_count = len(query_result)
 
-    if records_count < start:       # Проверка существования страницы
-        abort(404)                  # Сделать адекватную обработку
+    if not isinstance(start, int):
+        try:
+            start = int(start)
+        except ValueError:
+            start = 1
+    elif start < 1:
+        start = 1
+
+    if not isinstance(limit, int):
+        try:
+            limit = int(limit)
+        except ValueError:
+            limit = current_app.config['LIMIT']
+    elif limit < 1:
+        limit = current_app.config['LIMIT']
+
+    if records_count < start:
+        start = records_count
 
     response_obj = {}
-    response_obj['start'] = start   # Сделать проверку на отрицательные числа
-    response_obj['limit'] = limit   # Сделать проверку на отрицательные числа
+    response_obj['start'] = start
+    response_obj['limit'] = limit
     response_obj['count'] = records_count
 
     pages_count = math.ceil(records_count / limit)
@@ -202,7 +218,7 @@ def login():
     return response
 
 # ------------------------------------------------------------
-# Редактирование профиля
+# Профиль вошедшего пользователя
 # ------------------------------------------------------------
 
 
@@ -281,7 +297,7 @@ def update_profile_data(current_user, uid):
                 response = Response(
                     response=json.dumps({'type': 'success',
                                          'text': 'Данные профиля обновлены!',
-                                         'link': url_for('.get_user_by_id',
+                                         'link': url_for('.get_profile_by_id',
                                                          uid=uid,
                                                          _external=True)}),
                     status=200,
@@ -345,7 +361,7 @@ def update_profile_password(current_user, uid):
                 response = Response(
                     response=json.dumps({'type': 'success',
                                          'text': 'Успешно обновлен пароль!',
-                                         'link': url_for('.get_user_by_id',
+                                         'link': url_for('.get_profile_by_id',
                                                          uid=uid,
                                                          _external=True)}),
                     status=200,
@@ -421,7 +437,7 @@ def update_profile_avatar(current_user, uid):
             response = Response(
                     response=json.dumps({'type': 'success',
                                          'text': 'Фотокарточка вырезана!',
-                                         'link': url_for('.get_user_by_id',
+                                         'link': url_for('.get_profile_by_id',
                                                          uid=uid,
                                                          _external=True)}),
                     status=200,
@@ -469,9 +485,9 @@ def get_users(current_user):
             udata,
             url_for('API0.get_users',
                     _external=True),
-            start=int(request.args.get('start', 1)),
-            limit=int(request.args.get('limit',
-                                       current_app.config['LIMIT']))
+            start=request.args.get('start', 1),
+            limit=request.args.get('limit',
+                                   current_app.config['LIMIT'])
         )
 
         response = Response(

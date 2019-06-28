@@ -5,6 +5,7 @@ import 'vue-tel-input/dist/vue-tel-input.css';
 
 import BootstrapVue from 'bootstrap-vue';
 import Vuelidate from 'vuelidate';
+import VueLodash from 'vue-lodash';
 
 // Импортирование fontawesome и отдельных иконок из него
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -13,7 +14,7 @@ import {
   faExclamationTriangle, faSignInAlt, faSignOutAlt, faQuestion, faUserShield,
   faBars, faBell, faCog, faUserCircle, faCircle, faSearch, faThLarge, faFolder, faGlobeEurope,
   faChevronDown, faNewspaper, faAt, faSyncAlt, faHeart, faSave, faKey, faTimes, faUpload, faCheck,
-  faListOl, faListUl, faList, faUsers,
+  faListOl, faListUl, faList, faUsers, faSort, faPhone,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   faCopyright as farCopyright, faEye as farEye, faEyeSlash as farEyeSlash, faEdit as farEdit,
@@ -35,16 +36,15 @@ library.add(faTrash, faPencilAlt, faInfo, faPlus, faPowerOff,
   faUserShield, faBars, faGithub, faBell, faTrello, faCog, faUserCircle,
   faCircle, faSearch, faThLarge, faFolder, faGlobeEurope, faChevronDown, faNewspaper,
   faAt, farCopyright, faSyncAlt, faHeart, faSave, faKey, faTimes, farEye, farEyeSlash,
-  faUpload, farEdit, faCheck, faListOl, faListUl, faList, faUsers);
+  faUpload, farEdit, faCheck, faListOl, faListUl, faList, faUsers, faSort, faPhone);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('font-awesome-layers', FontAwesomeLayers);
 Vue.component('font-awesome-layers-text', FontAwesomeLayersText);
 
-
 Vue.config.productionTip = false;
 
 Vue.use(BootstrapVue);
-
+Vue.use(VueLodash);
 Vue.use(Vuelidate);
 
 // Объявление moment.js с русской локалью

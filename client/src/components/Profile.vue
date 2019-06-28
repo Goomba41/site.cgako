@@ -144,6 +144,7 @@
 
               <b-form-group>
                 <vue-tel-input
+                autocomplete="off"
                 :onlyCountries="['RU']"
                 :disabledFetchingCountry="true"
                 :placeholder="'Номер телефона'"
@@ -176,6 +177,7 @@
 
               <b-form-group>
                 <datepicker
+                autocomplete="off"
                 :placeholder="'Дата рождения (ГГГГ-MM-ДД)'"
                 :format="dateFormatter" :bootstrap-styling="true"
                 :language="russian" :typeable=false :required=true
@@ -199,6 +201,7 @@
 
               <b-form-group>
                 <b-form-textarea placeholder="О себе"
+                autocomplete="off"
                 rows="2" max-rows="6" no-resize
                 v-model="$v.profile.about_me.$model" name="about_me"
                 :state="$v.profile.about_me.$dirty ? !$v.profile.about_me.$error : null">
