@@ -22,7 +22,7 @@ class CmsUsers(db.Model):
     about_me = db.Column(db.Text())
 
     birth_date = db.Column(db.Date)
-    last_login = db.Column(db.DateTime)
+    last_login = db.Column(db.JSON(none_as_null=True))
 
     status = db.Column(db.SmallInteger)
 

@@ -3,6 +3,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import axios from 'axios';
+import _ from 'lodash';
 import { isValidJwt, EventBus, currentUserLogin } from '@/utils';
 
 Vue.use(Vuex);
@@ -20,8 +21,19 @@ const state = {
 // Асинхронные операции AJAX
 const actions = {
   // Запрос токена с отсылкой авторизационных данных
-  login(context, userCreds) {
-    return axios.post('/api/login', userCreds)
+  async login(context, userCreds) {
+    const userAgent = { agent: window.navigator.userAgent };
+    let ip = { ip: 'unknown' };
+
+    await axios.get('https://api.ipify.org/?format=json')
+      .then((response) => { ip = response.data; })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.log(error.response.data);
+      });
+
+    const userData = _.assign({}, userCreds, userAgent, ip);
+    return axios.post('/api/login', userData)
       .then((response) => { context.commit('setJwtToken', { jwt: response.data }); })
       .catch((error) => {
         EventBus.$emit('failedAuthentication', error.response.data);

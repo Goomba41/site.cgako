@@ -10,6 +10,7 @@ import uuid
 #  import base64
 import os
 import math
+import requests
 
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
@@ -168,6 +169,8 @@ def login():
     try:
 
         login_data = request.get_json()
+        client_ip = login_data.pop('ip', None)
+        client_agent = login_data.pop('agent', None)
 
         user = CmsUsers.authenticate(**login_data)
 
@@ -197,7 +200,22 @@ def login():
                            },
                            current_app.config['SECRET_KEY'])
 
-        CmsUsers.query.filter_by(id=user[0].id).update({'last_login': today})
+        last_login_data = {'datetime': today.isoformat()}
+
+        if client_ip:
+            last_login_data.update({'ip': client_ip})
+        else:
+            last_login_data.update(
+                requests.get('https://api.ipify.org/?format=json').json())
+
+        if client_agent:
+            last_login_data.update({'agent': client_agent})
+        else:
+            last_login_data.update(
+                {'agent': request.headers.get('User-Agent')})
+
+        CmsUsers.query.filter_by(id=user[0].id).update(
+            {'last_login': last_login_data})
         db.session.commit()
 
         #  test = jwt.decode(token, current_app.config['SECRET_KEY'])
@@ -636,8 +654,13 @@ def delete_users(current_user, uid):
 
         user = CmsUsers.query.get(uid)
 
-        db.session.delete(user)
-        db.session.commit()
+        if user.photo:
+            os.remove(os.path.join(
+                current_app.config['CMS_USERS_AVATARS'],
+                user.photo))
+
+        #  db.session.delete(user)
+        #  db.session.commit()
 
         response = Response(
             response=json.dumps({'type': 'success',

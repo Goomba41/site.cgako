@@ -137,12 +137,21 @@
               <font-awesome-icon :icon="['fab', 'yandex']" fixed-width />
               <font-awesome-icon :icon="['fab', 'google']" fixed-width />
             </td>
-            <td v-bind:title="user.last_login |
-            moment('subtract', '3 hours', 'dddd, MMMM Do YYYY, HH:mm:ss')">
-              {{user.last_login | moment('subtract', '3 hours', 'from')}}
+            <td v-bind:title="user.last_login && user.last_login.datetime ?
+            $options.filters.moment(user.last_login.datetime, 'dddd, MMMM Do YYYY, HH:mm:ss') :
+            'Не входил'">
+              {{user.last_login && user.last_login.datetime ?
+                $options.filters.moment(user.last_login.datetime, 'from') : 'Не входил'}}
+              <br>
+              {{user.last_login && user.last_login.ip ?
+                user.last_login.ip : ''}}
+              <font-awesome-icon v-if="user.last_login && user.last_login.agent"
+              :icon="['far', 'window-maximize']" fixed-width
+              v-bind:title="user.last_login && user.last_login.agent ?
+                user.last_login.agent : 'Неизвестный клиент'"/>
             </td>
             <td>
-              <b-button size="sm" title="Изменить досье" variant="warning" v-b-modal.password-modal>
+              <b-button size="sm" title="Изменить досье" variant="warning">
                 <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
               </b-button>
 
@@ -153,7 +162,8 @@
 
               <b-button class="ml-3" v-if="uid != user.id"
               size="sm" title="Уничтожить досье" variant="danger"
-              @click="deleteUser(user.id)">
+              @click="selectUser(user.id)"
+              v-b-modal.delete-modal>
                 <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
               </b-button>
             </td>
@@ -178,19 +188,65 @@
       </p>
     </b-modal>
 
+    <b-modal id="delete-modal"
+             title="Уничтожение досье"
+             hide-footer size="sm" centered
+            :header-bg-variant="'danger'"
+            :header-text-variant="'light'">
+
+      <b-form class="w-100" @submit.prevent="deleteUser(user.id)">
+
+        <b-form-group
+        description="Введите логин товарища, чтобы подтвердить утичтожение">
+          <b-input-group>
+
+            <b-form-input
+              name="confirmation-passphrase"
+              autofocus
+              v-model="$v.deletePassphrase.$model"
+              placeholder="Введите подтверждающую фразу"
+              :state="$v.deletePassphrase.$dirty ? !$v.deletePassphrase.$error : null"
+              @input="$v.deletePassphrase.$touch()">
+            </b-form-input>
+          </b-input-group>
+
+        </b-form-group>
+
+        <b-button class="mb-3" type="submit"
+        block variant="danger" title="Уничтожить досье товарища"
+        :disabled="!$v.deletePassphrase.$anyDirty || $v.deletePassphrase.$invalid">
+          <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
+        </b-button>
+
+        <div class="row mx-auto pl-3 pr-3 pt-3 border-top">
+          <span class="text-danger notation text-center">
+              <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
+              size="1x" fixed-width />
+  После удаления товарищ не сможет взаимодействовать с сайтом!
+          </span>
+        </div>
+
+      </b-form>
+    </b-modal>
+
   </main>
 </template>
 
 <script>
 import { mapState } from 'vuex';
 import _ from 'lodash';
+import {
+  required, sameAs,
+} from 'vuelidate/lib/validators';
 import Breadcumbs from './Breadcumbs';
+
 
 export default {
   name: 'Users',
   data() {
     return {
       user: {},
+      deletePassphrase: '',
       selected: [],
       selectAll: false,
       listControl: {
@@ -203,6 +259,14 @@ export default {
         },
       },
     };
+  },
+  validations: {
+    deletePassphrase: {
+      required,
+      sameAsLogin: sameAs(function sameLogin() {
+        return this.user.login;
+      }),
+    },
   },
   components: { Breadcumbs },
   computed: mapState({
@@ -229,28 +293,10 @@ export default {
       }
     },
     deleteUser(id) {
-      this.$bvModal.msgBoxConfirm('Вы подтверждаете, что досье товарища должно быть уничтожено?', {
-        title: 'Уничтожение досье',
-        size: 'sm',
-        buttonSize: 'sm',
-        okVariant: 'danger',
-        okTitle: 'Да',
-        cancelTitle: 'Нет',
-        footerClass: 'p-2',
-        headerBgVariant: 'danger',
-        headerTextVariant: 'white',
-        hideHeaderClose: false,
-        headerBorderVariant: 'danger',
-        centered: true,
-      })
-        .then((value) => {
-          if (value) {
-            this.$store.dispatch('deleteUser', { id });
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      this.$v.deletePassphrase.$touch();
+      if (!this.$v.deletePassphrase.$invalid) {
+        this.$store.dispatch('deleteUser', { id });
+      }
     },
     selectUser(id) {
       this.user = _.find(this.users.results, { id });

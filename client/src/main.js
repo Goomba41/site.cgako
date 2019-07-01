@@ -18,6 +18,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {
   faCopyright as farCopyright, faEye as farEye, faEyeSlash as farEyeSlash, faEdit as farEdit,
+  faWindowMaximize as farWindowMaximize,
 } from '@fortawesome/free-regular-svg-icons';
 import {
   faVk, faYandex, faOdnoklassniki, faGoogle, faGithub, faTrello,
@@ -36,7 +37,8 @@ library.add(faTrash, faPencilAlt, faInfo, faPlus, faPowerOff,
   faUserShield, faBars, faGithub, faBell, faTrello, faCog, faUserCircle,
   faCircle, faSearch, faThLarge, faFolder, faGlobeEurope, faChevronDown, faNewspaper,
   faAt, farCopyright, faSyncAlt, faHeart, faSave, faKey, faTimes, farEye, farEyeSlash,
-  faUpload, farEdit, faCheck, faListOl, faListUl, faList, faUsers, faSort, faPhone);
+  faUpload, farEdit, faCheck, faListOl, faListUl, faList, faUsers, faSort, faPhone,
+  farWindowMaximize);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('font-awesome-layers', FontAwesomeLayers);
 Vue.component('font-awesome-layers-text', FontAwesomeLayersText);
