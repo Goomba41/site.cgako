@@ -116,28 +116,53 @@
 
               </b-form-group>
 
-              <b-form-group>
-                <b-form-input
-                  type="email"
-                  required
-                  placeholder="Email"
-                  name="email"
-                  v-model="$v.profile.email.$model"
-                  trim
-                  :state="$v.profile.email.$dirty ? !$v.profile.email.$error : null"
-                ></b-form-input>
+              <b-form-group v-for="(v, index) in $v.profile.email.$each.$iter" v-bind:key="index">
+                <b-input-group>
+                  <b-input-group-text slot="prepend">
+                    <font-awesome-icon :title="'Личная почта'"
+                    v-if="v.$model.type==='personal'"
+                    v-bind:icon="['fa', 'user']" fixed-width/>
+                    <font-awesome-icon :title="'Основная почта'"
+                    v-else-if="v.$model.type==='primary'"
+                    v-bind:icon="['fa', 'at']" fixed-width/>
+                    <font-awesome-icon :title="'Рабочая почта'"
+                    v-else-if="v.$model.type==='work'"
+                    v-bind:icon="['fa', 'briefcase']" fixed-width/>
+                  </b-input-group-text>
+                  <b-form-input
+                    type="email"
+                    placeholder="Email"
+                    name="email"
+                    v-model="v.value.$model"
+                    trim
+                    :state="v.value.$dirty ? !v.value.$error : null"
+                  ></b-form-input>
+                  <b-input-group-text slot="append">
+
+                    <font-awesome-icon
+                    :title="v.$model.verified ? 'Подтверждена' : 'Не подтверждена'"
+                    v-bind:icon="['fa', 'check-circle']"
+                    :class="v.$model.verified ? 'text-success' : 'text-danger'" fixed-width/>
+
+                    <font-awesome-icon :title="'Активен до: '+(v.$model.activeUntil ?
+                    $options.filters.moment(v.$model.activeUntil, 'dddd, MMMM Do YYYY, HH:mm:ss') :
+                    'Не входил')"
+                    v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
+
+                  </b-input-group-text>
+                </b-input-group>
 
                 <b-form-invalid-feedback
-                :state="$v.profile.email.$dirty ? !$v.profile.email.$error : null">
-                  <span v-if="!$v.profile.email.required">
+                :state="v.value.$dirty ? !v.value.$error : null">
+                  <span v-if="!v.value.required">
                     Поле обязательно для заполнения!
                   </span>
-                  <span v-if="!$v.profile.email.email">
+                  <span v-if="!v.value.email">
                     Поле может содержать только email-адрес (example@example.ru)!
                   </span>
                 </b-form-invalid-feedback>
                 <b-form-valid-feedback
-                :state="$v.profile.email.$dirty ? !$v.profile.email.$error : null">
+                :state="v.value.$dirty ? !v.value.$error : null">
                   Все в порядке!
                 </b-form-valid-feedback>
               </b-form-group>
@@ -470,7 +495,7 @@ import { ru } from 'vuejs-datepicker/dist/locale';
 import moment from 'moment';
 import { mapState } from 'vuex';
 import {
-  required, minLength, maxLength, alphaNum, email, maxValue,
+  required, minLength, maxLength, alphaNum, email, maxValue, requiredIf,
 } from 'vuelidate/lib/validators';
 import Breadcumbs from './Breadcumbs';
 import { EventBus, passwordGenerator, formatBytes } from '@/utils';
@@ -533,8 +558,18 @@ export default {
         alpha: val => /^[а-яё]*$/i.test(val),
       },
       email: {
-        required,
-        email,
+        $each: {
+          value: {
+            email,
+            required: requiredIf((value) => {
+              if (!value) return true;
+              if (value.type === 'primary') {
+                return true;
+              }
+              return false;
+            }),
+          },
+        },
       },
       phone: {
         required,

@@ -14,6 +14,7 @@ import requests
 
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
+from user_agents import parse
 from flask import current_app, json, Blueprint, \
     request, Response, url_for
 from functools import wraps
@@ -210,6 +211,23 @@ def login():
 
         if client_agent:
             last_login_data.update({'agent': client_agent})
+            user_agent = parse(client_agent)
+            if user_agent.is_pc:
+                device = 'pc'
+            elif user_agent.is_mobile:
+                device = 'mobile'
+            elif user_agent.is_tablet:
+                device = 'tablet'
+            else:
+                device = 'unknown'
+            last_login_data.update({
+                'browser': ('%s %s' % (user_agent.browser.family,
+                                       user_agent.browser.version_string
+                                       )).strip(),
+                'os': ('%s %s' % (user_agent.os.family,
+                                  user_agent.os.version_string)).strip(),
+                'device': device,
+            })
         else:
             last_login_data.update(
                 {'agent': request.headers.get('User-Agent')})
@@ -272,6 +290,7 @@ def update_profile_data(current_user, uid):
     try:
 
         update_data = request.get_json()
+
         #  Фото попать обязательно
         update_data.pop('photo', None)
         #  Не попать после реализации
@@ -282,6 +301,7 @@ def update_profile_data(current_user, uid):
             for error in sorted(profile_validator.iter_errors(
                                 update_data), key=str):
                 errors.append(error.message)
+                print(error.message)
 
             separator = '; '
             error_text = separator.join(errors)
@@ -293,9 +313,14 @@ def update_profile_data(current_user, uid):
                 )
 
         else:
+            primary_mail = list(
+                filter(
+                    lambda mail: mail['type'] == "primary",
+                    update_data['email'])
+                    )[0]["value"]
             exist = CmsUsers.exist(sid=uid, **{
                                       'login': update_data['login'],
-                                      'email': update_data['email'],
+                                      'email': primary_mail,
                                       'phone': update_data['phone']
                                       })
 
@@ -308,9 +333,14 @@ def update_profile_data(current_user, uid):
                     mimetype='application/json'
                 )
             else:
+                previous = CmsUsers.query.filter_by(id=uid).first().email
+                current = update_data['email']
 
-                CmsUsers.query.filter_by(id=uid).update(update_data)
-                db.session.commit()
+                for mail in current:
+                    print(mail)
+
+                #  CmsUsers.query.filter_by(id=uid).update(update_data)
+                #  db.session.commit()
 
                 response = Response(
                     response=json.dumps({'type': 'success',
@@ -659,8 +689,8 @@ def delete_users(current_user, uid):
                 current_app.config['CMS_USERS_AVATARS'],
                 user.photo))
 
-        #  db.session.delete(user)
-        #  db.session.commit()
+        db.session.delete(user)
+        db.session.commit()
 
         response = Response(
             response=json.dumps({'type': 'success',

@@ -147,8 +147,40 @@
                 user.last_login.ip : ''}}
               <font-awesome-icon v-if="user.last_login && user.last_login.agent"
               :icon="['far', 'window-maximize']" fixed-width
-              v-bind:title="user.last_login && user.last_login.agent ?
-                user.last_login.agent : 'Неизвестный клиент'"/>
+              v-bind:title="user.last_login && user.last_login.browser ?
+                user.last_login.browser : 'Неизвестный браузер'"/>
+
+              <font-awesome-icon v-if="user.last_login && user.last_login.device
+              && user.last_login.device==='pc'"
+              v-bind:icon="['fa', 'desktop']" fixed-width
+              v-bind:title="user.last_login && user.last_login.device ?
+                'Компьютер': 'Неизвестное устройство'"/>
+              <font-awesome-icon v-else-if="user.last_login && user.last_login.device
+              && user.last_login.device==='tablet'"
+              v-bind:icon="['fa', 'tablet-alt']" fixed-width
+              v-bind:title="user.last_login && user.last_login.device ?
+                'Планшет' : 'Неизвестное устройство'"/>
+              <font-awesome-icon v-else-if="user.last_login && user.last_login.device
+              && user.last_login.device==='mobile'"
+              v-bind:icon="['fa', 'mobile-alt']" fixed-width
+              v-bind:title="user.last_login && user.last_login.device ?
+                'Телефон' : 'Неизвестное устройство'"/>
+
+              <font-awesome-icon v-if="user.last_login && user.last_login.os
+              && user.last_login.os.includes('Windows')"
+              v-bind:icon="['fab', 'windows']" fixed-width
+              v-bind:title="user.last_login && user.last_login.os ?
+                user.last_login.os: 'Неизвестное устройство'"/>
+              <font-awesome-icon v-else-if="user.last_login && user.last_login.os
+              && user.last_login.os.includes('Mac')"
+              v-bind:icon="['fab', 'apple']" fixed-width
+              v-bind:title="user.last_login && user.last_login.os ?
+                user.last_login.os : 'Неизвестное устройство'"/>
+              <font-awesome-icon v-else-if="user.last_login && user.last_login.os"
+              v-bind:icon="['fab', 'linux']" fixed-width
+              v-bind:title="user.last_login && user.last_login.os ?
+                user.last_login.os : 'Неизвестное устройство'"/>
+
             </td>
             <td>
               <b-button size="sm" title="Изменить досье" variant="warning">
@@ -160,7 +192,7 @@
                 <font-awesome-icon :icon="['fa', 'info']" fixed-width />
               </b-button>
 
-              <b-button class="ml-3" v-if="uid != user.id"
+              <b-button v-if="uid != user.id"
               size="sm" title="Уничтожить досье" variant="danger"
               @click="selectUser(user.id)"
               v-b-modal.delete-modal>
@@ -189,6 +221,9 @@
     </b-modal>
 
     <b-modal id="delete-modal"
+            @show="deletePassphrase=''"
+            @hidden="deletePassphrase=''"
+            @close="deletePassphrase=''"
              title="Уничтожение досье"
              hide-footer size="sm" centered
             :header-bg-variant="'danger'"
@@ -197,23 +232,22 @@
       <b-form class="w-100" @submit.prevent="deleteUser(user.id)">
 
         <b-form-group
-        description="Введите логин товарища, чтобы подтвердить утичтожение">
+        description="Введите позывной товарища, чтобы подтвердить утичтожение">
           <b-input-group>
 
             <b-form-input
               name="confirmation-passphrase"
               autofocus
               v-model="$v.deletePassphrase.$model"
-              placeholder="Введите подтверждающую фразу"
+              placeholder="Подтверждающая фраза"
               :state="$v.deletePassphrase.$dirty ? !$v.deletePassphrase.$error : null"
               @input="$v.deletePassphrase.$touch()">
             </b-form-input>
           </b-input-group>
 
         </b-form-group>
-
-        <b-button class="mb-3" type="submit"
-        block variant="danger" title="Уничтожить досье товарища"
+        <b-button type="submit" block
+        variant="danger" title="Уничтожить досье товарища"
         :disabled="!$v.deletePassphrase.$anyDirty || $v.deletePassphrase.$invalid">
           <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
         </b-button>

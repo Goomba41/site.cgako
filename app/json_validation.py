@@ -5,6 +5,7 @@
 
 import re
 import datetime
+import dateutil.parser
 
 from jsonschema import validators, Draft4Validator
 from jsonschema.exceptions import ValidationError
@@ -39,9 +40,32 @@ schema_profile_data = {
                     "minLength": 1
                  },
         "email": {
-                    "type": "string",
-                    'is_email': True,
-                    "minLength": 1
+                    "type": "array",
+                    "maxItems": 3,
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        'properties': {
+                            "value": {
+                                "type": "string",
+                                'is_email': True,
+                                'minLength': 1
+                            },
+                            "type": {
+                                "type": "string",
+                                'enum': ["primary", "work", "personal"],
+                            },
+                            "activeUntil": {
+                                "type": "string",
+                                'is_date': True,
+                            },
+                            "verified": {
+                                "type": "boolean",
+                            },
+                        },
+                        "required": ["verified", "type", "value", "activeUntil"],
+                    },
                  },
         "phone": {
                     "type": "string",
@@ -100,15 +124,15 @@ def is_email(validator, value, instance, schema_profile_data):
     if re.search(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)',
                  instance) is None:
         yield ValidationError("%r not in email format" % (instance))
-    elif validate_email(instance, verify=True, check_mx=True) is None:
-        yield ValidationError("%r address doesn't exist" % (instance))
+    elif validate_email(instance, verify=True) is None or not validate_email(instance, verify=True):
+        yield ValidationError("%r адрес почты не существует в сети!" % (instance))
 
 
 def is_date(validator, value, instance, schema_profile_data):
     try:
-        datetime.datetime.strptime(instance, '%Y-%m-%d')
+        dateutil.parser.parse(instance)
     except ValueError:
-        yield ValidationError("%r incorrect birth date format" % (instance))
+        yield ValidationError("%r incorrect date format" % (instance))
 
 
 def is_valid(validator, value, instance, schema_profile_password):
