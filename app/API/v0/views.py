@@ -11,15 +11,19 @@ import uuid
 import os
 import math
 import requests
+import dateutil
 
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from itsdangerous import URLSafeTimedSerializer
 from urllib.parse import urljoin
 from user_agents import parse
 from flask import current_app, json, Blueprint, \
-    request, Response, url_for
+    request, Response, url_for, render_template
+from flask_mail import Message
 from functools import wraps
 
-from app import bcrypt, db
+from app import bcrypt, db, mail
 from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema
 from app.json_validation import profile_validator, password_validator
 
@@ -100,6 +104,48 @@ def server_error(dbg=None):
     return response
 
 
+def generate_confirmation_token(email):
+    """Генерация токена для подтверждения почты."""
+
+    serializer = URLSafeTimedSerializer(
+        current_app.config['SECRET_KEY'])
+    return serializer.dumps(
+        email,
+        salt=current_app.config['VERIFICATION_SALT'])
+
+
+def confirm_email_token(token, expiration=3600):
+    """Верификация токена для подтверждения почты."""
+
+    serializer = URLSafeTimedSerializer(
+        current_app.config['SECRET_KEY'])
+
+    try:
+        serializer.loads(
+            token,
+            salt=current_app.config['VERIFICATION_SALT'],
+            max_age=expiration
+        )
+    except Exception:
+        return False
+
+    return True
+
+
+def send_email(to, subject, template):
+    """Отправка электронных писем."""
+
+    msg = Message(
+        subject,
+        recipients=[to],
+        html=template,
+        sender=current_app.config['MAIL_DEFAULT_SENDER']
+    )
+    #  print(msg)
+    mail.send(msg)
+    print("mail sended!")
+
+
 def pagination_of_list(query_result, url, start, limit):
     """ Пагинация результатов запроса. Принимает параметры:
     результат запроса (json), URL API для генерации ссылок, стартовая позиция,
@@ -159,9 +205,33 @@ def pagination_of_list(query_result, url, start, limit):
     return response_obj
 
 
+#  Манипуляции с датой
+def date_manipulation(value, action, period='month', number=3):
+    if action == "plus":
+        if period == 'day':
+            return (value + relativedelta(days=number)).isoformat()
+        elif period == 'week':
+            return (value + relativedelta(weeks=number)).isoformat()
+        elif period == 'month':
+            return (value + relativedelta(months=number)).isoformat()
+        elif period == 'year':
+            return (value + relativedelta(years=number)).isoformat()
+    elif action == "minus":
+        if period == 'day':
+            return (value - relativedelta(days=number)).isoformat()
+        elif period == 'week':
+            return (value - relativedelta(weeks=number)).isoformat()
+        elif period == 'month':
+            return (value - relativedelta(months=number)).isoformat()
+        elif period == 'year':
+            return (value - relativedelta(years=number)).isoformat()
+    else:
+        return value
+
 # ------------------------------------------------------------
 # Логин
 # ------------------------------------------------------------
+
 
 @API0.route('/login', methods=['POST'])
 def login():
@@ -254,6 +324,41 @@ def login():
     return response
 
 # ------------------------------------------------------------
+# Верификация почты
+# ------------------------------------------------------------
+
+
+@API0.route('/verify/mail/<string:token>', methods=['GET'])
+def verify_mail(token):
+    """Функция верификации почты пользователя"""
+
+    try:
+
+        verified = confirm_email_token(token)
+
+        if verified:
+            response = Response(
+                response=json.dumps({'type': 'success',
+                                     'text': 'Почта подтверждена!'}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Токен подтверждения \
+поврежден или просрочен!'}),
+                status=422,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+# ------------------------------------------------------------
 # Профиль вошедшего пользователя
 # ------------------------------------------------------------
 
@@ -335,9 +440,29 @@ def update_profile_data(current_user, uid):
             else:
                 previous = CmsUsers.query.filter_by(id=uid).first().email
                 current = update_data['email']
+                pairs = zip(current, previous)
 
-                for mail in current:
-                    print(mail)
+                changed = [x for x, y in pairs if x != y]
+                if changed:
+                    for mail_item in changed:
+                        sended_date = dateutil.parser.parse(
+                            mail_item['activeUntil'])
+                        if sended_date <= datetime.now():
+                            mail_item['activeUntil'] = date_manipulation(
+                                datetime.now(), action="plus")
+                        mail_item['verified'] = False
+                        if mail_item['value']:
+                            token = generate_confirmation_token(
+                                mail_item['value'])
+                            confirm_url = url_for(
+                                'API0.verify_mail',
+                                token=token,
+                                _external=True)
+                            html = render_template(
+                                'confirmation_mail.html',
+                                confirm_url=confirm_url)
+                            subject = "Please confirm email"
+                            send_email(mail_item['value'], subject, html)
 
                 #  CmsUsers.query.filter_by(id=uid).update(update_data)
                 #  db.session.commit()

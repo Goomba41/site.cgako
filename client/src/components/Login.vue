@@ -42,7 +42,10 @@
                                 </b-button>
                                 <button class="btn btn-primary" type="submit"
                                 :disabled="disableButton">
-                                    <font-awesome-icon :icon="['fa', 'sign-in-alt']" fixed-width />
+                                    <font-awesome-icon v-if="!formPending"
+                                    :icon="['fa', 'sign-in-alt']" fixed-width />
+                                    <b-spinner small v-if="formPending"
+                                    label="Идет аутентификация..."></b-spinner>
                                 </button>
                             </div>
 
@@ -98,6 +101,7 @@ bcc=anton.borodawkin@yandex.ru"
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import { EventBus } from '@/utils';
 
 export default {
@@ -133,11 +137,12 @@ export default {
       }
     },
   },
-  computed: {
+  computed: mapState({
+    formPending: state => state.formPending,
     disableButton() {
       return this.username.length === 0 || this.password.length === 0;
     },
-  },
+  }),
   mounted() {
     this.checkTokenExpiration();
     EventBus.$on('failedAuthentication', (msg) => {

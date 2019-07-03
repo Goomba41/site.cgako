@@ -15,6 +15,7 @@ const state = {
   profile: {}, // профиль текущего пользователя
   uploadProgress: 0,
   uploadProgressMax: 100,
+  formPending: false,
   jwt: localStorage.getItem('token') || '', // Загрузить токен из хранилища, или инициировать пустой, если нет в хранилище
 };
 
@@ -22,6 +23,8 @@ const state = {
 const actions = {
   // Запрос токена с отсылкой авторизационных данных
   async login(context, userCreds) {
+    context.commit('setFormPending');
+
     const userAgent = { agent: window.navigator.userAgent };
     let ip = { ip: 'unknown' };
 
@@ -30,13 +33,18 @@ const actions = {
       .catch((error) => {
         // eslint-disable-next-line
         console.log(error.response.data);
+        context.commit('setFormPending');
       });
 
     const userData = _.assign({}, userCreds, userAgent, ip);
     return axios.post('/api/login', userData)
-      .then((response) => { context.commit('setJwtToken', { jwt: response.data }); })
+      .then((response) => {
+        context.commit('setJwtToken', { jwt: response.data });
+        context.commit('setFormPending');
+      })
       .catch((error) => {
         EventBus.$emit('failedAuthentication', error.response.data);
+        context.commit('setFormPending');
       });
   },
   // Выход с сайта с удалением токена из локального хранилища и хранилища состояния
@@ -56,15 +64,19 @@ const actions = {
   },
   // Обновить данные профиля вошедшего пользователя
   updateProfileData(context, dataUpdate) {
+    context.commit('setFormPending');
+
     return axios.put(`/api/profile/${context.state.uid}/data?dbg`, dataUpdate,
       { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
       .then((response) => {
         context.dispatch('loadProfile');
         EventBus.$emit('forceRerender');
         EventBus.$emit('message', response.data);
+        context.commit('setFormPending');
       })
       .catch((error) => {
         EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
       });
   },
   // Обновить пароль вошедшего пользователя
@@ -134,6 +146,10 @@ const actions = {
 
 // Мутации данных
 const mutations = {
+  // Установка статуса отправки формы
+  setFormPending(state) {
+    state.formPending = !state.formPending;
+  },
   // Установка токена аутентификации
   setJwtToken(state, payload) {
     localStorage.token = payload.jwt;

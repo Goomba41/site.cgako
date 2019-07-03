@@ -19,12 +19,15 @@ from flask_migrate import Migrate
 
 from flask_sqlalchemy import SQLAlchemy
 
+from flask_mail import Mail
+
 app = Flask(__name__)
 app.config.from_object('config')
 
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+mail = Mail(app)
 bcrypt = Bcrypt(app)
 
 from app.API.v0.views import API0

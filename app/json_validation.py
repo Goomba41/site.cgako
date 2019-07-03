@@ -4,10 +4,9 @@
 """Модели данных БД."""
 
 import re
-import datetime
 import dateutil.parser
 
-from jsonschema import validators, Draft4Validator
+from jsonschema import validators, Draft7Validator
 from jsonschema.exceptions import ValidationError
 from validate_email import validate_email
 
@@ -16,6 +15,10 @@ from validate_email import validate_email
 # ------------------------------------------------------------
 
 #  Профиль пользователя CMS
+
+#  Есть проблемы при валидации списка почт:
+#  при запросе к API value должно быть обязательно,
+#  но эта валидация не проходит
 schema_profile_data = {
     "type": "object",
     "properties": {
@@ -49,8 +52,6 @@ schema_profile_data = {
                         'properties': {
                             "value": {
                                 "type": "string",
-                                'is_email': True,
-                                'minLength': 1
                             },
                             "type": {
                                 "type": "string",
@@ -64,7 +65,20 @@ schema_profile_data = {
                                 "type": "boolean",
                             },
                         },
-                        "required": ["verified", "type", "value", "activeUntil"],
+                        "required": [
+                            "verified",
+                            "type",
+                            "value",
+                            "activeUntil"
+                            ],
+                        "if": {
+                            "properties": {
+                              "type": {"const": "primary"}
+                            },
+                            "required": ["type", "value"],
+                          },
+                        "then": {"is_email_primary": ["value"]},
+                        "else": {"is_email": ["value"]}
                     },
                  },
         "phone": {
@@ -118,14 +132,31 @@ schema_profile_password = {
 # ------------------------------------------------------------
 
 
-def is_email(validator, value, instance, schema_profile_data):
-    if not isinstance(instance, str):
-        yield ValidationError("%r not string" % instance)
+def is_email_primary(validator, value, instance, schema_profile_data):
+    if not isinstance(instance['value'], str):
+        yield ValidationError("%r not string" % instance['value'])
     if re.search(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)',
-                 instance) is None:
-        yield ValidationError("%r not in email format" % (instance))
-    elif validate_email(instance, verify=True) is None or not validate_email(instance, verify=True):
-        yield ValidationError("%r адрес почты не существует в сети!" % (instance))
+                 instance['value']) is None:
+        yield ValidationError(
+            "%r не в формате почты или пустая строка" % (instance['value']))
+    elif (validate_email(instance['value'], verify=True) is None or
+          not validate_email(instance['value'], verify=True)):
+        yield ValidationError(
+            "%r адрес почты не существует в сети!" % (instance['value']))
+
+
+def is_email(validator, value, instance, schema_profile_data):
+    if not isinstance(instance['value'], str):
+        yield ValidationError("%r not string" % instance['value'])
+    if len(instance['value']) > 0:
+        if re.search(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)',
+                     instance['value']) is None:
+            yield ValidationError(
+                "%r не в формате почты" % (instance['value']))
+        elif (validate_email(instance['value'], verify=True) is None or
+              not validate_email(instance['value'], verify=True)):
+            yield ValidationError(
+                "%r адрес почты не существует в сети!" % (instance['value']))
 
 
 def is_date(validator, value, instance, schema_profile_data):
@@ -163,12 +194,13 @@ def is_valid(validator, value, instance, schema_profile_password):
                 "%r incorrect format of password" % (instance))
 
 
-all_validators = dict(Draft4Validator.VALIDATORS)
-all_validators.update({'is_email': is_email, 'is_date': is_date,
-                       'is_valid': is_valid})
+all_validators = dict(Draft7Validator.VALIDATORS)
+all_validators.update({'is_email_primary': is_email_primary,
+                       'is_email': is_email,
+                       'is_date': is_date, 'is_valid': is_valid})
 
 MyValidator = validators.create(
-    meta_schema=Draft4Validator.META_SCHEMA,
+    meta_schema=Draft7Validator.META_SCHEMA,
     validators=all_validators
 )
 

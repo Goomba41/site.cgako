@@ -169,6 +169,7 @@
               <font-awesome-icon v-if="user.last_login && user.last_login.os
               && user.last_login.os.includes('Windows')"
               v-bind:icon="['fab', 'windows']" fixed-width
+              class="text-primary"
               v-bind:title="user.last_login && user.last_login.os ?
                 user.last_login.os: 'Неизвестное устройство'"/>
               <font-awesome-icon v-else-if="user.last_login && user.last_login.os
@@ -209,13 +210,26 @@
             hide-footer size="sm" centered
             header-bg-variant="info"
             header-text-variant="light">
-      <p>
-        <a :href="`mailto:${this.user.email}`" title="Написать на электронную почту">
-          <font-awesome-icon :icon="['fa', 'at']" fixed-width /> {{this.user.email}}
+      <p v-for="mail in this.user.email" v-bind:key="mail.value">
+        <a v-if="mail.value" :href="`mailto:${mail.value}`" title="Написать на эту почту">
+          <font-awesome-icon :title="'Личная почта'"
+          v-if="mail.type==='personal'"
+          v-bind:icon="['fa', 'user']" fixed-width/>
+          <font-awesome-icon :title="'Основная почта'"
+          v-else-if="mail.type==='primary'"
+          v-bind:icon="['fa', 'at']" fixed-width/>
+          <font-awesome-icon :title="'Рабочая почта'"
+          v-else-if="mail.type==='work'"
+          v-bind:icon="['fa', 'briefcase']" fixed-width/>
+          <font-awesome-icon
+          :title="mail.verified ? 'Подтверждена' : 'Не подтверждена'"
+          v-bind:icon="['fa', 'check-circle']"
+          :class="mail.verified ? 'text-success' : 'text-danger'" fixed-width/>
+          {{mail.value}}
         </a>
       </p>
       <p>
-        <font-awesome-icon :icon="['fa', 'phone']" fixed-width />
+        <font-awesome-icon :icon="['fa', 'phone']" fixed-width class="text-primary"/>
         {{this.user.phone}}
       </p>
     </b-modal>

@@ -116,55 +116,59 @@
 
               </b-form-group>
 
-              <b-form-group v-for="(v, index) in $v.profile.email.$each.$iter" v-bind:key="index">
-                <b-input-group>
-                  <b-input-group-text slot="prepend">
-                    <font-awesome-icon :title="'Личная почта'"
-                    v-if="v.$model.type==='personal'"
-                    v-bind:icon="['fa', 'user']" fixed-width/>
-                    <font-awesome-icon :title="'Основная почта'"
-                    v-else-if="v.$model.type==='primary'"
-                    v-bind:icon="['fa', 'at']" fixed-width/>
-                    <font-awesome-icon :title="'Рабочая почта'"
-                    v-else-if="v.$model.type==='work'"
-                    v-bind:icon="['fa', 'briefcase']" fixed-width/>
-                  </b-input-group-text>
-                  <b-form-input
-                    type="email"
-                    placeholder="Email"
-                    name="email"
-                    v-model="v.value.$model"
-                    trim
-                    :state="v.value.$dirty ? !v.value.$error : null"
-                  ></b-form-input>
-                  <b-input-group-text slot="append">
+              <b-form-group class="text-justify" description="Основная почта обязательна для заполнения. Чтобы удалить рабочую и/или личную почту, очистите поле и сохраните форму. После добавления новой почты и/или обновления привязанной, будет отправлено письмо на эту почту для её подтверждения.">
+                <b-form-group v-for="(v, index) in $v.profile.email.$each.$iter" v-bind:key="index">
+                  <b-input-group>
+                    <b-input-group-text slot="prepend">
+                      <font-awesome-icon :title="'Личная почта'"
+                      v-if="v.$model.type==='personal'"
+                      v-bind:icon="['fa', 'user']" fixed-width/>
+                      <font-awesome-icon :title="'Основная почта'"
+                      v-else-if="v.$model.type==='primary'"
+                      v-bind:icon="['fa', 'at']" fixed-width/>
+                      <font-awesome-icon :title="'Рабочая почта'"
+                      v-else-if="v.$model.type==='work'"
+                      v-bind:icon="['fa', 'briefcase']" fixed-width/>
+                    </b-input-group-text>
+                    <b-form-input
+                      type="email"
+                      placeholder="Email"
+                      name="email"
+                      v-model="v.value.$model"
+                      trim
+                      :state="v.value.$dirty ? !v.value.$error : null"
+                    ></b-form-input>
+                    <b-input-group-text slot="append" v-if="v.$model.value">
 
-                    <font-awesome-icon
-                    :title="v.$model.verified ? 'Подтверждена' : 'Не подтверждена'"
-                    v-bind:icon="['fa', 'check-circle']"
-                    :class="v.$model.verified ? 'text-success' : 'text-danger'" fixed-width/>
+                      <font-awesome-icon
+                      :title="v.$model.verified ? 'Подтверждена' : 'Не подтверждена'"
+                      v-bind:icon="['fa', 'check-circle']"
+                      :class="v.$model.verified ? 'text-success' : 'text-danger'" fixed-width/>
 
-                    <font-awesome-icon :title="'Активен до: '+(v.$model.activeUntil ?
-                    $options.filters.moment(v.$model.activeUntil, 'dddd, MMMM Do YYYY, HH:mm:ss') :
-                    'Не входил')"
-                    v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
+                      <font-awesome-icon :title="v.$model.activeUntil ?
+                      'Активен до: '+
+                      $options.filters.moment(v.$model.activeUntil, 'dddd, MMMM Do YYYY, HH:mm:ss') :
+                      'Необходима активация'"
+                      v-if="v.$model.activeUntil || v.$model.verified"
+                      v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
 
-                  </b-input-group-text>
-                </b-input-group>
+                    </b-input-group-text>
+                  </b-input-group>
 
-                <b-form-invalid-feedback
-                :state="v.value.$dirty ? !v.value.$error : null">
-                  <span v-if="!v.value.required">
-                    Поле обязательно для заполнения!
-                  </span>
-                  <span v-if="!v.value.email">
-                    Поле может содержать только email-адрес (example@example.ru)!
-                  </span>
-                </b-form-invalid-feedback>
-                <b-form-valid-feedback
-                :state="v.value.$dirty ? !v.value.$error : null">
-                  Все в порядке!
-                </b-form-valid-feedback>
+                  <b-form-invalid-feedback
+                  :state="v.value.$dirty ? !v.value.$error : null">
+                    <span v-if="!v.value.required">
+                      Поле обязательно для заполнения!
+                    </span>
+                    <span v-if="!v.value.email">
+                      Поле может содержать только email-адрес (example@example.ru)!
+                    </span>
+                  </b-form-invalid-feedback>
+                  <b-form-valid-feedback
+                  :state="v.value.$dirty ? !v.value.$error : null">
+                    Все в порядке!
+                  </b-form-valid-feedback>
+                </b-form-group>
               </b-form-group>
 
               <b-form-group>
@@ -247,7 +251,10 @@
 
               <b-button type="submit" variant="primary" class="float-left"
               :disabled="!$v.profile.$anyDirty || $v.profile.$invalid">
-                <font-awesome-icon :icon="['fa', 'save']" fixed-width />
+                <font-awesome-icon v-if="!formPending"
+                :icon="['fa', 'save']" fixed-width />
+                <b-spinner small v-if="formPending"
+                label="Идет отправка формы..."></b-spinner>
               </b-button>
 
             </b-form>
@@ -658,6 +665,7 @@ export default {
     profile: state => state.profile,
     progressValue: state => state.uploadProgress,
     progressMax: state => state.uploadProgressMax,
+    formPending: state => state.formPending,
   }),
   mounted() {
     EventBus.$on('failedAuthentication', (msg) => {
