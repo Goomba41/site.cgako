@@ -42,8 +42,9 @@ def token_required(f):
         auth_headers = request.headers.get('Authorization', '').split()
 
         invalid_msg = {'type': 'error',
-                       'text': 'Некорректный токен. Требуется регистрация или переданы \
-неверные аутентификационные данные.',
+                       'text': 'Некорректный токен. '
+                               'Требуется регистрация или переданы'
+                               'неверные аутентификационные данные.',
                        'authenticated': False}
         expired_msg = {'type': 'error',
                        'text': 'Токен просрочен. Аутентифицируйтесь заново.',
@@ -366,8 +367,8 @@ def verify_mail(token):
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
-                                     'text': 'Токен \
-поврежден или просрочен!'}),
+                                     'text': 'Токен'
+                                             'поврежден или просрочен!'}),
                 status=422,
                 mimetype='application/json'
             )
@@ -452,8 +453,10 @@ def update_profile_data(current_user, uid):
             if exist:
                 response = Response(
                     response=json.dumps({'type': 'danger',
-                                         'text': 'Уже есть пользователь с такими логином, \
-телефоном или почтой! Выберите другие!'}),
+                                         'text': 'Уже есть пользователь'
+                                                 'с такими логином, '
+                                                 'телефоном или почтой!'
+                                                 'Выберите другие!'}),
                     status=422,
                     mimetype='application/json'
                 )
@@ -478,14 +481,14 @@ def update_profile_data(current_user, uid):
                                  "value": mail_item['value'],
                                  "type": mail_item['type']
                                 }, expiration=3600)
-                            confirm_url = 'http://192.168.0.96:8080\
-/verify/mail/' + token.decode("utf-8")
+                            confirm_url = 'http://192.168.0.96:8080/verify' \
+                                          '/mail/' + token.decode("utf-8")
                             print(confirm_url)
                             html = render_template(
                                 'confirmation_mail.html',
                                 confirm_url=confirm_url)
-                            subject = "Подтверждение адреса электронной почты \
-в CMS сайта ЦГАКО"
+                            subject = 'Подтверждение адреса электронной ' \
+                                      'почты в CMS сайта ЦГАКО'
                             send_email(mail_item['value'], subject, html)
 
                 CmsUsers.query.filter_by(id=uid).update(update_data)
@@ -617,8 +620,8 @@ def update_profile_avatar(current_user, uid):
             else:
                 response = Response(
                     response=json.dumps({'type': 'danger',
-                                         'text': 'Вы отправили \
-более 1 файла!'}),
+                                         'text': 'Вы отправили'
+                                                 'более 1 файла!'}),
                     status=422,
                     mimetype='application/json'
                 )
@@ -741,8 +744,8 @@ def post_users(current_user):
         if exist:
             response = Response(
                 response=json.dumps({'type': 'error',
-                                     'text': 'Пользователь с такими данными \
-существует!'}),
+                                     'text': 'Пользователь с такими данными'
+                                             'существует!'}),
                 status=422,
                 mimetype='application/json'
             )
@@ -764,8 +767,8 @@ def post_users(current_user):
 
             response = Response(
                 response=json.dumps({'type': 'success',
-                                     'text': 'Успешно добавлен пользователь \
-с id='+str(user.id)+'!',
+                                     'text': 'Успешно добавлен пользователь'
+                                             'с id='+str(user.id)+'!',
                                      'link': url_for('.get_user_by_id',
                                                      uid=user.id,
                                                      _external=True)}),
@@ -797,8 +800,8 @@ def update_users(current_user, uid):
         if check.id != uid:
             response = Response(
                 response=json.dumps({'type': 'error',
-                                     'text': 'Пользователь с такими данными \
-существует!'}),
+                                     'text': 'Пользователь с такими данными'
+                                             'существует!'}),
                 status=422,
                 mimetype='application/json'
             )
@@ -808,8 +811,8 @@ def update_users(current_user, uid):
 
             response = Response(
                 response=json.dumps({'type': 'success',
-                                     'text': 'Успешно обновлен пользователь \
-с id='+str(uid)+'!',
+                                     'text': 'Успешно обновлен пользователь'
+                                             'с id='+str(uid)+'!',
                                      'link': url_for('.get_user_by_id',
                                                      uid=uid,
                                                      _external=True)}),

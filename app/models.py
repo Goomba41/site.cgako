@@ -75,7 +75,7 @@ class CmsUsers(db.Model):
 
     def __repr__(self):
         """Форматирование представления экземпляра класса."""
-        return 'Пользователь id:%i, имя:%r ' % (self.id, self.name)
+        return 'Пользователь id:%i, логин:%r ' % (self.id, self.login)
 
     @classmethod
     def authenticate(cls, **kwargs):

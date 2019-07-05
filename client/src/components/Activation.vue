@@ -16,7 +16,8 @@
                     <b-alert :variant="msgType" show class="w-100">{{msgText}}</b-alert>
                 </div>
 
-                <div v-if="msgType==='success'" class="row justify-content-start align-items-start mx-auto p-3">
+                <div v-if="msgType==='success'"
+                class="row justify-content-start align-items-start mx-auto p-3">
                     <b-button type="button" block :to="{ name: 'Login' }"
                     variant="primary" title="Перейти на страницу входа">
                       Перейти на страницу входа

@@ -18,7 +18,7 @@
             <template slot="button-content">
               <font-awesome-icon icon="list" fixed-width />
             </template>
-            <b-dropdown-item disabled>
+            <b-dropdown-item variant="danger" v-b-modal.delete-group-modal>
               <font-awesome-icon icon="trash" fixed-width />
               Удалить
             </b-dropdown-item>
@@ -277,6 +277,48 @@
       </b-form>
     </b-modal>
 
+    <b-modal id="delete-group-modal"
+            @show="deleteGroupPassphrase=''"
+            @hidden="deleteGroupPassphrase=''"
+            @close="deleteGroupPassphrase=''"
+             title="Уничтожение пачки досье"
+             hide-footer size="sm" centered
+            :header-bg-variant="'danger'"
+            :header-text-variant="'light'">
+
+      <b-form class="w-100" @submit.prevent="deleteUser(selected)">
+        <b-form-group
+        description="Введите слово 'Удалить', чтобы подтвердить утичтожение">
+          <b-input-group>
+
+            <b-form-input
+              name="confirmation-passphrase"
+              autofocus
+              v-model="$v.deleteGroupPassphrase.$model"
+              placeholder="Подтверждающая фраза"
+              :state="$v.deleteGroupPassphrase.$dirty ? !$v.deleteGroupPassphrase.$error : null"
+              @input="$v.deleteGroupPassphrase.$touch()">
+            </b-form-input>
+          </b-input-group>
+
+        </b-form-group>
+        <b-button type="submit" block
+        variant="danger" title="Уничтожить пачку досье"
+        :disabled="!$v.deleteGroupPassphrase.$anyDirty || $v.deleteGroupPassphrase.$invalid">
+          <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
+        </b-button>
+
+        <div class="row mx-auto pl-3 pr-3 pt-3 border-top">
+          <span class="text-danger notation text-center">
+              <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
+              size="1x" fixed-width />
+  После удаления товарищи не смогут взаимодействовать с сайтом!
+          </span>
+        </div>
+
+      </b-form>
+    </b-modal>
+
   </main>
 </template>
 
@@ -295,6 +337,7 @@ export default {
     return {
       user: {},
       deletePassphrase: '',
+      deleteGroupPassphrase: '',
       selected: [],
       selectAll: false,
       listControl: {
@@ -314,6 +357,10 @@ export default {
       sameAsLogin: sameAs(function sameLogin() {
         return this.user.login;
       }),
+    },
+    deleteGroupPassphrase: {
+      required,
+      sameAsPassphrase: sameAs(() => 'Удалить'),
     },
   },
   components: { Breadcumbs },
@@ -341,8 +388,11 @@ export default {
       }
     },
     deleteUser(id) {
-      this.$v.deletePassphrase.$touch();
-      if (!this.$v.deletePassphrase.$invalid) {
+      if (Array.isArray(id)) {
+        for (let i = 0; i < id.length; i += 1) {
+          this.$store.dispatch('deleteUser', { id: id[i] });
+        }
+      } else if (!Number.isNaN(id)) {
         this.$store.dispatch('deleteUser', { id });
       }
     },

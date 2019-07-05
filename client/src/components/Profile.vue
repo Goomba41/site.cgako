@@ -118,7 +118,11 @@
 
               </b-form-group>
 
-              <b-form-group class="text-justify" description="Основная почта обязательна для заполнения. Чтобы удалить рабочую и/или личную почту, очистите поле и сохраните форму. После добавления новой почты и/или обновления привязанной, будет отправлено письмо на эту почту для её подтверждения.">
+              <b-form-group class="text-justify"
+              description="Основная почта обязательна для заполнения.
+Чтобы удалить рабочую и/или личную почту, очистите поле и сохраните форму.
+После добавления новой почты и/или обновления привязанной,
+будет отправлено письмо на эту почту для её подтверждения.">
                 <b-form-group v-for="(v, index) in $v.profile.email.$each.$iter" v-bind:key="index">
                   <b-input-group>
                     <b-input-group-text slot="prepend">
@@ -149,7 +153,8 @@
 
                       <font-awesome-icon :title="v.$model.activeUntil ?
                       'Активен до: '+
-                      $options.filters.moment(v.$model.activeUntil, 'dddd, MMMM Do YYYY, HH:mm:ss') :
+                      $options.filters.moment(v.$model.activeUntil,
+                                              'dddd, MMMM Do YYYY, HH:mm:ss') :
                       'Необходима активация'"
                       v-if="v.$model.activeUntil || v.$model.verified"
                       v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
