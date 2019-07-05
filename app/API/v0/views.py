@@ -44,7 +44,7 @@ def token_required(f):
         invalid_msg = {'type': 'error',
                        'text': 'Некорректный токен. '
                                'Требуется регистрация или переданы'
-                               'неверные аутентификационные данные.',
+                               ' неверные аутентификационные данные.',
                        'authenticated': False}
         expired_msg = {'type': 'error',
                        'text': 'Токен просрочен. Аутентифицируйтесь заново.',
@@ -111,7 +111,7 @@ def generate_confirmation_token(jdict, expiration=3600):
     """Генерация токена для подтверждения почты."""
 
     serializer = TimedJSONWebSignatureSerializer(
-        current_app.config['SECRET_KEY'], expires_in=3600)
+        current_app.config['SECRET_KEY'], expires_in=expiration)
 
     return serializer.dumps(
         jdict,
@@ -368,7 +368,7 @@ def verify_mail(token):
             response = Response(
                 response=json.dumps({'type': 'danger',
                                      'text': 'Токен'
-                                             'поврежден или просрочен!'}),
+                                             ' поврежден или просрочен!'}),
                 status=422,
                 mimetype='application/json'
             )
@@ -427,7 +427,6 @@ def update_profile_data(current_user, uid):
             for error in sorted(profile_validator.iter_errors(
                                 update_data), key=str):
                 errors.append(error.message)
-                print(error.message)
 
             separator = '; '
             error_text = separator.join(errors)
@@ -483,10 +482,10 @@ def update_profile_data(current_user, uid):
                                 }, expiration=3600)
                             confirm_url = 'http://192.168.0.96:8080/verify' \
                                           '/mail/' + token.decode("utf-8")
-                            print(confirm_url)
                             html = render_template(
                                 'confirmation_mail.html',
-                                confirm_url=confirm_url)
+                                confirm_url=confirm_url,
+                                active_time="1 час")
                             subject = 'Подтверждение адреса электронной ' \
                                       'почты в CMS сайта ЦГАКО'
                             send_email(mail_item['value'], subject, html)
@@ -656,6 +655,71 @@ def update_profile_avatar(current_user, uid):
         #  fh.write(base64.decodebytes(
         #  bytes(img_enc_string, encoding='utf-8')
         #  ))
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/profile/<int:uid>/mail/verify-send', methods=['GET'])
+@token_required
+def verify_mail_send(current_user, uid):
+    """ Изменение данных пользователя через профиль"""
+
+    try:
+        if request.args.get('value') and request.args.get('type'):
+
+            user = CmsUsers.query.filter(
+                (func.json_contains(CmsUsers.email, json.dumps(
+                    {'value': request.args.get('value'),
+                     'type': request.args.get('type')}))) &
+                (CmsUsers.id == uid)).first()
+
+            if user:
+
+                token = generate_confirmation_token(
+                    {
+                     "uid": uid,
+                     "value": request.args.get('value'),
+                     "type": request.args.get('type')
+                    }, expiration=86400)
+                confirm_url = 'http://192.168.0.96:8080/verify' \
+                              '/mail/' + token.decode("utf-8")
+                html = render_template(
+                    'confirmation_mail.html',
+                    confirm_url=confirm_url,
+                    active_time="1 день")
+                subject = 'Подтверждение адреса электронной ' \
+                          'почты в CMS сайта ЦГАКО'
+                send_email(request.args.get('value'), subject, html)
+
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Письмо для подтверждения'
+                                                 ' отправлено!'}),
+                    status=200,
+                    mimetype='application/json'
+                )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'У данного пользователя нет'
+                                                 ' почты с такими'
+                                                 ' параметрами!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Не отправлены требуемые'
+                                             ' параметры: почта (value), '
+                                             ' тип почты (type)!'}),
+                status=422,
+                mimetype='application/json'
+            )
 
     except Exception:
 

@@ -131,7 +131,7 @@
                       v-bind:icon="['fa', 'user']" fixed-width/>
                       <font-awesome-icon :title="'Основная почта'"
                       v-else-if="v.$model.type==='primary'"
-                      v-bind:icon="['fa', 'at']" fixed-width/>
+                      v-bind:icon="['fa', 'envelope']" fixed-width/>
                       <font-awesome-icon :title="'Рабочая почта'"
                       v-else-if="v.$model.type==='work'"
                       v-bind:icon="['fa', 'briefcase']" fixed-width/>
@@ -144,22 +144,33 @@
                       trim
                       :state="v.value.$dirty ? !v.value.$error : null"
                     ></b-form-input>
-                    <b-input-group-text slot="append" v-if="v.$model.value">
+                    <b-input-group-append>
+                      <b-button v-if="v.$model.value && !v.value.$dirty &&
+                      (dateDiffNow(v.$model.activeUntil, reactivationPeriod) || !v.$model.verified)"
+                      variant="outline-secondary" title="Послать письмо подтверждения"
+                      @click="onSubmitMailVerify(v.$model.type, v.$model.value)"
+                      :disabled="formPending">
+                        <b-spinner small v-if="formPending"
+                        label="Идет отправка формы..."></b-spinner>
+                        <font-awesome-icon v-else v-bind:icon="['fa', 'envelope']" fixed-width/>
+                      </b-button>
+                      <b-input-group-text v-if="v.$model.value">
 
-                      <font-awesome-icon
-                      :title="v.$model.verified ? 'Подтверждена' : 'Не подтверждена'"
-                      v-bind:icon="['fa', 'check-circle']"
-                      :class="v.$model.verified ? 'text-success' : 'text-danger'" fixed-width/>
+                        <font-awesome-icon
+                        :title="v.$model.verified ? 'Подтверждена' : 'Не подтверждена'"
+                        v-bind:icon="['fa', 'check-circle']"
+                        :class="v.$model.verified ? 'text-success' : 'text-danger'" fixed-width/>
 
-                      <font-awesome-icon :title="v.$model.activeUntil ?
-                      'Активен до: '+
-                      $options.filters.moment(v.$model.activeUntil,
-                                              'dddd, MMMM Do YYYY, HH:mm:ss') :
-                      'Необходима активация'"
-                      v-if="v.$model.activeUntil || v.$model.verified"
-                      v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
+                        <font-awesome-icon :title="v.$model.activeUntil ?
+                        'Активен до: '+
+                        $options.filters.moment(v.$model.activeUntil,
+                                                'dddd, MMMM Do YYYY, HH:mm:ss') :
+                        'Необходима активация'"
+                        v-if="v.$model.activeUntil || v.$model.verified"
+                        v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
 
-                    </b-input-group-text>
+                      </b-input-group-text>
+                    </b-input-group-append>
                   </b-input-group>
 
                   <b-form-invalid-feedback
@@ -296,7 +307,7 @@
             <h3>{{profile.surname}}<br>
             {{profile.name}} {{profile.patronymic}}<br>
             @{{profile.login}}</h3>
-            <h2 class="pb-4">Должность</h2>
+            <h2 class="pb-4">Роль</h2>
             <p v-if=profile.about_me class="text-justify m-0 pt-3">{{profile.about_me}}</p>
           </b-card-text>
 <!--
@@ -616,6 +627,15 @@ export default {
     dateFormatter(date) {
       return moment(date).format('YYYY-MM-DD');
     },
+    dateDiffNow(date, period) {
+      if (moment().diff(date, 'days') <= -period) {
+        return false;
+      }
+      return true;
+    },
+    onSubmitMailVerify(type, value) {
+      this.$store.dispatch('verifyMailSend', { value, type });
+    },
     onSelectImage() {
       const { files } = this.$refs.imageInput.$refs.input;
       if (files && files[0]) {
@@ -673,6 +693,7 @@ export default {
     progressValue: state => state.uploadProgress,
     progressMax: state => state.uploadProgressMax,
     formPending: state => state.formPending,
+    reactivationPeriod: state => state.reactivationPeriod,
   }),
   mounted() {
     EventBus.$on('failedAuthentication', (msg) => {

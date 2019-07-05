@@ -16,6 +16,7 @@ const state = {
   uploadProgress: 0,
   uploadProgressMax: 100,
   formPending: false,
+  reactivationPeriod: 7,
   jwt: localStorage.getItem('token') || '', // Загрузить токен из хранилища, или инициировать пустой, если нет в хранилище
 };
 
@@ -50,6 +51,27 @@ const actions = {
   // Выход с сайта с удалением токена из локального хранилища и хранилища состояния
   logout(context) {
     context.commit('unsetJwtToken');
+  },
+  // Верификация почты, отсылка
+  verifyMailSend(context, payload) {
+    context.commit('setFormPending');
+    return axios.get(`/api/profile/${context.state.uid}/mail/verify-send`,
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+        params: {
+          value: payload.value,
+          type: payload.type,
+        },
+      })
+      .then((response) => {
+        context.commit('setFormPending');
+        EventBus.$emit('message', response.data);
+        // context.commit('setUsers', { users: response.data });
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
   },
   // Верификация почты, ответ
   verifyMail(context, token) {
