@@ -1,7 +1,9 @@
 # SITE SPECIFIC
 migrations/
 client/static/
+client/src/assets/
 .Trash-1000
+config.py
 
 # Geany files
 *.geany

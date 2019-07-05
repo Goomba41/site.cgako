@@ -15,13 +15,15 @@ import dateutil
 
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import TimedJSONWebSignatureSerializer
+from sqlalchemy import func
 from urllib.parse import urljoin
 from user_agents import parse
 from flask import current_app, json, Blueprint, \
     request, Response, url_for, render_template
 from flask_mail import Message
 from functools import wraps
+
 
 from app import bcrypt, db, mail
 from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema
@@ -104,32 +106,32 @@ def server_error(dbg=None):
     return response
 
 
-def generate_confirmation_token(email):
+def generate_confirmation_token(jdict, expiration=3600):
     """Генерация токена для подтверждения почты."""
 
-    serializer = URLSafeTimedSerializer(
-        current_app.config['SECRET_KEY'])
+    serializer = TimedJSONWebSignatureSerializer(
+        current_app.config['SECRET_KEY'], expires_in=3600)
+
     return serializer.dumps(
-        email,
+        jdict,
         salt=current_app.config['VERIFICATION_SALT'])
 
 
-def confirm_email_token(token, expiration=3600):
+def confirm_email_token(token):
     """Верификация токена для подтверждения почты."""
 
-    serializer = URLSafeTimedSerializer(
+    serializer = TimedJSONWebSignatureSerializer(
         current_app.config['SECRET_KEY'])
 
     try:
-        serializer.loads(
+        email = serializer.loads(
             token,
             salt=current_app.config['VERIFICATION_SALT'],
-            max_age=expiration
         )
     except Exception:
-        return False
+        return (False, None)
 
-    return True
+    return (True, email)
 
 
 def send_email(to, subject, template):
@@ -141,9 +143,8 @@ def send_email(to, subject, template):
         html=template,
         sender=current_app.config['MAIL_DEFAULT_SENDER']
     )
-    #  print(msg)
+
     mail.send(msg)
-    print("mail sended!")
 
 
 def pagination_of_list(query_result, url, start, limit):
@@ -336,17 +337,36 @@ def verify_mail(token):
 
         verified = confirm_email_token(token)
 
-        if verified:
+        if verified[0]:
+
+            uid = verified[1].pop('uid', None)
+            email = verified[1]
+
+            user_emails = CmsUsers.query.filter(
+                    (func.json_contains(CmsUsers.email, json.dumps(email))) &
+                    (CmsUsers.id == uid)).first().email
+
+            for mail_item in user_emails:
+                if (mail_item['value'] == email['value'] and
+                        mail_item['type'] == email['type']):
+                    mail_item.update(
+                        {'verified': True, 'activeUntil': date_manipulation(
+                            datetime.now(), action="plus")})
+
+            CmsUsers.query.filter_by(id=uid).update({'email': user_emails})
+            db.session.commit()
+
             response = Response(
                 response=json.dumps({'type': 'success',
-                                     'text': 'Почта подтверждена!'}),
+                                     'text': 'Ваша почта подтверждена, '
+                                     'спасибо!'}),
                 status=200,
                 mimetype='application/json'
             )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
-                                     'text': 'Токен подтверждения \
+                                     'text': 'Токен \
 поврежден или просрочен!'}),
                 status=422,
                 mimetype='application/json'
@@ -453,19 +473,23 @@ def update_profile_data(current_user, uid):
                         mail_item['verified'] = False
                         if mail_item['value']:
                             token = generate_confirmation_token(
-                                mail_item['value'])
-                            confirm_url = url_for(
-                                'API0.verify_mail',
-                                token=token,
-                                _external=True)
+                                {
+                                 "uid": uid,
+                                 "value": mail_item['value'],
+                                 "type": mail_item['type']
+                                }, expiration=3600)
+                            confirm_url = 'http://192.168.0.96:8080\
+/verify/mail/' + token.decode("utf-8")
+                            print(confirm_url)
                             html = render_template(
                                 'confirmation_mail.html',
                                 confirm_url=confirm_url)
-                            subject = "Please confirm email"
+                            subject = "Подтверждение адреса электронной почты \
+в CMS сайта ЦГАКО"
                             send_email(mail_item['value'], subject, html)
 
-                #  CmsUsers.query.filter_by(id=uid).update(update_data)
-                #  db.session.commit()
+                CmsUsers.query.filter_by(id=uid).update(update_data)
+                db.session.commit()
 
                 response = Response(
                     response=json.dumps({'type': 'success',

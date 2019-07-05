@@ -141,6 +141,7 @@ export default {
     });
     EventBus.$on('forceRerender', () => {
       this.componentKey += 1;
+      this.$forceUpdate();
     });
   },
   beforeDestroy() {

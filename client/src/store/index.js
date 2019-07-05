@@ -51,6 +51,17 @@ const actions = {
   logout(context) {
     context.commit('unsetJwtToken');
   },
+  // Верификация почты, ответ
+  verifyMail(context, token) {
+    return axios.get(`/api/verify/mail/${token}`)
+      .then((response) => {
+        EventBus.$emit('messageActivation', response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        EventBus.$emit('messageActivation', error.response.data);
+      });
+  },
   // Загрузить данные профиля вошедшего пользователя
   loadProfile(context) {
     return axios.get(`/api/profile/${context.state.uid}`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })

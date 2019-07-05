@@ -7,7 +7,7 @@
 
                 <div class="row justify-content-center align-items-center text-center mx-auto p-3">
                     <div class="col mx-auto">
-                        <img src="../assets/logo-1.png" alt="ЦГАКО" width=70>
+                        <img src="../assets/logo-2.png" alt="ЦГАКО" width=250>
                         <h1 class="text-gradient mt-4 mb-0">Вход в CMS</h1>
                         <h3 class="text-primary-color mb-4">Панель управления сайтом ЦГАКО</h3>
                     </div>

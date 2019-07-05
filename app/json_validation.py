@@ -92,7 +92,7 @@ schema_profile_data = {
                     "minLength": 1
                       },
         "about_me": {
-                    "type": "string",
+                    "type": ["string", "null"],
                     "pattern": r'(^.{0,140}$)'
                     },
         "password": {

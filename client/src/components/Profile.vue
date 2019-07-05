@@ -10,6 +10,8 @@
 
           <h3 slot="header" class="mb-0">
             Форма редактирования профиля
+            <b-spinner small v-if="formPending"
+            label="Идет отправка формы..."></b-spinner>
           </h3>
           <b-card-text class="text-center">
 

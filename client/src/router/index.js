@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import NProgress from 'nprogress';
+import Activation from '@/components/Activation';
 import Users from '@/components/Users';
 import Login from '@/components/Login';
 import Dashboard from '@/components/Dashboard';
@@ -77,6 +78,15 @@ const router = new Router({
         } else {
           next();
         }
+      },
+    },
+    {
+      path: '/verify/mail/:token',
+      name: 'Activation',
+      component: Activation,
+      props: true,
+      meta: {
+        title: 'Верификация почты',
       },
     },
     {
