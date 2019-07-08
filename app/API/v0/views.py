@@ -12,6 +12,7 @@ import os
 import math
 import requests
 import dateutil
+from random import SystemRandom
 
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -88,7 +89,7 @@ def token_required(f):
 # Функции
 # ------------------------------------------------------------
 
-
+#  Генерация ответа сервера при ошибке
 def server_error(dbg=None):
     """Вывод серверной ошибки с трейсом. Параметр dbg отвечает за вывод
     в формате traceback."""
@@ -107,6 +108,7 @@ def server_error(dbg=None):
     return response
 
 
+#  Генерация токена подтверждения почты
 def generate_confirmation_token(jdict, expiration=3600):
     """Генерация токена для подтверждения почты."""
 
@@ -118,6 +120,7 @@ def generate_confirmation_token(jdict, expiration=3600):
         salt=current_app.config['VERIFICATION_SALT'])
 
 
+#  Проверка токена подтверждения почты
 def confirm_email_token(token):
     """Верификация токена для подтверждения почты."""
 
@@ -135,6 +138,7 @@ def confirm_email_token(token):
     return (True, email)
 
 
+#  Отправка письма
 def send_email(to, subject, template):
     """Отправка электронных писем."""
 
@@ -148,6 +152,7 @@ def send_email(to, subject, template):
     mail.send(msg)
 
 
+#  Пагинация получаемого с API списка
 def pagination_of_list(query_result, url, start, limit):
     """ Пагинация результатов запроса. Принимает параметры:
     результат запроса (json), URL API для генерации ссылок, стартовая позиция,
@@ -230,6 +235,40 @@ def date_manipulation(value, action, period='month', number=3):
     else:
         return value
 
+
+#  Генерация пароля с определенной длиной
+#  Переделать под генерацию пароля с задаваемой длиной
+def pass_generation(size=8):
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    alphabet_upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    numeric = '0123456789'
+    special = '!@#$%^&*()_+~`|}{[]:;?><,./-='
+    cryptogen = SystemRandom()
+
+    character_set = alphabet + alphabet_upper + numeric + special
+
+    password_symbols = ''.join(
+        cryptogen.choice(character_set) for i in range(size-4))
+
+    password_symbols += cryptogen.choice(alphabet)
+    password_symbols += cryptogen.choice(alphabet_upper)
+    password_symbols += cryptogen.choice(numeric)
+    password_symbols += cryptogen.choice(special)
+
+    password_symbols = list(map(str, password_symbols))
+
+    #  // алгоритм Фишера-Йетса для перемешивания символов
+    for i in range(len(password_symbols) - 1, 0, -1):
+        j = math.floor(cryptogen.random() * (i + 1))
+        temp = password_symbols[j]
+        password_symbols[j] = password_symbols[i]
+        password_symbols[i] = temp
+
+    password = password_symbols = ''.join(password_symbols)
+
+    return password
+
+
 # ------------------------------------------------------------
 # Логин
 # ------------------------------------------------------------
@@ -240,7 +279,6 @@ def login():
     """Функция логина пользователя, создание JWT-токена"""
 
     try:
-
         login_data = request.get_json()
         client_ip = login_data.pop('ip', None)
         client_agent = login_data.pop('agent', None)
@@ -288,6 +326,53 @@ def login():
             if diff <= 0:
                 mail_item['activeUntil'] = datetime.now().isoformat()
                 mail_item['verified'] = False
+        #  -------------------------------------------------------------
+
+        #  Проверка пароля и перегенерация, если время истекло
+        #  и генерация и отсылка письма с токеном активации
+        #  за неделю и в день истечения
+        #  (проблема со спамом, необходимо определять
+        #  отправлено ли письмо в этот день)
+        pjson = user[0].password
+        activation_date_pass = dateutil.parser.parse(
+                        pjson['activeUntil'])
+        diff = (activation_date_pass - datetime.now()).days
+        if diff == 6:
+            primary_mail = list(
+                filter(
+                    lambda mail: mail['type'] == "primary",
+                    user[0].email)
+                    )[0]["value"]
+            html = render_template(
+                'password_warning.html',
+                email=primary_mail)
+            subject = 'Окончание действия пароля ' \
+                      'в CMS сайта ЦГАКО'
+            for mail_item in user[0].email:
+                send_email(mail_item['value'], subject, html)
+        if diff <= 0:
+            password = pass_generation(8)
+            pjson['value'] = bcrypt.generate_password_hash(
+                password).decode('utf-8')
+            print(pjson['activeUntil'])
+            pjson['activeUntil'] = (
+                datetime.now() + relativedelta(months=1)).isoformat()
+            print(pjson['activeUntil'])
+            pjson['blocked'] = False
+            primary_mail = list(
+                filter(
+                    lambda mail: mail['type'] == "primary",
+                    user[0].email)
+                    )[0]["value"]
+            html = render_template(
+                'password_change.html',
+                password=password,
+                login=user[0].login,
+                email=primary_mail,)
+            subject = 'Вам выдан новый пароль ' \
+                      'в CMS сайта ЦГАКО'
+            send_email(primary_mail, subject, html)
+
         #  -------------------------------------------------------------
 
         #  Генерация токена доступа для пользователя
@@ -338,7 +423,9 @@ def login():
                 {'agent': request.headers.get('User-Agent')})
 
         CmsUsers.query.filter_by(id=user[0].id).update(
-            {'last_login': last_login_data, 'email': user[0].email})
+            {'last_login': last_login_data,
+             'email': user[0].email,
+             'password': user[0].password})
         db.session.commit()
         #  -------------------------------------------------------------
 

@@ -12,7 +12,7 @@ class CmsUsers(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.String(20), unique=True)
-    password = db.Column(db.String(60))
+    password = db.Column(db.JSON(none_as_null=True))
     socials = db.Column(db.JSON(none_as_null=True))
     photo = db.Column(db.String(50))
     name = db.Column(db.String(20))
@@ -96,7 +96,9 @@ class CmsUsers(db.Model):
             mail_status = list(filter(lambda mail: mail['type'] == "primary", user.email))
             if mail_status and not mail_status[0]['verified']:
                 return (None, 'Основная почта не активирована!', 'username')
-            elif not bcrypt.check_password_hash(user.password, password):
+            elif user.password['blocked']:
+                return (None, 'Вход по паролю заблокирован!', 'password')
+            elif not bcrypt.check_password_hash(user.password['value'], password):
                 return (None, 'Неверный пароль!', 'password')
         else:
             return (None, 'Пользователь не найден!', 'username')
