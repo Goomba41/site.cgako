@@ -87,17 +87,15 @@ class CmsUsers(db.Model):
             return (None, 'Не переданы данные\
         для аутентификации пользователя!', 'empty')
 
-        #  user = cls.query.filter((cls.login == login) | (cls.email == login)).first()
-
         #  email = {"value": login, "verified": True} # Вход через любую подтвержденную почту, привязанную к пользователю
         #  user = cls.query.filter((cls.login == login) | (func.json_contains(cls.email, json.dumps(email)))).first()
 
         user = cls.query.filter((cls.login == login) | (func.json_contains(cls.email, json.dumps({"value": login})))).first()
 
         if user:
-            mail_status = list(filter(lambda mail: mail['value'] == login, user.email))
+            mail_status = list(filter(lambda mail: mail['type'] == "primary", user.email))
             if mail_status and not mail_status[0]['verified']:
-                return (None, 'Почта не активирована!', 'username')
+                return (None, 'Основная почта не активирована!', 'username')
             elif not bcrypt.check_password_hash(user.password, password):
                 return (None, 'Неверный пароль!', 'password')
         else:

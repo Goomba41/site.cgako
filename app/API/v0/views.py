@@ -260,6 +260,37 @@ def login():
 
             return response
 
+        #  Проверка почт и изменение статуса активации, если время истекло
+        #  и генерация и отсылка письма с токеном активации
+        #  за неделю и в день истечения
+        #  (проблема со спамом, необходимо определять
+        #  отправлено ли письмо в этот день)
+        for mail_item in user[0].email:
+            activation_date = dateutil.parser.parse(
+                            mail_item['activeUntil'])
+            diff = (activation_date - datetime.now()).days
+            if diff == 6 or diff == -1:
+                token = generate_confirmation_token(
+                    {
+                     "uid": user[0].id,
+                     "value": mail_item['value'],
+                     "type": mail_item['type']
+                    }, expiration=3600)
+                confirm_url = 'http://192.168.0.96:8080/verify' \
+                              '/mail/' + token.decode("utf-8")
+                html = render_template(
+                    'confirmation_mail.html',
+                    confirm_url=confirm_url,
+                    active_time="1 час")
+                subject = 'Подтверждение адреса электронной ' \
+                          'почты в CMS сайта ЦГАКО'
+                send_email(mail_item['value'], subject, html)
+            if diff <= 0:
+                mail_item['activeUntil'] = datetime.now().isoformat()
+                mail_item['verified'] = False
+        #  -------------------------------------------------------------
+
+        #  Генерация токена доступа для пользователя
         today = datetime.now()
         token_duration = current_app.config['TOKEN_DURATION']
         day_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -274,7 +305,9 @@ def login():
                            current_app.config['SECRET_KEY'])
 
         last_login_data = {'datetime': today.isoformat()}
+        #  -------------------------------------------------------------
 
+        #  Получение данных о клиенте пользователя (ip, user-agent)
         if client_ip:
             last_login_data.update({'ip': client_ip})
         else:
@@ -305,8 +338,9 @@ def login():
                 {'agent': request.headers.get('User-Agent')})
 
         CmsUsers.query.filter_by(id=user[0].id).update(
-            {'last_login': last_login_data})
+            {'last_login': last_login_data, 'email': user[0].email})
         db.session.commit()
+        #  -------------------------------------------------------------
 
         #  test = jwt.decode(token, current_app.config['SECRET_KEY'])
         #  print(test)

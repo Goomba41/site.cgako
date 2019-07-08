@@ -281,7 +281,7 @@
             @show="deleteGroupPassphrase=''"
             @hidden="deleteGroupPassphrase=''"
             @close="deleteGroupPassphrase=''"
-             title="Уничтожение пачки досье"
+             title="Уничтожение досье"
              hide-footer size="sm" centered
             :header-bg-variant="'danger'"
             :header-text-variant="'light'">
