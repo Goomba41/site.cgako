@@ -129,6 +129,11 @@ class CmsUsers(db.Model):
         else:
             return (None, 'Пользователь не найден!', 'username')
 
+        user.password['failed_times'] = 0
+        CmsUsers.query.filter_by(id=user.id).update(
+            {'password': user.password})
+        db.session.commit()
+
         return (user, 'Успешно!')
 
     @classmethod

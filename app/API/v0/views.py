@@ -354,10 +354,8 @@ def login():
             password = pass_generation(8)
             pjson['value'] = bcrypt.generate_password_hash(
                 password).decode('utf-8')
-            print(pjson['activeUntil'])
             pjson['activeUntil'] = (
                 datetime.now() + relativedelta(months=1)).isoformat()
-            print(pjson['activeUntil'])
             pjson['blocked'] = False
             primary_mail = list(
                 filter(
@@ -675,7 +673,15 @@ def update_profile_password(current_user, uid):
                     passwordNew=bcrypt.generate_password_hash(
                         update_data['passwordNew']).decode('utf-8'))
                 CmsUsers.query.filter_by(id=uid).update(
-                    {'password': update_data['passwordNew']})
+                    {
+                        'password': {
+                            "value": update_data['passwordNew'],
+                            "blocked": False,
+                            "activeUntil": (datetime.now() + relativedelta(
+                                months=1)).isoformat(),
+                            "failed_times": 0
+                        }
+                    })
                 db.session.commit()
 
                 response = Response(

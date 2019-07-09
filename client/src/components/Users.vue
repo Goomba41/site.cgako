@@ -9,9 +9,10 @@
             Всего {{ users.count }}
             {{ users.count | declension(["товарищ", "товарища", "товарищей"]) }}
           </span>
-          <button type="button" title="Новое досье" class="btn btn-success btn-sm mr-1">
+          <b-button title="Новое досье" class="mr-1" size="sm" variant="success"
+          v-b-modal.new-modal>
             <font-awesome-icon icon="plus" fixed-width />
-          </button>
+          </b-button>
           <b-dropdown size="sm" class="mr-1"
           v-bind:disabled="!selected.length"
           v-bind:class="!selected.length">
@@ -111,10 +112,6 @@
               fixed-width title="Подтверждение учетной записи" />
               <font-awesome-icon icon="power-off"
               fixed-width title="Отключить учетную запись" />
-<!--
-              <b-form-checkbox v-model="user.status" name="status" switch>
-              </b-form-checkbox>
--->
               <font-awesome-icon icon="key"
               fixed-width title="Пароль учетной записи" />
             </td>
@@ -319,17 +316,326 @@
       </b-form>
     </b-modal>
 
+    <b-modal id="new-modal"
+            title="Новое досье"
+            hide-footer size="lg" centered
+            @show="newUser.password=passwordGenerator()"
+            :header-bg-variant="'success'"
+            :header-text-variant="'light'"
+            @hidden="onReset">
+
+      <b-form class="w-100" @submit.prevent="onSubmitNewUser" @reset="onReset">
+<!--
+anyDirty {{$v.newUser.$anyDirty}}<br>
+!anyDirty {{!$v.newUser.$anyDirty}}<br>
+dirty {{$v.newUser.$dirty}}<br>
+invalid {{$v.newUser.$invalid}}
+-->{{newUser}}
+        <b-form-group>
+          <b-form-input name="login"
+            type="text"
+            autofocus
+            placeholder="Логин"
+            trim
+            v-model="$v.newUser.login.$model"
+            :state="$v.newUser.login.$dirty ? !$v.newUser.login.$error : null"
+          ></b-form-input>
+
+          <b-form-invalid-feedback
+          :state="$v.newUser.login.$dirty ? !$v.newUser.login.$error : null">
+            <span v-if="!$v.newUser.login.required">
+              Поле обязательно для заполнения!
+            </span>
+            <span v-if="!$v.newUser.login.minLength">
+              Поле должно содержать минимум 4 символа!
+            </span>
+            <span v-if="!$v.newUser.login.maxLength">
+              Поле может содержать максимум 20 символов!
+            </span>
+            <span v-if="!$v.newUser.login.alphaNum">
+              Поле может содержать только латинские буквы и цифры!
+            </span>
+          </b-form-invalid-feedback>
+          <b-form-valid-feedback
+          :state="$v.newUser.login.$dirty ? !$v.newUser.login.$error : null">
+            Все в порядке!
+          </b-form-valid-feedback>
+
+        </b-form-group>
+
+        <b-form-group
+        description="Пароль генерируется автоматически. Нажмите кнопку чтобы сгенерировать новый.">
+          <b-input-group>
+            <b-input-group-prepend>
+              <b-button variant="outline-secondary"
+              v-on:click='isActivePassword = !isActivePassword'>
+                <font-awesome-icon fixed-width
+                v-bind:icon="isActivePassword ? ['far', 'eye-slash'] : ['far', 'eye']"
+                v-bind:title="isActivePassword ? 'Скрыть' : 'Показать'"/>
+              </b-button>
+            </b-input-group-prepend>
+            <b-form-input
+              :state="!$v.newUser.password.$dirty ? !$v.newUser.password.$error : null"
+              v-bind:type="isActivePassword ? 'text' : 'password'"
+              name="password"
+              readonly disabled
+              v-model="$v.newUser.password.$model"
+              placeholder="Новый пароль">
+            </b-form-input>
+            <b-input-group-append>
+              <b-button variant="outline-primary"
+              @click="newUser.password = passwordGenerator()">
+                <font-awesome-icon :icon="['fa', 'key']" fixed-width />
+              </b-button>
+            </b-input-group-append>
+          </b-input-group>
+
+          <b-form-invalid-feedback
+          :state="$v.newUser.password.$dirty ? !$v.newUser.password.$error : null">
+            <span v-if="!$v.newUser.password.required">
+              Поле обязательно для заполнения!
+            </span>
+          </b-form-invalid-feedback>
+          <b-form-valid-feedback
+          :state="$v.newUser.login.$dirty ? !$v.newUser.login.$error : null">
+            Все в порядке!
+          </b-form-valid-feedback>
+        </b-form-group>
+
+        <b-form-group>
+          <b-input-group>
+            <b-form-input placeholder="Фамилия"
+            v-model="$v.newUser.surname.$model"
+            :state="$v.newUser.surname.$dirty ? !$v.newUser.surname.$error : null"
+            name="surname" trim
+            @input="$v.newUser.validationGroupFIO.$touch()">
+            </b-form-input>
+            <b-form-input placeholder="Имя"
+            v-model="$v.newUser.name.$model"
+            :state="$v.newUser.name.$dirty ? !$v.newUser.name.$error : null"
+            name="name" trim
+            @input="$v.newUser.validationGroupFIO.$touch()">
+            </b-form-input>
+            <b-form-input placeholder="Отчество"
+            v-model="$v.newUser.patronymic.$model"
+            :state="$v.newUser.patronymic.$dirty ? !$v.newUser.patronymic.$error : null"
+            name="patronymic" trim
+            @input="$v.newUser.validationGroupFIO.$touch()">
+            </b-form-input>
+          </b-input-group>
+
+          <b-form-invalid-feedback
+          :state="$v.newUser.validationGroupFIO.$dirty ?
+          !$v.newUser.validationGroupFIO.$anyError : null">
+            <span v-if="!$v.newUser.surname.required">
+              Фамилия обязательна для заполнения!
+            </span>
+            <span v-if="!$v.newUser.surname.minLength">
+              Фамилия должна содержать минимум 4 символа!
+            </span>
+            <span v-if="!$v.newUser.surname.maxLength">
+              Фамилия может содержать максимум 20 символов!
+            </span>
+            <span v-if="!$v.newUser.surname.alpha">
+              Фамилия может содержать только русские буквы!
+            </span>
+            <span v-if="!$v.newUser.name.required">
+              Имя обязательно для заполнения!
+            </span>
+            <span v-if="!$v.newUser.name.minLength">
+              Имя должно содержать минимум 4 символа!
+            </span>
+            <span v-if="!$v.newUser.name.maxLength">
+              Имя может содержать максимум 20 символов!
+            </span>
+            <span v-if="!$v.newUser.name.alpha">
+              Имя может содержать только русские буквы!
+            </span>
+            <span v-if="!$v.newUser.patronymic.required">
+              Отчество обязательно для заполнения!
+            </span>
+            <span v-if="!$v.newUser.patronymic.minLength">
+              Отчество должно содержать минимум 4 символа!
+            </span>
+            <span v-if="!$v.newUser.patronymic.maxLength">
+              Отчество может содержать максимум 20 символов!
+            </span>
+            <span v-if="!$v.newUser.patronymic.alpha">
+              Отчество может содержать русские только буквы!
+            </span>
+          </b-form-invalid-feedback>
+          <b-form-valid-feedback
+            :state="$v.newUser.validationGroupFIO.$dirty ?
+            !$v.newUser.validationGroupFIO.$anyError : null">
+            Все в порядке!
+          </b-form-valid-feedback>
+
+        </b-form-group>
+
+        <b-form-group class="text-justify"
+        description="Основная почта обязательна для заполнения.
+После добавления новой почты на неё будет отправлено письмо для подтверждения">
+
+          <b-form-group v-for="(v, index) in $v.newUser.email.$each.$iter" v-bind:key="index">
+            <b-input-group>
+              <b-input-group-text slot="prepend">
+                <font-awesome-icon :title="'Личная почта'"
+                v-if="v.$model.type==='personal'"
+                v-bind:icon="['fa', 'user']" fixed-width/>
+                <font-awesome-icon :title="'Основная почта'"
+                v-else-if="v.$model.type==='primary'"
+                v-bind:icon="['fa', 'envelope']" fixed-width/>
+                <font-awesome-icon :title="'Рабочая почта'"
+                v-else-if="v.$model.type==='work'"
+                v-bind:icon="['fa', 'briefcase']" fixed-width/>
+              </b-input-group-text>
+              <b-form-input
+                type="email"
+                placeholder="Email"
+                name="email"
+                v-model="v.value.$model"
+                trim
+                :state="v.value.$dirty ? !v.value.$error : null"
+              ></b-form-input>
+            </b-input-group>
+
+            <b-form-invalid-feedback
+            :state="v.value.$dirty ? !v.value.$error : null">
+              <span v-if="!v.value.required">
+                Поле обязательно для заполнения!
+              </span>
+              <span v-if="!v.value.email">
+                Поле может содержать только email-адрес (example@example.ru)!
+              </span>
+            </b-form-invalid-feedback>
+            <b-form-valid-feedback
+            :state="v.value.$dirty ? !v.value.$error : null">
+              Все в порядке!
+            </b-form-valid-feedback>
+          </b-form-group>
+        </b-form-group>
+
+        <b-form-group>
+          <vue-tel-input
+          autocomplete="off"
+          :onlyCountries="['RU']"
+          :disabledFetchingCountry="true"
+          :placeholder="'Номер телефона'"
+          name="phone"
+          v-model="$v.newUser.phone.$model"
+          :wrapperClasses="$v.newUser.phone.$dirty ?
+          (!$v.newUser.phone.$error ?
+          'is-valid input-group' : 'is-invalid input-group') : 'input-group'"
+          :inputClasses="$v.newUser.phone.$dirty ?
+          (!$v.newUser.phone.$error ?
+          'is-valid form-control' : 'is-invalid form-control') : 'form-control'"
+
+          :is-valid="$v.newUser.phone.$dirty ? !$v.newUser.phone.$error : null"
+          />
+
+          <b-form-invalid-feedback
+          :state="$v.newUser.phone.$dirty ? !$v.newUser.phone.$error : null">
+            <span v-if="!$v.newUser.phone.required">
+              Поле обязательно для заполнения!
+            </span>
+            <span v-if="!$v.newUser.phone.format ">
+              Неправильное количество цифр в номере!
+            </span>
+          </b-form-invalid-feedback>
+          <b-form-valid-feedback
+          :state="$v.newUser.phone.$dirty ? !$v.newUser.phone.$error : null">
+            Все в порядке!
+          </b-form-valid-feedback>
+        </b-form-group>
+
+        <b-form-group>
+          <datepicker
+          autocomplete="off"
+          :placeholder="'Дата рождения (ГГГГ-MM-ДД)'"
+          :format="dateFormatter" :bootstrap-styling="true"
+          :language="russian" :typeable=false :required=true
+          :monday-first=true :disabledDates="disabledDates"
+          v-model="$v.newUser.birth_date.$model" name="birth_date"
+          :input-class="($v.newUser.birth_date.$dirty) ?
+          ((!$v.newUser.birth_date.$error) ? 'is-valid' : 'is-invalid') : null">
+          </datepicker>
+
+          <b-form-invalid-feedback
+          :state="$v.newUser.birth_date.$dirty ? !$v.newUser.birth_date.$error : null">
+            <span v-if="!$v.newUser.birth_date.required">
+              Поле обязательно для заполнения!
+            </span>
+          </b-form-invalid-feedback>
+          <b-form-valid-feedback
+          :state="$v.newUser.birth_date.$dirty ? !$v.newUser.birth_date.$error : null">
+            Все в порядке!
+          </b-form-valid-feedback>
+        </b-form-group>
+
+        <b-form-group>
+          <b-form-textarea placeholder="О себе"
+          autocomplete="off"
+          rows="2" max-rows="6" no-resize
+          v-model="$v.newUser.about_me.$model" name="about_me"
+          :state="$v.newUser.about_me.$dirty ? !$v.newUser.about_me.$error : null">
+          </b-form-textarea>
+
+          <b-form-invalid-feedback
+          :state="$v.newUser.about_me.$dirty ? !$v.newUser.about_me.$error : null">
+            <span v-if="!$v.newUser.about_me.maxLength">
+              Поле может содержать максимум 140 символов!
+            </span>
+          </b-form-invalid-feedback>
+          <b-form-valid-feedback
+          :state="$v.newUser.about_me.$dirty ? !$v.newUser.about_me.$error : null">
+            Все в порядке!
+          </b-form-valid-feedback>
+        </b-form-group>
+
+        <b-button type="submit" variant="success" block
+        title="Внести новое досье"
+        :disabled="!$v.newUser.$anyDirty || $v.newUser.$invalid">
+          <font-awesome-icon v-if="!formPending"
+          :icon="['fa', 'save']" fixed-width />
+          <b-spinner small v-if="formPending"
+          label="Идет отправка досье..."></b-spinner>
+        </b-button>
+        <b-button type="reset" variant="danger" block
+        :disabled="!$v.newUser.$anyDirty">
+          <font-awesome-icon v-if="!formPending"
+          :icon="['fa', 'times']" fixed-width />
+          <b-spinner small v-if="formPending"
+          label="Идет отправка досье..."></b-spinner>
+        </b-button>
+
+        <div class="row mx-auto mt-3 pl-3 pr-3 pt-3 border-top">
+          <span class="text-danger notation text-center">
+              <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
+              size="1x" fixed-width />
+  Авторизационные данные будут отправлены пользователю
+  на основную почту.
+          </span>
+        </div>
+
+      </b-form>
+
+    </b-modal>
+
   </main>
 </template>
 
 <script>
+import Datepicker from 'vuejs-datepicker';
+import { ru } from 'vuejs-datepicker/dist/locale';
+import VueTelInput from 'vue-tel-input';
+import moment from 'moment';
 import { mapState } from 'vuex';
 import _ from 'lodash';
 import {
-  required, sameAs,
+  required, sameAs, minLength, maxLength, alphaNum, email, requiredIf,
 } from 'vuelidate/lib/validators';
 import Breadcumbs from './Breadcumbs';
-
+import { passwordGenerator } from '@/utils';
 
 export default {
   name: 'Users',
@@ -349,6 +655,37 @@ export default {
           asc: true,
         },
       },
+      disabledDates: {
+        from: new Date(),
+      },
+      russian: ru,
+      passwordGenerator,
+      isActivePassword: false,
+      passwordNewSize: 8,
+      newUser: {
+        login: '',
+        password: '',
+        name: '',
+        surname: '',
+        patronymic: '',
+        email: [
+          {
+            type: 'primary',
+            value: '',
+          },
+          {
+            type: 'work',
+            value: '',
+          },
+          {
+            type: 'personal',
+            value: '',
+          },
+        ],
+        phone: '',
+        birth_date: '',
+        about_me: '',
+      },
     };
   },
   validations: {
@@ -362,8 +699,62 @@ export default {
       required,
       sameAsPassphrase: sameAs(() => 'Удалить'),
     },
+    newUser: {
+      login: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(20),
+        alphaNum,
+      },
+      password: {
+        required,
+      },
+      name: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(20),
+        alpha: val => /^[а-яё]*$/i.test(val),
+      },
+      surname: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(20),
+        alpha: val => /^[а-яё]*$/i.test(val),
+      },
+      patronymic: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(20),
+        alpha: val => /^[а-яё]*$/i.test(val),
+      },
+      email: {
+        $each: {
+          value: {
+            email,
+            required: requiredIf((value) => {
+              if (!value) return true;
+              if (value.type === 'primary') {
+                return true;
+              }
+              return false;
+            }),
+          },
+        },
+      },
+      phone: {
+        required,
+        format: val => (val != null && val.length === 16),
+      },
+      birth_date: {
+        required,
+      },
+      about_me: {
+        maxLength: maxLength(140),
+      },
+      validationGroupFIO: ['newUser.name', 'newUser.surname', 'newUser.patronymic'],
+    },
   },
-  components: { Breadcumbs },
+  components: { Breadcumbs, Datepicker, VueTelInput },
   computed: mapState({
     users: state => state.users,
     uid: state => state.uid,
@@ -372,11 +763,17 @@ export default {
         this.listControl.orderBy.field,
         this.listControl.orderBy.asc ? 'asc' : 'desc');
     },
+    progressValue: state => state.uploadProgress,
+    progressMax: state => state.uploadProgressMax,
+    formPending: state => state.formPending,
   }),
   beforeMount() {
     this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
   },
   methods: {
+    dateFormatter(date) {
+      return moment(date).format('YYYY-MM-DD');
+    },
     select() {
       this.selected = [];
       if (!this.selectAll) {
@@ -385,6 +782,45 @@ export default {
             this.selected.push(this.users.results[i].id);
           }
         }
+      }
+    },
+    onReset(evt) {
+      evt.preventDefault();
+
+      this.newUser.login = '';
+      this.newUser.password = passwordGenerator(this.passwordNewSize);
+      this.newUser.name = '';
+      this.newUser.surname = '';
+      this.newUser.patronymic = '';
+      this.newUser.phone = '';
+      this.newUser.birth_date = '';
+      this.newUser.about_me = '';
+      this.newUser.email = [
+        {
+          type: 'primary',
+          value: '',
+        },
+        {
+          type: 'work',
+          value: '',
+        },
+        {
+          type: 'personal',
+          value: '',
+        },
+      ];
+      // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+    },
+    onSubmitNewUser() {
+      this.$v.$touch();
+
+      if (!this.$v.newUser.$invalid) {
+        this.newUser.birth_date = moment(this.newUser.birth_date).format('YYYY-MM-DD');
+        // this.$store.dispatch('updateProfileData', this.profile);
       }
     },
     deleteUser(id) {
