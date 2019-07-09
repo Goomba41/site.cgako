@@ -836,3 +836,22 @@ img.profile-image-preview.preview-square {
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
+/*
+---------------------------- Цвета языков проекта -----------------------------
+*/
+
+.color-Vue {
+    color: #2c3e50;
+}
+.color-Python {
+    color: #3572A5;
+}
+.color-HTML {
+    color: #e34c26;
+}
+.color-CSS {
+    color: #563d7c;
+}
+.color-JavaScript {
+    color: #f1e05a;
+}

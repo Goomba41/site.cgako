@@ -95,6 +95,24 @@
 
         </b-row>
 
+        <b-row class="pb-3">
+          <b-col cols="12">
+            <b-list-group horizontal class="shaded">
+                <b-list-group-item class="text-center flex-fill"
+                :key="name" v-for="(value, name) in projectLangs">
+                  <b-row class="mx-auto justify-content-center align-items-center
+                  text-center vertical-align">
+                    <h3 class="m-0 pr-1">
+                      <font-awesome-icon :icon="['fa', 'circle']"
+                      :class="'color-' + name" fixed-width/> {{name}}
+                    </h3>
+                    <span style="line-height: 1.2;">{{value}}%</span>
+                  </b-row>
+                </b-list-group-item>
+              </b-list-group>
+          </b-col>
+        </b-row>
+
         <b-row>
           <b-col cols="8">
             <b-card
@@ -117,18 +135,39 @@
             </b-card>
           </b-col>
         </b-row>
+
     </main>
 </template>
 
 <script>
+import axios from 'axios';
 import Breadcumbs from './Breadcumbs';
 
 export default {
   name: 'Dashboard',
   data() {
     return {
+      projectLangs: {},
     };
   },
   components: { Breadcumbs },
+  mounted() {
+    return axios.get('https://api.github.com/repos/Goomba41/site.cgako/languages')
+      .then((response) => {
+        let sum = 0;
+        const langs = response.data;
+        Object.entries(response.data).forEach((value) => {
+          sum += value[1];
+        });
+        Object.entries(langs).forEach(([key, value]) => {
+          langs[key] = parseFloat(((value / sum) * 100)).toFixed(2);
+        });
+        this.projectLangs = langs;
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+      });
+  },
 };
 </script>
