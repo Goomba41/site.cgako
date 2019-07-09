@@ -52,7 +52,19 @@ const actions = {
   logout(context) {
     context.commit('unsetJwtToken');
   },
-  // Верификация почты, отсылка
+  // Информация о проекте Github API
+  loadGithubInfo() {
+    return axios.get('https://api.github.com/repos/Goomba41/site.cgako/languages')
+      .then((response) => {
+        // eslint-disable-next-line
+        console.log(response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+      });
+  },
+  // Верификация почты, отсылка письма
   verifyMailSend(context, payload) {
     context.commit('setFormPending');
     return axios.get(`/api/profile/${context.state.uid}/mail/verify-send`,

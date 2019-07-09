@@ -4,13 +4,16 @@
 """Модели данных БД."""
 
 from app import bcrypt, db, ma
-from flask import json
+
+from flask import current_app, json
+
 from sqlalchemy import func
+
 
 class CmsUsers(db.Model):
     """Модель данных пользователя."""
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
     login = db.Column(db.String(20), unique=True)
     password = db.Column(db.JSON(none_as_null=True))
     socials = db.Column(db.JSON(none_as_null=True))
@@ -87,19 +90,42 @@ class CmsUsers(db.Model):
             return (None, 'Не переданы данные\
         для аутентификации пользователя!', 'empty')
 
-        #  email = {"value": login, "verified": True} # Вход через любую подтвержденную почту, привязанную к пользователю
-        #  user = cls.query.filter((cls.login == login) | (func.json_contains(cls.email, json.dumps(email)))).first()
+        #  email = {"value": login, "verified": True}
+        # Вход через любую подтвержденную почту, привязанную к пользователю
+        #  user = cls.query.filter((cls.login == login) |
+        #  (func.json_contains(cls.email, json.dumps(email)))).first()
 
-        user = cls.query.filter((cls.login == login) | (func.json_contains(cls.email, json.dumps({"value": login})))).first()
+        user = cls.query.filter((cls.login == login) | (
+            func.json_contains(cls.email, json.dumps(
+                {"value": login})))).first()
 
         if user:
-            mail_status = list(filter(lambda mail: mail['type'] == "primary", user.email))
+            mail_status = list(
+                filter(lambda mail: mail['type'] == "primary", user.email))
             if mail_status and not mail_status[0]['verified']:
                 return (None, 'Основная почта не активирована!', 'username')
             elif user.password['blocked']:
                 return (None, 'Вход по паролю заблокирован!', 'password')
-            elif not bcrypt.check_password_hash(user.password['value'], password):
-                return (None, 'Неверный пароль!', 'password')
+            elif not bcrypt.check_password_hash(
+                    user.password['value'], password):
+                max_fails = current_app.config['MAX_FAILED']
+                user.password['failed_times'] += 1
+                if user.password['failed_times'] >= max_fails:
+                    user.password['blocked'] = True
+                    user.password['failed_times'] = 0
+                    CmsUsers.query.filter_by(id=user.id).update(
+                        {'password': user.password})
+                    db.session.commit()
+                    return (None, 'Неверный пароль! Ваш пароль заблокирован!',
+                            'password')
+                else:
+                    CmsUsers.query.filter_by(id=user.id).update(
+                        {'password': user.password})
+                    db.session.commit()
+                    return (None, 'Неверный пароль! '
+                            'Осталось попыток ввода: %i' % (
+                                max_fails - user.password['failed_times']),
+                            'password')
         else:
             return (None, 'Пользователь не найден!', 'username')
 
@@ -107,18 +133,20 @@ class CmsUsers(db.Model):
 
     @classmethod
     def exist(cls, sid=None, **kwargs):
-        """Проверка существования пользователя с данными в базе"""
+        """Проверка существования пользователя с данными в базе."""
         email_condition = {"value": kwargs.get('email'), "type": "primary"}
 
         if sid is None:
             exist = cls.query.filter(
                     (cls.login == kwargs.get('login')) |
-                    ((func.json_contains(cls.email, json.dumps(email_condition)))) |
+                    ((func.json_contains(
+                        cls.email, json.dumps(email_condition)))) |
                     (cls.phone == kwargs.get('phone'))).first()
         else:
             exist = cls.query.filter(
                     ((cls.login == kwargs.get('login')) |
-                     ((func.json_contains(cls.email, json.dumps(email_condition)))) |
+                     ((func.json_contains(
+                        cls.email, json.dumps(email_condition)))) |
                      (cls.phone == kwargs.get('phone'))) &
                     (cls.id != sid)).first()
         if exist:
