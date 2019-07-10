@@ -175,6 +175,23 @@ const actions = {
         console.error(error);
       });
   },
+  // Создать нового пользователя
+  newUser(context, dataNew) {
+    context.commit('setFormPending');
+
+    return axios.post('/api/users?dbg', dataNew,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        context.dispatch('loadUsers');
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('messageModal', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        EventBus.$emit('messageModal', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
   // Удалить пользователя
   deleteUser(context, payload) {
     return axios.delete(`/api/users/${payload.id}`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })

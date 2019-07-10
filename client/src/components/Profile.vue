@@ -278,7 +278,8 @@
             </b-form>
 
             <b-button variant="danger" class="float-right"
-            @click="passwordUpdate.passwordNew = passwordGenerator()" v-b-modal.password-modal>
+            @click="passwordUpdate.passwordNew = passwordGenerator(size=8)"
+            v-b-modal.password-modal>
               <font-awesome-icon :icon="['fa', 'key']" fixed-width />
             </b-button>
 
@@ -406,7 +407,7 @@
             </b-form-input>
             <b-input-group-append>
               <b-button variant="outline-primary"
-              @click="passwordUpdate.passwordNew = passwordGenerator()">
+              @click="passwordUpdate.passwordNew = passwordGenerator(size = 8)">
                 <font-awesome-icon :icon="['fa', 'key']" fixed-width />
               </b-button>
             </b-input-group-append>
@@ -540,7 +541,6 @@ export default {
       isActiveProgress: false,
       isActiveOld: false,
       isActiveNew: true,
-      passwordNewSize: 8,
       passwordUpdate: {
         passwordNew: '',
         passwordOld: '',

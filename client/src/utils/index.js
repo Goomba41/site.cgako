@@ -22,8 +22,9 @@ export function currentUserLogin(jwt) {
   return data.uid;
 }
 
-// Фукнция генерации пароля (необходимо модифицировать для указаний модификаций)
-export function passwordGenerator() {
+// Фукнция генерации пароля (необходимо модифицировать
+// для указаний параметров генераций, выбора алфавитов)
+export function passwordGenerator(size = 8) {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz';
   const alphabetUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const numeric = '0123456789';
@@ -33,7 +34,7 @@ export function passwordGenerator() {
 
   let password = '';
 
-  for (let i = 0; i < this.passwordNewSize - 4; i += 1) {
+  for (let i = 0; i < size - 4; i += 1) {
     password += CharacterSet.charAt(Math.floor(Math.random() * CharacterSet.length));
   }
 

@@ -318,19 +318,14 @@
 
     <b-modal id="new-modal"
             title="Новое досье"
-            hide-footer size="lg" centered
-            @show="newUser.password=passwordGenerator()"
+            hide-footer size="xl" centered
+            @show="newUser.password=passwordGenerator(size=9)"
             :header-bg-variant="'success'"
             :header-text-variant="'light'"
             @hidden="onReset">
 
       <b-form class="w-100" @submit.prevent="onSubmitNewUser" @reset="onReset">
-<!--
-anyDirty {{$v.newUser.$anyDirty}}<br>
-!anyDirty {{!$v.newUser.$anyDirty}}<br>
-dirty {{$v.newUser.$dirty}}<br>
-invalid {{$v.newUser.$invalid}}
--->{{newUser}}
+
         <b-form-group>
           <b-form-input name="login"
             type="text"
@@ -356,15 +351,10 @@ invalid {{$v.newUser.$invalid}}
               Поле может содержать только латинские буквы и цифры!
             </span>
           </b-form-invalid-feedback>
-          <b-form-valid-feedback
-          :state="$v.newUser.login.$dirty ? !$v.newUser.login.$error : null">
-            Все в порядке!
-          </b-form-valid-feedback>
 
         </b-form-group>
 
-        <b-form-group
-        description="Пароль генерируется автоматически. Нажмите кнопку чтобы сгенерировать новый.">
+        <b-form-group>
           <b-input-group>
             <b-input-group-prepend>
               <b-button variant="outline-secondary"
@@ -384,7 +374,7 @@ invalid {{$v.newUser.$invalid}}
             </b-form-input>
             <b-input-group-append>
               <b-button variant="outline-primary"
-              @click="newUser.password = passwordGenerator()">
+              @click="newUser.password = passwordGenerator(size=8)">
                 <font-awesome-icon :icon="['fa', 'key']" fixed-width />
               </b-button>
             </b-input-group-append>
@@ -396,10 +386,11 @@ invalid {{$v.newUser.$invalid}}
               Поле обязательно для заполнения!
             </span>
           </b-form-invalid-feedback>
-          <b-form-valid-feedback
-          :state="$v.newUser.login.$dirty ? !$v.newUser.login.$error : null">
-            Все в порядке!
-          </b-form-valid-feedback>
+           <b-form-text class="text-muted">
+            Пароль генерируется автоматически. Нажмите кнопку
+            <font-awesome-icon :icon="['fa', 'key']" fixed-width />
+            чтобы сгенерировать новый.
+          </b-form-text>
         </b-form-group>
 
         <b-form-group>
@@ -464,18 +455,9 @@ invalid {{$v.newUser.$invalid}}
               Отчество может содержать русские только буквы!
             </span>
           </b-form-invalid-feedback>
-          <b-form-valid-feedback
-            :state="$v.newUser.validationGroupFIO.$dirty ?
-            !$v.newUser.validationGroupFIO.$anyError : null">
-            Все в порядке!
-          </b-form-valid-feedback>
-
         </b-form-group>
 
-        <b-form-group class="text-justify"
-        description="Основная почта обязательна для заполнения.
-После добавления новой почты на неё будет отправлено письмо для подтверждения">
-
+        <b-form-group class="text-justify">
           <b-form-group v-for="(v, index) in $v.newUser.email.$each.$iter" v-bind:key="index">
             <b-input-group>
               <b-input-group-text slot="prepend">
@@ -508,11 +490,14 @@ invalid {{$v.newUser.$invalid}}
                 Поле может содержать только email-адрес (example@example.ru)!
               </span>
             </b-form-invalid-feedback>
-            <b-form-valid-feedback
-            :state="v.value.$dirty ? !v.value.$error : null">
-              Все в порядке!
-            </b-form-valid-feedback>
           </b-form-group>
+          <b-form-text class="text-muted">
+            Основная почта
+            <font-awesome-icon :icon="['fa', 'envelope']" fixed-width />
+            обязательна для заполнения.
+            После добавления новой почты на неё будет отправлено письмо
+            для подтверждения.
+          </b-form-text>
         </b-form-group>
 
         <b-form-group>
@@ -542,10 +527,6 @@ invalid {{$v.newUser.$invalid}}
               Неправильное количество цифр в номере!
             </span>
           </b-form-invalid-feedback>
-          <b-form-valid-feedback
-          :state="$v.newUser.phone.$dirty ? !$v.newUser.phone.$error : null">
-            Все в порядке!
-          </b-form-valid-feedback>
         </b-form-group>
 
         <b-form-group>
@@ -566,10 +547,6 @@ invalid {{$v.newUser.$invalid}}
               Поле обязательно для заполнения!
             </span>
           </b-form-invalid-feedback>
-          <b-form-valid-feedback
-          :state="$v.newUser.birth_date.$dirty ? !$v.newUser.birth_date.$error : null">
-            Все в порядке!
-          </b-form-valid-feedback>
         </b-form-group>
 
         <b-form-group>
@@ -586,27 +563,40 @@ invalid {{$v.newUser.$invalid}}
               Поле может содержать максимум 140 символов!
             </span>
           </b-form-invalid-feedback>
-          <b-form-valid-feedback
-          :state="$v.newUser.about_me.$dirty ? !$v.newUser.about_me.$error : null">
-            Все в порядке!
-          </b-form-valid-feedback>
         </b-form-group>
 
-        <b-button type="submit" variant="success" block
-        title="Внести новое досье"
-        :disabled="!$v.newUser.$anyDirty || $v.newUser.$invalid">
-          <font-awesome-icon v-if="!formPending"
-          :icon="['fa', 'save']" fixed-width />
-          <b-spinner small v-if="formPending"
-          label="Идет отправка досье..."></b-spinner>
-        </b-button>
-        <b-button type="reset" variant="danger" block
-        :disabled="!$v.newUser.$anyDirty">
-          <font-awesome-icon v-if="!formPending"
-          :icon="['fa', 'times']" fixed-width />
-          <b-spinner small v-if="formPending"
-          label="Идет отправка досье..."></b-spinner>
-        </b-button>
+        <b-row>
+          <b-col>
+            <b-button type="submit" variant="success" block
+            title="Внести новое досье"
+            :disabled="!$v.newUser.$anyDirty || $v.newUser.$invalid">
+              <font-awesome-icon v-if="!formPending"
+              :icon="['fa', 'save']" fixed-width />
+              <b-spinner small v-if="formPending"
+              label="Идет отправка досье..."></b-spinner>
+            </b-button>
+          </b-col>
+          <b-col>
+            <b-button type="reset" variant="danger" block
+            title="Стереть данные"
+            :disabled="!$v.newUser.$anyDirty">
+              <font-awesome-icon v-if="!formPending"
+              :icon="['fa', 'times']" fixed-width />
+              <b-spinner small v-if="formPending"
+              label="Идет отправка досье..."></b-spinner>
+            </b-button>
+          </b-col>
+        </b-row>
+
+        <b-row>
+          <b-col>
+            <b-alert :show="messageModal.dismissCountDown" @dismiss-count-down="countDownChanged"
+            :variant="messageModal.msgType" fade
+            class="message w-100 text-center m-0 mt-3 justify-content-center align-items-center">
+              {{messageModal.msgText}}
+            </b-alert>
+          </b-col>
+        </b-row>
 
         <div class="row mx-auto mt-3 pl-3 pr-3 pt-3 border-top">
           <span class="text-danger notation text-center">
@@ -635,7 +625,7 @@ import {
   required, sameAs, minLength, maxLength, alphaNum, email, requiredIf,
 } from 'vuelidate/lib/validators';
 import Breadcumbs from './Breadcumbs';
-import { passwordGenerator } from '@/utils';
+import { EventBus, passwordGenerator } from '@/utils';
 
 export default {
   name: 'Users',
@@ -661,7 +651,6 @@ export default {
       russian: ru,
       passwordGenerator,
       isActivePassword: false,
-      passwordNewSize: 8,
       newUser: {
         login: '',
         password: '',
@@ -685,6 +674,12 @@ export default {
         phone: '',
         birth_date: '',
         about_me: '',
+      },
+      messageModal: {
+        dismissSecs: 3,
+        dismissCountDown: 0,
+        msgText: '',
+        msgType: '',
       },
     };
   },
@@ -771,6 +766,9 @@ export default {
     this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
   },
   methods: {
+    countDownChanged(dismissCountDown) {
+      this.messageModal.dismissCountDown = dismissCountDown;
+    },
     dateFormatter(date) {
       return moment(date).format('YYYY-MM-DD');
     },
@@ -786,9 +784,10 @@ export default {
     },
     onReset(evt) {
       evt.preventDefault();
+      this.$v.newUser.$reset();
 
       this.newUser.login = '';
-      this.newUser.password = passwordGenerator(this.passwordNewSize);
+      this.newUser.password = passwordGenerator(9);
       this.newUser.name = '';
       this.newUser.surname = '';
       this.newUser.patronymic = '';
@@ -820,7 +819,7 @@ export default {
 
       if (!this.$v.newUser.$invalid) {
         this.newUser.birth_date = moment(this.newUser.birth_date).format('YYYY-MM-DD');
-        // this.$store.dispatch('updateProfileData', this.profile);
+        this.$store.dispatch('newUser', this.newUser);
       }
     },
     deleteUser(id) {
@@ -860,6 +859,16 @@ export default {
     listChange() {
       this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
     },
+  },
+  mounted() {
+    EventBus.$on('messageModal', (msg) => {
+      this.messageModal.dismissCountDown = this.messageModal.dismissSecs;
+      this.messageModal.msgText = msg.text;
+      this.messageModal.msgType = msg.type;
+    });
+  },
+  beforeDestroy() {
+    EventBus.$off('messageModal');
   },
 };
 </script>

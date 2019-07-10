@@ -571,9 +571,9 @@ def update_profile_data(current_user, uid):
             if exist:
                 response = Response(
                     response=json.dumps({'type': 'danger',
-                                         'text': 'Уже есть пользователь'
+                                         'text': 'Уже есть пользователь '
                                                  'с такими логином, '
-                                                 'телефоном или почтой!'
+                                                 'телефоном или почтой! '
                                                  'Выберите другие!'}),
                     status=422,
                     mimetype='application/json'
@@ -927,6 +927,8 @@ def post_users(current_user):
 
         post_data = request.get_json()
 
+        print(post_data)
+
         exist = CmsUsers.query.filter(
             (CmsUsers.login == post_data['login']) |
             (CmsUsers.email == post_data['email']) |
@@ -934,9 +936,11 @@ def post_users(current_user):
 
         if exist:
             response = Response(
-                response=json.dumps({'type': 'error',
-                                     'text': 'Пользователь с такими данными'
-                                             'существует!'}),
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Уже есть пользователь '
+                                             'с такими логином, '
+                                             'телефоном или основной '
+                                             'почтой!'}),
                 status=422,
                 mimetype='application/json'
             )
