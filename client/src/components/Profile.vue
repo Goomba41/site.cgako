@@ -388,8 +388,7 @@
           </b-input-group>
         </b-form-group>
 
-        <b-form-group
-        description="Пароль генерируется автоматически Нажмите кнопку чтобы создать новый">
+        <b-form-group>
           <b-input-group>
             <b-input-group-prepend>
               <b-button variant="outline-secondary" v-on:click='isActiveNew = !isActiveNew'>
@@ -412,6 +411,11 @@
               </b-button>
             </b-input-group-append>
           </b-input-group>
+          <b-form-text class="text-muted">
+            Пароль генерируется автоматически. Нажмите кнопку
+            <font-awesome-icon :icon="['fa', 'key']" fixed-width />
+            чтобы сгенерировать новый.
+          </b-form-text>
         </b-form-group>
 
         <b-form-group id="form-read-group">

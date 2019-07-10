@@ -38,7 +38,7 @@
       <b-col sm="4" class="text-center">
         <b-row class="justify-content-center align-middle align-items-center">
           <b-col sm="6">
-            <b-input-group :append="'/ ' + users.pages + ' cтраниц'" size="sm">
+            <b-input-group :append="'/ ' + users.pages + ' cтр.'" size="sm">
               <b-form-input type="number" min=1 :max="users.pages"
               autocomplete="off"
               v-model="listControl.page"
@@ -127,7 +127,7 @@
               {{user.surname}} {{user.name.charAt(0)}}.{{user.patronymic.charAt(0)}}.
               <br><b>@{{user.login}}</b>
             </td>
-            <td>Администратор</td>
+            <td>...</td>
             <td>
               <font-awesome-icon :icon="['fab', 'vk']" fixed-width />
               <font-awesome-icon :icon="['fab', 'odnoklassniki']" fixed-width />
@@ -319,7 +319,7 @@
     <b-modal id="new-modal"
             title="Новое досье"
             hide-footer size="xl" centered
-            @show="newUser.password=passwordGenerator(size=9)"
+            @show="newUser.password=passwordGenerator(size=8)"
             :header-bg-variant="'success'"
             :header-text-variant="'light'"
             @hidden="onReset">
@@ -495,8 +495,8 @@
             Основная почта
             <font-awesome-icon :icon="['fa', 'envelope']" fixed-width />
             обязательна для заполнения.
-            После добавления новой почты на неё будет отправлено письмо
-            для подтверждения.
+            Для неё будет отправлено письмо с авторизационными данными и
+            ссылкой подтверждения.
           </b-form-text>
         </b-form-group>
 
@@ -603,7 +603,8 @@
               <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
               size="1x" fixed-width />
   Авторизационные данные будут отправлены пользователю
-  на основную почту.
+  на основную почту. Будьте внимательны при её заполнении,
+  чтобы данные для входа не попали в чужие руки!
           </span>
         </div>
 
@@ -787,7 +788,7 @@ export default {
       this.$v.newUser.$reset();
 
       this.newUser.login = '';
-      this.newUser.password = passwordGenerator(9);
+      this.newUser.password = passwordGenerator(8);
       this.newUser.name = '';
       this.newUser.surname = '';
       this.newUser.patronymic = '';
@@ -813,6 +814,7 @@ export default {
       this.$nextTick(() => {
         this.show = true;
       });
+      EventBus.$emit('forceRerender');
     },
     onSubmitNewUser() {
       this.$v.$touch();

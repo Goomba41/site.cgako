@@ -100,7 +100,7 @@ def server_error(dbg=None):
         text = "Серверная ошибка!"
 
     response = Response(
-        response=json.dumps({'type': 'error', 'text': text}),
+        response=json.dumps({'type': 'warning', 'text': text}),
         status=500,
         mimetype='application/json'
     )
@@ -927,12 +927,17 @@ def post_users(current_user):
 
         post_data = request.get_json()
 
-        print(post_data)
+        primary_mail = list(
+            filter(
+                lambda mail: mail['type'] == "primary",
+                post_data['email'])
+                )[0]["value"]
 
-        exist = CmsUsers.query.filter(
-            (CmsUsers.login == post_data['login']) |
-            (CmsUsers.email == post_data['email']) |
-            (CmsUsers.phone == post_data["phone"])).first()
+        exist = CmsUsers.exist(**{
+                                  'login': post_data['login'],
+                                  'email': primary_mail,
+                                  'phone': post_data['phone']
+                                  })
 
         if exist:
             response = Response(
@@ -956,14 +961,40 @@ def post_users(current_user):
                 phone=post_data['phone'],
                 about_me=post_data['about_me']
             )
-
             db.session.add(user)
             db.session.commit()
 
+            password = post_data['password']
+            login = post_data['login']
+            additional_mails = []
+            for mail_item in post_data['email']:
+                if mail_item['value'] and mail_item['type'] != "primary":
+                    print("got")
+                    additional_mails.append(mail_item['value'])
+
+            token = generate_confirmation_token(
+                {
+                 "uid": user.id,
+                 "value": primary_mail,
+                 "type": "primary"
+                }, expiration=3600)
+            confirm_url = 'http://192.168.0.96:8080/verify' \
+                          '/mail/' + token.decode("utf-8")
+            html = render_template(
+                'user_created.html',
+                confirm_url=confirm_url,
+                password=password,
+                login=login,
+                emails=additional_mails,
+                active_time="1 час")
+            subject = 'Для Вас создан пользователь ' \
+                      'в CMS сайта ЦГАКО'
+            send_email(primary_mail, subject, html)
+
             response = Response(
                 response=json.dumps({'type': 'success',
-                                     'text': 'Успешно добавлен пользователь'
-                                             'с id='+str(user.id)+'!',
+                                     'text': 'Успешно добавлен пользователь '
+                                             '@'+str(user.login)+'!',
                                      'link': url_for('.get_user_by_id',
                                                      uid=user.id,
                                                      _external=True)}),

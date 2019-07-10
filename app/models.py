@@ -9,6 +9,27 @@ from flask import current_app, json
 
 from sqlalchemy import func
 
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
+
+# ------------------------------------------------------------
+# Функции
+# ------------------------------------------------------------
+
+#  Обработка полученноых почт от пользователя
+def cms_user_emails(emails):
+    """Обработка пароля для пользователя."""
+    for email_item in emails:
+        email_item.update({"verified": False,
+        "activeUntil": (datetime.now() + relativedelta(
+                                months=1)).isoformat()})
+    return emails
+
+
+# ------------------------------------------------------------
+# Модели
+# ------------------------------------------------------------
 
 class CmsUsers(db.Model):
     """Модель данных пользователя."""
@@ -60,7 +81,13 @@ class CmsUsers(db.Model):
                  last_login=None, status=None, socials=None, photo=None):
         """Конструктор класса."""
         self.login = login
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password = {
+            "value": bcrypt.generate_password_hash(password).decode('utf-8'),
+            "blocked": False,
+            "activeUntil": (datetime.now() + relativedelta(
+                                    months=1)).isoformat(),
+            "failed_times": 0
+        }
         self.socials = {"ok": "",
                         "vk": "",
                         "google": "",
@@ -69,7 +96,7 @@ class CmsUsers(db.Model):
         self.name = name
         self.surname = surname
         self.patronymic = patronymic
-        self.email = email
+        self.email = cms_user_emails(email)
         self.phone = phone
         self.birth_date = birth_date
         self.last_login = None if last_login is None else last_login
@@ -78,7 +105,7 @@ class CmsUsers(db.Model):
 
     def __repr__(self):
         """Форматирование представления экземпляра класса."""
-        return 'Пользователь id:%i, логин:%r ' % (self.id, self.login)
+        return 'Пользователь логин:%r ' % (self.login)
 
     @classmethod
     def authenticate(cls, **kwargs):
@@ -158,6 +185,10 @@ class CmsUsers(db.Model):
             return True
         return False
 
+
+# ------------------------------------------------------------
+# Схемы
+# ------------------------------------------------------------
 
 class CmsUsersSchema(ma.ModelSchema):
     """Marshmallow-схема для перегона модели в json формат."""

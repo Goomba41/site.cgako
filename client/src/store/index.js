@@ -182,8 +182,6 @@ const actions = {
     return axios.post('/api/users?dbg', dataNew,
       { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
       .then((response) => {
-        context.dispatch('loadUsers');
-        EventBus.$emit('forceRerender');
         EventBus.$emit('messageModal', response.data);
         context.commit('setFormPending');
       })
