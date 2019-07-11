@@ -45,7 +45,7 @@ schema_profile_data = {
         "email": {
                     "type": "array",
                     "maxItems": 3,
-                    "minItems": 1,
+                    "minItems": 3,
                     "items": {
                         "type": "object",
                         "additionalProperties": False,
@@ -98,7 +98,7 @@ schema_profile_data = {
         "password": {
                     "type": "string",
                     "is_valid": True,
-                    "minLength": 1
+                    "minLength": 8
                     },
     },
     "required": ["login", "email", "phone"],
@@ -120,10 +120,90 @@ schema_profile_password = {
         "passwordNew": {
                     "type": "string",
                     "is_valid": True,
-                    "minLength": 1
+                    "minLength": 8
                     },
     },
     "required": ["login", "passwordNew", "passwordOld"],
+    "additionalProperties": False
+}
+
+#  Пользователь CMS
+
+schema_user_data = {
+    "type": "object",
+    "properties": {
+        "login": {
+                    "type": "string",
+                    "pattern": r"\b[a-zA-Z0-9]{4,20}\b",
+                    "minLength": 1
+                 },
+        "name": {
+                    "type": "string",
+                    "pattern": r'\b[а-яА-Я]{4,20}\b',
+                    "minLength": 1
+                 },
+        "surname": {
+                    "type": "string",
+                    "pattern": r'\b[а-яА-Я]{4,20}\b',
+                    "minLength": 1
+                 },
+        "patronymic": {
+                    "type": "string",
+                    "pattern": r'\b[а-яА-Я]{4,20}\b',
+                    "minLength": 1
+                 },
+        "email": {
+                    "type": "array",
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        'properties': {
+                            "value": {
+                                "type": "string",
+                            },
+                            "type": {
+                                "type": "string",
+                                'enum': ["primary", "work", "personal"],
+                            },
+                        },
+                        "required": [
+                            "type",
+                            "value",
+                            ],
+                        "if": {
+                            "properties": {
+                              "type": {"const": "primary"}
+                            },
+                            "required": ["type", "value"],
+                          },
+                        "then": {"is_email_primary": ["value"]},
+                        "else": {"is_email": ["value"]}
+                    },
+                 },
+        "phone": {
+                    "type": "string",
+                    "pattern": r'(^\+7\s\d{3,3}\s\d{3,3}\s\d{2,2}\s\d{2,2}$)',
+                    "minLength": 1
+                 },
+        "birth_date": {
+                    "type": "string",
+                    'is_date': True,
+                    "minLength": 1
+                      },
+        "about_me": {
+                    "type": ["string", "null"],
+                    "pattern": r'(^.{0,140}$)'
+                    },
+        "password": {
+                    "type": "string",
+                    "is_valid": True,
+                    "minLength": 8
+                    },
+    },
+    "required": ["login", "email", "phone", "password",
+                 "birth_date", "name", "surname", "patronymic"],
     "additionalProperties": False
 }
 
@@ -191,7 +271,10 @@ def is_valid(validator, value, instance, schema_profile_password):
     for key, value in occurs.items():
         if value == 0:
             yield ValidationError(
-                "%r incorrect format of password" % (instance))
+                "%r incorrect format of password (minimum 1 lower- and "
+                "uppercase alphabet, numeric, and special characters)" % (
+                    instance))
+            break
 
 
 all_validators = dict(Draft7Validator.VALIDATORS)
@@ -206,3 +289,4 @@ MyValidator = validators.create(
 
 profile_validator = MyValidator(schema_profile_data)
 password_validator = MyValidator(schema_profile_password)
+user_validator = MyValidator(schema_user_data)

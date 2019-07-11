@@ -28,7 +28,8 @@ from functools import wraps
 
 from app import bcrypt, db, mail
 from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema
-from app.json_validation import profile_validator, password_validator
+from app.json_validation import profile_validator, password_validator, \
+    user_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -337,6 +338,8 @@ def login():
         activation_date_pass = dateutil.parser.parse(
                         pjson['activeUntil'])
         diff = (activation_date_pass - datetime.now()).days
+        if pjson['first_auth']:
+            pjson['blocked'] = True
         if diff == 6:
             primary_mail = list(
                 filter(
@@ -357,6 +360,7 @@ def login():
             pjson['activeUntil'] = (
                 datetime.now() + relativedelta(months=1)).isoformat()
             pjson['blocked'] = False
+            pjson['first_auth'] = True
             primary_mail = list(
                 filter(
                     lambda mail: mail['type'] == "primary",
@@ -656,7 +660,7 @@ def update_profile_password(current_user, uid):
 
             auth_data = {'login': update_data['login'],
                          'password': update_data['passwordOld']}
-            user = CmsUsers.authenticate(**auth_data)
+            user = CmsUsers.authenticate(check=True, **auth_data)
 
             if not user[0]:
 
@@ -677,6 +681,7 @@ def update_profile_password(current_user, uid):
                         'password': {
                             "value": update_data['passwordNew'],
                             "blocked": False,
+                            "first_auth": False,
                             "activeUntil": (datetime.now() + relativedelta(
                                 months=1)).isoformat(),
                             "failed_times": 0
@@ -927,80 +932,99 @@ def post_users(current_user):
 
         post_data = request.get_json()
 
-        primary_mail = list(
-            filter(
-                lambda mail: mail['type'] == "primary",
-                post_data['email'])
-                )[0]["value"]
+        print(post_data)
 
-        exist = CmsUsers.exist(**{
-                                  'login': post_data['login'],
-                                  'email': primary_mail,
-                                  'phone': post_data['phone']
-                                  })
+        if not user_validator.is_valid(post_data):
+            errors = []
+            for error in sorted(user_validator.iter_errors(
+                                post_data), key=str):
+                errors.append(error.message)
 
-        if exist:
+            separator = '; '
+            error_text = separator.join(errors)
+            print(error_text)
             response = Response(
-                response=json.dumps({'type': 'danger',
-                                     'text': 'Уже есть пользователь '
-                                             'с такими логином, '
-                                             'телефоном или основной '
-                                             'почтой!'}),
-                status=422,
-                mimetype='application/json'
-            )
+                    response=json.dumps({'type': 'danger',
+                                         'text': error_text}),
+                    status=422,
+                    mimetype='application/json'
+                )
         else:
-            user = CmsUsers(
-                login=post_data['login'],
-                password=post_data['password'],
-                name=post_data['name'],
-                surname=post_data['surname'],
-                patronymic=post_data['patronymic'],
-                birth_date=post_data['birth_date'],
-                email=post_data['email'],
-                phone=post_data['phone'],
-                about_me=post_data['about_me']
-            )
-            db.session.add(user)
-            db.session.commit()
 
-            password = post_data['password']
-            login = post_data['login']
-            additional_mails = []
-            for mail_item in post_data['email']:
-                if mail_item['value'] and mail_item['type'] != "primary":
-                    print("got")
-                    additional_mails.append(mail_item['value'])
+            primary_mail = list(
+                filter(
+                    lambda mail: mail['type'] == "primary",
+                    post_data['email'])
+                    )[0]["value"]
 
-            token = generate_confirmation_token(
-                {
-                 "uid": user.id,
-                 "value": primary_mail,
-                 "type": "primary"
-                }, expiration=3600)
-            confirm_url = 'http://192.168.0.96:8080/verify' \
-                          '/mail/' + token.decode("utf-8")
-            html = render_template(
-                'user_created.html',
-                confirm_url=confirm_url,
-                password=password,
-                login=login,
-                emails=additional_mails,
-                active_time="1 час")
-            subject = 'Для Вас создан пользователь ' \
-                      'в CMS сайта ЦГАКО'
-            send_email(primary_mail, subject, html)
+            exist = CmsUsers.exist(**{
+                                      'login': post_data['login'],
+                                      'email': primary_mail,
+                                      'phone': post_data['phone']
+                                      })
 
-            response = Response(
-                response=json.dumps({'type': 'success',
-                                     'text': 'Успешно добавлен пользователь '
-                                             '@'+str(user.login)+'!',
-                                     'link': url_for('.get_user_by_id',
-                                                     uid=user.id,
-                                                     _external=True)}),
-                status=200,
-                mimetype='application/json'
-            )
+            if exist:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Уже есть пользователь '
+                                                 'с такими логином, '
+                                                 'телефоном или основной '
+                                                 'почтой!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+            else:
+                user = CmsUsers(
+                    login=post_data['login'],
+                    password=post_data['password'],
+                    name=post_data['name'],
+                    surname=post_data['surname'],
+                    patronymic=post_data['patronymic'],
+                    birth_date=post_data['birth_date'],
+                    email=post_data['email'],
+                    phone=post_data['phone'],
+                    about_me=post_data.get('about_me', None)
+                )
+                db.session.add(user)
+                db.session.commit()
+
+                password = post_data['password']
+                login = post_data['login']
+                additional_mails = []
+                for mail_item in post_data['email']:
+                    if mail_item['value'] and mail_item['type'] != "primary":
+                        print("got")
+                        additional_mails.append(mail_item['value'])
+
+                token = generate_confirmation_token(
+                    {
+                     "uid": user.id,
+                     "value": primary_mail,
+                     "type": "primary"
+                    }, expiration=3600)
+                confirm_url = 'http://192.168.0.96:8080/verify' \
+                              '/mail/' + token.decode("utf-8")
+                html = render_template(
+                    'user_created.html',
+                    confirm_url=confirm_url,
+                    password=password,
+                    login=login,
+                    emails=additional_mails,
+                    active_time="1 час")
+                subject = 'Для Вас создан пользователь ' \
+                          'в CMS сайта ЦГАКО'
+                send_email(primary_mail, subject, html)
+
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Добавлен пользователь '
+                                                 '@'+str(user.login)+'!',
+                                         'link': url_for('.get_user_by_id',
+                                                         uid=user.id,
+                                                         _external=True)}),
+                    status=200,
+                    mimetype='application/json'
+                )
 
     except Exception:
 

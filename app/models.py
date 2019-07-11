@@ -84,6 +84,7 @@ class CmsUsers(db.Model):
         self.password = {
             "value": bcrypt.generate_password_hash(password).decode('utf-8'),
             "blocked": False,
+            "first_auth": True,
             "activeUntil": (datetime.now() + relativedelta(
                                     months=1)).isoformat(),
             "failed_times": 0
@@ -101,14 +102,14 @@ class CmsUsers(db.Model):
         self.birth_date = birth_date
         self.last_login = None if last_login is None else last_login
         self.status = 1 if status is None else status
-        self.about_me = None if about_me is None else about_me
+        self.about_me = '' if about_me is None else about_me
 
     def __repr__(self):
         """Форматирование представления экземпляра класса."""
         return 'Пользователь логин:%r ' % (self.login)
 
     @classmethod
-    def authenticate(cls, **kwargs):
+    def authenticate(cls, check=False, **kwargs):
         """Функция аутентификации."""
         login = kwargs.get('login')
         password = kwargs.get('password')
@@ -131,8 +132,8 @@ class CmsUsers(db.Model):
                 filter(lambda mail: mail['type'] == "primary", user.email))
             if mail_status and not mail_status[0]['verified']:
                 return (None, 'Основная почта не активирована!', 'username')
-            elif user.password['blocked']:
-                return (None, 'Вход по паролю заблокирован!', 'password')
+            elif user.password['blocked'] and not check:
+                return (None, 'Пароль заблокирован!', 'password')
             elif not bcrypt.check_password_hash(
                     user.password['value'], password):
                 max_fails = current_app.config['MAX_FAILED']
