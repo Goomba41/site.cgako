@@ -8,8 +8,10 @@
                 <div class="row justify-content-center align-items-center text-center mx-auto p-3">
                     <div class="col mx-auto">
                         <img src="../assets/logo-2.png" alt="ЦГАКО" width=250>
-                        <h1 class="text-gradient mt-4 mb-0">Вход в CMS</h1>
-                        <h3 class="text-primary-color mb-4">Панель управления сайтом ЦГАКО</h3>
+                        <h1 class="text-gradient mt-4 mb-0">ЦГАКО CMS</h1>
+                        <h3 class="text-primary-color mb-0 weight-100">
+                          Вход в панель управления сайтом ЦГАКО
+                        </h3>
                     </div>
                 </div>
 
@@ -58,20 +60,21 @@
                     </form>
                 </div>
 
+<!--
                 <div class="row justify-content-start align-items-start mx-auto p-3">
-                    <button type="button" title="Войти через ВКонтакте"
+                    <button type="button" v-b-tooltip.hover title="Войти через ВКонтакте"
                     class="mr-2 btn btn-outline-vk">
                         <font-awesome-icon :icon="['fab', 'vk']" fixed-width />
                     </button>
-                    <button type="button" title="Войти через Одноклассники"
+                    <button type="button" v-b-tooltip.hover title="Войти через Одноклассники"
                     class="mr-2 btn btn-outline-ok">
                         <font-awesome-icon :icon="['fab', 'odnoklassniki']" fixed-width />
                     </button>
-                    <button type="button" title="Войти через Яндекс"
+                    <button type="button" v-b-tooltip.hover title="Войти через Яндекс"
                     class="mr-2 btn btn-outline-yandex">
                         <font-awesome-icon :icon="['fab', 'yandex']" fixed-width />
                     </button>
-                    <button type="button" title="Войти через Google"
+                    <button type="button" v-b-tooltip.hover title="Войти через Google"
                     class="mr-2 btn btn-outline-google">
                         <font-awesome-icon :icon="['fab', 'google']" fixed-width />
                     </button>
@@ -80,10 +83,11 @@
 subject=Проблемы%20со%20входом%20в%20систему.&amp;
 body=Описание%20проблемы:%0D%0A%0D%0A&amp;
 bcc=anton.borodawkin@yandex.ru"
-                    title="Написать в техподдержку" aria-disabled="true"
+                    title="Написать в техподдержку" v-b-tooltip.hover aria-disabled="true"
                     class="ml-auto btn btn-outline-primary">
                     <font-awesome-icon :icon="['fa', 'question']" fixed-width /></a>
                 </div>
+-->
 
                 <div class="row mx-auto pl-3 pr-3 pt-3 border-top">
                     <span class="text-danger notation">

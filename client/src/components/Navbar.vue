@@ -3,7 +3,7 @@
     <b-navbar sticky toggleable="lg" variant="primary">
         <b-navbar-nav class="ml-auto">
             <b-nav-item v-b-toggle.my-collapse class="navbar-pictogram pr-5"
-            href="#" title="Боковое меню" @click="sidebarToggle">
+            href="#" title="Боковое меню" v-b-tooltip.hover @click="sidebarToggle">
                 <font-awesome-icon :icon="['fa', 'bars']" fixed-width size="1x"/>
             </b-nav-item>
         </b-navbar-nav>
@@ -32,14 +32,17 @@
         <b-navbar-nav class="mr-auto">
 
             <b-nav-item class="navbar-pictogram pr-2"
-            href="https://trello.com/b/xgWEmEaD/сайт-цгако" title="Дорожная карта развития Trello">
+            href="https://trello.com/b/xgWEmEaD/сайт-цгако" v-b-tooltip.hover
+            title="Дорожная карта развития Trello">
                 <font-awesome-icon :icon="['fab', 'trello']" fixed-width size="1x"/>
             </b-nav-item>
             <b-nav-item class="navbar-pictogram pr-2"
-            href="https://github.com/Goomba41/site.cgako" title="Исходный код проекта на Github">
+            href="https://github.com/Goomba41/site.cgako" v-b-tooltip.hover
+            title="Исходный код проекта на Github">
                 <font-awesome-icon :icon="['fab', 'github']" fixed-width size="1x"/>
             </b-nav-item>
-            <b-nav-item class="navbar-pictogram pr-2" href="#" title="Уведомления">
+            <b-nav-item class="navbar-pictogram pr-2" href="#"
+            v-b-tooltip.hover title="Уведомления">
                 <font-awesome-layers class="fa-1x">
                     <font-awesome-icon icon="bell" />
                     <font-awesome-icon icon="circle" transform="shrink-6 up-6 right-6"

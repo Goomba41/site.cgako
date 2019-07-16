@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import moment from 'moment';
 
 export const EventBus = new Vue();
 
@@ -76,4 +77,11 @@ export function formatBytes(bytes, decimals = 2, power = null) {
   }
 
   return { number: parseFloat((bytes / (k ** i)).toFixed(dm)), measure: sizes[i] };
+}
+
+export function dateDiffNow(date, period) {
+  if (moment().diff(date, 'days') <= -period) {
+    return false;
+  }
+  return true;
 }

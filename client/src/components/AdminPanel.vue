@@ -143,11 +143,24 @@ export default {
       this.componentKey += 1;
       this.$forceUpdate();
     });
+    EventBus.$on('message', (msg) => {
+      console.log(msg.type);
+      this.$bvToast.toast(msg.text, {
+        title: `Variant ${msg.type || 'default'}`,
+        autoHideDelay: 5000,
+        appendToast: true,
+        variant: 'success',
+        solid: true,
+        toaster: 'b-toaster-top-right',
+        is-status: true,
+      });
+    });
   },
   beforeDestroy() {
     EventBus.$off('logout');
     EventBus.$off('sidebarToggle');
     EventBus.$off('forceRerender');
+    EventBus.$off('message');
   },
   beforeMount() {
     this.$store.dispatch('loadProfile');

@@ -3,7 +3,7 @@
     <div class="row pb-4 mx-auto w-100">
       <b-breadcrumb :items="crumbs"
       class="pr-3 pl-3 p-0 m-0 justify-content-center align-items-center"></b-breadcrumb>
-      <button type="button" title="Обновить данные"
+      <button type="button" title="Обновить данные" v-b-tooltip.hover
       class="btn btn-sm btn-secondary ml-auto" @click="forceRerender">
         <font-awesome-icon icon="sync-alt" fixed-width />
       </button>

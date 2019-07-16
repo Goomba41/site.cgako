@@ -8,7 +8,7 @@
         <b-card tag="article" class="profile-form shaded"
         header-tag="header" footer-tag="footer">
 
-          <h3 slot="header" class="mb-0">
+          <h3 slot="header" class="mb-0 weight-100 small">
             Форма редактирования профиля
             <b-spinner small v-if="formPending"
             label="Идет отправка формы..."></b-spinner>
@@ -147,7 +147,8 @@
                     <b-input-group-append>
                       <b-button v-if="v.$model.value && !v.value.$dirty &&
                       (dateDiffNow(v.$model.activeUntil, reactivationPeriod) || !v.$model.verified)"
-                      variant="outline-secondary" title="Послать письмо подтверждения"
+                      variant="outline-secondary" v-b-tooltip.hover
+                      title="Послать письмо подтверждения"
                       @click="onSubmitMailVerify(v.$model.type, v.$model.value)"
                       :disabled="formPending">
                         <b-spinner small v-if="formPending"
@@ -291,11 +292,11 @@
       <div class="col-3">
         <b-card tag="article" style="max-width: 20rem;" class="profile-card shaded text-center">
           <div class="card-profile-image mb-4 mx-auto">
-            <div class="profile-image-overlay" title="Фотокарточка">
-              <div v-b-modal.avatar-modal title="Вклеить новую">
+            <div class="profile-image-overlay" v-b-tooltip.hover title="Фотокарточка">
+              <div v-b-modal.avatar-modal v-b-tooltip.hover title="Вклеить новую">
                 <font-awesome-icon :icon="['fa', 'upload']" fixed-width />
               </div>
-              <div @click="onSubmitAvatar" title="Вырезать">
+              <div @click="onSubmitAvatar" v-b-tooltip.hover title="Вырезать">
                 <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
               </div>
             </div>
@@ -425,7 +426,7 @@
         </b-form-group>
 
         <b-button class="mb-3" type="submit"
-        block variant="primary" title="Установить новый пароль"
+        block variant="primary" v-b-tooltip.hover title="Установить новый пароль"
         :disabled="$v.passwordUpdate.$invalid">
           <font-awesome-icon :icon="['fa', 'save']" fixed-width />
         </b-button>
@@ -497,7 +498,7 @@
         </b-form-group>
 
         <b-button class="mb-3" type="submit" block variant="primary"
-        title="Установить новую фотокарточку"
+        title="Установить новую фотокарточку" v-b-tooltip.hover
         :disabled="!$v.imageUpdate.$anyDirty || $v.imageUpdate.$invalid">
           <font-awesome-icon :icon="['fa', 'save']" fixed-width />
         </b-button>

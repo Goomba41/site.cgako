@@ -159,6 +159,8 @@ const actions = {
   },
   // Загрузить пользователей
   loadUsers(context, payload) {
+    context.commit('setFormPending');
+
     return axios.get('/api/users',
       {
         headers: { Authorization: `Bearer: ${context.state.jwt}` },
@@ -169,10 +171,12 @@ const actions = {
       })
       .then((response) => {
         context.commit('setUsers', { users: response.data });
+        context.commit('setFormPending');
       })
       .catch((error) => {
         // eslint-disable-next-line
         console.error(error);
+        context.commit('setFormPending');
       });
   },
   // Создать нового пользователя

@@ -102,7 +102,7 @@
                 :key="name" v-for="(value, name) in projectLangs">
                   <b-row class="mx-auto justify-content-center align-items-center
                   text-center vertical-align">
-                    <h3 class="m-0 pr-1">
+                    <h3 class="m-0 pr-2 weight-100 small">
                       <font-awesome-icon :icon="['fa', 'circle']"
                       :class="'color-' + name" fixed-width/> {{name}}
                     </h3>

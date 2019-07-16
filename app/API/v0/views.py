@@ -871,7 +871,7 @@ def get_users(current_user):
 
     try:
 
-        user_schema = CmsUsersSchema(many=True)
+        user_schema = CmsUsersSchema(many=True, exclude=['password'])
 
         users = CmsUsers.query.all()
         udata = user_schema.dump(users)
@@ -906,7 +906,7 @@ def get_user_by_id(current_user, uid):
 
     try:
 
-        user_schema = CmsUsersSchema()
+        user_schema = CmsUsersSchema(exclude=['password'])
         user = CmsUsers.query.get(uid)
         udata = user_schema.dump(user)
 
@@ -931,8 +931,6 @@ def post_users(current_user):
     try:
 
         post_data = request.get_json()
-
-        print(post_data)
 
         if not user_validator.is_valid(post_data):
             errors = []

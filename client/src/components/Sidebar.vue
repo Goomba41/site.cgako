@@ -3,7 +3,7 @@
 
     <b-list-group class="pt-3 pb-3">
       <b-list-group-item class="heading noselect">
-        <h3 class="m-0">Навигация</h3>
+        <h3 class="m-0 weight-100 small">Навигация</h3>
       </b-list-group-item>
 
       <router-link :to="{ name: 'Dashboard' }">
@@ -47,7 +47,7 @@
 
     <b-list-group class="pt-3 pb-3">
       <b-list-group-item class="heading noselect">
-        <h3 class="m-0">Настройки</h3>
+        <h3 class="m-0 weight-100 small">Настройки</h3>
       </b-list-group-item>
     </b-list-group>
 

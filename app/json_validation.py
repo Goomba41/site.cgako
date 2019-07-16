@@ -77,8 +77,8 @@ schema_profile_data = {
                             },
                             "required": ["type", "value"],
                           },
-                        "then": {"is_email_primary": ["value"]},
-                        "else": {"is_email": ["value"]}
+                        "then": {"is_email_primary": True},
+                        "else": {"is_email": True}
                     },
                  },
         "phone": {
@@ -178,8 +178,8 @@ schema_user_data = {
                             },
                             "required": ["type", "value"],
                           },
-                        "then": {"is_email_primary": ["value"]},
-                        "else": {"is_email": ["value"]}
+                        "then": {"is_email_primary": True},
+                        "else": {"is_email": True}
                     },
                  },
         "phone": {
@@ -212,7 +212,7 @@ schema_user_data = {
 # ------------------------------------------------------------
 
 
-def is_email_primary(validator, value, instance, schema_profile_data):
+def is_email_primary(validator, value, instance, schema):
     if not isinstance(instance['value'], str):
         yield ValidationError("%r not string" % instance['value'])
     if re.search(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)',
@@ -225,7 +225,7 @@ def is_email_primary(validator, value, instance, schema_profile_data):
             "%r адрес почты не существует в сети!" % (instance['value']))
 
 
-def is_email(validator, value, instance, schema_profile_data):
+def is_email(validator, value, instance, schema):
     if not isinstance(instance['value'], str):
         yield ValidationError("%r not string" % instance['value'])
     if len(instance['value']) > 0:
@@ -239,14 +239,14 @@ def is_email(validator, value, instance, schema_profile_data):
                 "%r адрес почты не существует в сети!" % (instance['value']))
 
 
-def is_date(validator, value, instance, schema_profile_data):
+def is_date(validator, value, instance, schema):
     try:
         dateutil.parser.parse(instance)
     except ValueError:
         yield ValidationError("%r incorrect date format" % (instance))
 
 
-def is_valid(validator, value, instance, schema_profile_password):
+def is_valid(validator, value, instance, schema):
     if not isinstance(instance, str):
         yield ValidationError("%r not string" % instance)
 

@@ -16,6 +16,18 @@
     background: linear-gradient(180deg, #0B4FA6 50%, #FFFFFF 50%);
 }
 
+h3.weight-100 {
+  font-weight: 100;
+}
+
+h3.small {
+  font-size: 1rem;
+}
+
+.login-theme h3 {
+  font-size: .9rem;
+}
+
 .UICountdown {
     z-index: 9999;
     position: absolute;
@@ -356,11 +368,6 @@ h1 {
     font-size: 3rem;
     font-weight: 100;
     text-transform: uppercase;
-}
-
-h3 {
-    font-size: 1rem;
-    font-weight: 100;
 }
 
 .notation, .field-desc {
@@ -743,17 +750,25 @@ article.profile-card h2 {
   font-weight: 900;
 }
 
-.profile-card .card-profile-image, .card-profile-image  {
+.card-profile-image, .card-profile-image  {
   border-radius: 100%;
   display: flex;
   justify-content: center;
   overflow: hidden;
   position: relative;
+}
+
+profile-card .card-profile-image, .card-profile-image  {
   width: 7rem;
   height: 7rem;
 }
 
-article.profile-card img.profile-image, img.profile-image {
+.modal-profile-image  {
+  width: 5.7rem;
+  height: 5.7rem;
+}
+
+img.profile-image, img.profile-image {
   border: 5px solid #ced4da;
   position: relative;
   border-radius: 50%;
@@ -762,7 +777,7 @@ article.profile-card img.profile-image, img.profile-image {
   object-fit: cover;
 }
 
-.profile-card .profile-image-overlay {
+.profile-image-overlay {
   background-color: rgba(11, 79, 166, 0.4);
   background: linear-gradient(65deg, rgba(11, 79, 166, 0.4), rgba(253, 199, 0, 0.4));
   color: white;
@@ -779,7 +794,7 @@ article.profile-card img.profile-image, img.profile-image {
   transition: opacity 0.25s;
   z-index: 1
 }
-.profile-card .profile-image-overlay:hover {
+.profile-image-overlay:hover {
   opacity: 1;
 }
 
