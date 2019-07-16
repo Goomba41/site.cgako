@@ -10,8 +10,6 @@
 
           <h3 slot="header" class="mb-0 weight-100 small">
             Форма редактирования профиля
-            <b-spinner small v-if="formPending"
-            label="Идет отправка формы..."></b-spinner>
           </h3>
           <b-card-text class="text-center">
 
@@ -41,10 +39,6 @@
                     Поле может содержать только латинские буквы и цифры!
                   </span>
                 </b-form-invalid-feedback>
-                <b-form-valid-feedback
-                :state="$v.profile.login.$dirty ? !$v.profile.login.$error : null">
-                  Все в порядке!
-                </b-form-valid-feedback>
 
               </b-form-group>
 
@@ -110,11 +104,6 @@
                     Отчество может содержать русские только буквы!
                   </span>
                 </b-form-invalid-feedback>
-                <b-form-valid-feedback
-                :state="$v.profile.validationGroupFIO.$dirty ?
-                !$v.profile.validationGroupFIO.$anyError : null">
-                  Все в порядке!
-                </b-form-valid-feedback>
 
               </b-form-group>
 
@@ -183,10 +172,6 @@
                       Поле может содержать только email-адрес (example@example.ru)!
                     </span>
                   </b-form-invalid-feedback>
-                  <b-form-valid-feedback
-                  :state="v.value.$dirty ? !v.value.$error : null">
-                    Все в порядке!
-                  </b-form-valid-feedback>
                 </b-form-group>
               </b-form-group>
 
@@ -217,10 +202,6 @@
                     Неправильное количество символов в номере!
                   </span>
                 </b-form-invalid-feedback>
-                <b-form-valid-feedback
-                :state="$v.profile.phone.$dirty ? !$v.profile.phone.$error : null">
-                  Все в порядке!
-                </b-form-valid-feedback>
               </b-form-group>
 
               <b-form-group>
@@ -240,10 +221,6 @@
                     Поле обязательно для заполнения!
                   </span>
                 </b-form-invalid-feedback>
-                <b-form-valid-feedback
-                :state="$v.profile.birth_date.$dirty ? !$v.profile.birth_date.$error : null">
-                  Все в порядке!
-                </b-form-valid-feedback>
 
               </b-form-group>
 
@@ -261,10 +238,6 @@
                     Поле может содержать максимум 140 символов!
                   </span>
                 </b-form-invalid-feedback>
-                <b-form-valid-feedback
-                :state="$v.profile.about_me.$dirty ? !$v.profile.about_me.$error : null">
-                  Все в порядке!
-                </b-form-valid-feedback>
 
               </b-form-group>
 
@@ -491,10 +464,7 @@
               Фотокарточка не соответствует ГОСТам ДЖиПег, ГиФ или ПэНГэ!
             </span>
           </b-form-invalid-feedback>
-          <b-form-valid-feedback
-          :state="$v.imageUpdate.$dirty ? !$v.imageUpdate.$anyError : null">
-            Все в порядке!
-          </b-form-valid-feedback>
+
         </b-form-group>
 
         <b-button class="mb-3" type="submit" block variant="primary"

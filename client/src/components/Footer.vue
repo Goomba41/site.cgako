@@ -2,7 +2,7 @@
     <footer class="row mx-auto w-100">
       <span class="caption p-3">
         <a href="https://ru.wikipedia.org/wiki/Авторское_право"
-        v-b-tooltip.hover title="Авторское право">
+        v-b-tooltip.hover title="Прочитать об авторском праве">
           <font-awesome-icon :icon="['far', 'copyright']" fixed-width size="1x"/>
         </a>
         КОБГУ "ЦГАКО", 2019
@@ -25,8 +25,6 @@
 </template>
 
 <script>
-import { EventBus } from '@/utils';
-
 export default {
   name: 'Footerline',
   data() {

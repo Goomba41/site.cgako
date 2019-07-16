@@ -144,15 +144,13 @@ export default {
       this.$forceUpdate();
     });
     EventBus.$on('message', (msg) => {
-      console.log(msg.type);
       this.$bvToast.toast(msg.text, {
-        title: `Variant ${msg.type || 'default'}`,
-        autoHideDelay: 5000,
+        title: 'Сообщение',
+        autoHideDelay: 3000,
         appendToast: true,
-        variant: 'success',
+        variant: msg.type || 'default',
         solid: true,
         toaster: 'b-toaster-top-right',
-        is-status: true,
       });
     });
   },
