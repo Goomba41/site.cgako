@@ -88,7 +88,7 @@
 
     </b-row>
 
-    <div class="row-fluid pb-3">
+    <div class="row p-3">
       <table class="table table-hover td-align-middle">
         <thead>
           <tr class="text-center">
@@ -610,16 +610,6 @@
           </b-col>
         </b-row>
 
-        <b-row>
-          <b-col>
-            <b-alert :show="messageModal.dismissCountDown" @dismiss-count-down="countDownChanged"
-            :variant="messageModal.msgType" fade
-            class="message w-100 text-center m-0 mt-3 justify-content-center align-items-center">
-              {{messageModal.msgText}}
-            </b-alert>
-          </b-col>
-        </b-row>
-
         <div class="row mx-auto mt-3 pl-3 pr-3 pt-3 border-top">
           <span class="text-danger notation text-center">
               <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
@@ -642,7 +632,7 @@
             :header-bg-variant="'primary'"
             :header-text-variant="'light'">
 
-      <b-form class="w-100" @submit.prevent="">
+      <b-form class="w-100" @submit.prevent="onSubmitUpdateUser">
         <b-row>
 
           <b-col :cols="uid!=user.id? 7 : 12" >
@@ -766,16 +756,16 @@
                     (dateDiffNow(v.$model.activeUntil, reactivationPeriod) || !v.$model.verified)"
                     variant="outline-secondary" v-b-tooltip.hover
                     title="Послать письмо подтверждения"
-                    @click="onSubmitMailVerify(v.$model.type, v.$model.value)"
+                    @click="onSubmitMailVerify(user.id, v.$model.type, v.$model.value)"
                     :disabled="formPending">
                       <b-spinner small v-if="formPending"
                       label="Идет отправка..."></b-spinner>
                       <font-awesome-icon v-else v-bind:icon="['fa', 'envelope']" fixed-width/>
                     </b-button>
-                    <b-button v-if="v.$model.value && !v.value.$dirty"
+                    <b-button v-if="v.$model.value && (!v.value.$dirty && v.$model.verified)"
                     variant="outline-danger" v-b-tooltip.hover
                     title="Сбросить активацию почты"
-                    @click="console.log('Почикано!');"
+                    @click="onSubmitMailReset(user.id, v.$model.type, v.$model.value)"
                     :disabled="formPending">
                       <b-spinner small v-if="formPending"
                       label="Обработка..."></b-spinner>
@@ -814,8 +804,7 @@
                 Основная почта
                 <font-awesome-icon :icon="['fa', 'envelope']" fixed-width />
                 обязательна для заполнения.
-                Для неё будет отправлено письмо с авторизационными данными и
-                ссылкой подтверждения.
+                На добавленную или измененную почту будет отправлено письмо с ссылкой подтверждения.
               </b-form-text>
             </b-form-group>
 
@@ -893,7 +882,7 @@
                 <b-list-group-item class="flex-column align-items-start align-middle">
                   <div class="d-flex w-100 pb-2 justify-content-between align-items-center">
                     <h6 class="m-0">Сбросить пароль</h6>
-                    <b-button
+                    <b-button @click="onSubmitPasswordReset(user.id)"
                     size="sm" title="Сбросить пароль" variant="outline-danger"
                     v-b-tooltip.hover>Сделать сброс</b-button>
                   </div>
@@ -903,7 +892,7 @@
                 <b-list-group-item class="flex-column align-items-start align-middle">
                   <div class="d-flex w-100 pb-2 justify-content-between align-items-center">
                     <h6 class="m-0">Блокировать пароль</h6>
-                    <b-button
+                    <b-button @click="onSubmitPasswordBlock(user.id)"
                     size="sm" title="Блокировать пароль" variant="outline-danger"
                     v-b-tooltip.hover>Заблокировать</b-button>
                   </div>
@@ -920,7 +909,7 @@
           <b-col>
             <b-button type="submit" variant="primary" block
             title="Внести новое досье" v-b-tooltip.hover
-            :disabled="!$v.user.$anyDirty || $v.user.$invalid">
+            :disabled="!$v.user.$anyDirty || $v.user.$invalid || formPending">
               <font-awesome-icon v-if="!formPending"
               :icon="['fa', 'save']" fixed-width />
               <b-spinner small v-if="formPending"
@@ -929,23 +918,12 @@
           </b-col>
         </b-row>
 
-        <b-row>
-          <b-col>
-            <b-alert :show="messageModal.dismissCountDown" @dismiss-count-down="countDownChanged"
-            :variant="messageModal.msgType" fade
-            class="message w-100 text-center m-0 mt-3 justify-content-center align-items-center">
-              {{messageModal.msgText}}
-            </b-alert>
-          </b-col>
-        </b-row>
-
         <div class="row mx-auto mt-3 pl-3 pr-3 pt-3 border-top">
           <span class="text-danger notation text-center">
               <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
               size="1x" fixed-width />
-  Авторизационные данные будут отправлены пользователю
-  на основную почту. Будьте внимательны при её заполнении,
-  чтобы данные для входа не попали в чужие руки!
+  <b>При сбросе основной почты</b> и выходе из CMS, пользователь больше не сможет войти!
+  Будьте осторожны!
           </span>
         </div>
 
@@ -975,7 +953,6 @@ export default {
     return {
       dateDiffNow,
       user: {},
-      searchPhrase: '',
       deletePassphrase: '',
       deleteGroupPassphrase: '',
       selected: [],
@@ -1018,12 +995,6 @@ export default {
         phone: '',
         birth_date: '',
         about_me: '',
-      },
-      messageModal: {
-        dismissSecs: 3,
-        dismissCountDown: 0,
-        msgText: '',
-        msgType: '',
       },
     };
   },
@@ -1162,9 +1133,6 @@ export default {
     this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
   },
   methods: {
-    countDownChanged(dismissCountDown) {
-      this.messageModal.dismissCountDown = dismissCountDown;
-    },
     dateFormatter(date) {
       return moment(date).format('YYYY-MM-DD');
     },
@@ -1211,12 +1179,36 @@ export default {
       });
       EventBus.$emit('forceRerender');
     },
+    onSubmitPasswordReset(id) {
+      this.$store.dispatch('passwordReset', { id });
+    },
+    onSubmitPasswordBlock(id) {
+      this.$store.dispatch('passwordBlock', { id });
+    },
+    onSubmitMailVerify(id, type, value) {
+      this.$store.dispatch('verifyMailSend', { id, value, type });
+      EventBus.$emit('forceRerender');
+    },
+    onSubmitMailReset(id, type, value) {
+      this.$store.dispatch('verifyMailReset', { id, value, type });
+      EventBus.$emit('forceRerender');
+    },
     onSubmitNewUser() {
       this.$v.$touch();
 
       if (!this.$v.newUser.$invalid) {
         this.newUser.birth_date = moment(this.newUser.birth_date).format('YYYY-MM-DD');
         this.$store.dispatch('newUser', this.newUser);
+      }
+    },
+    async onSubmitUpdateUser() {
+      this.$v.user.$touch();
+
+      if (!this.$v.user.$invalid) {
+        this.user.birth_date = moment(this.user.birth_date).format('YYYY-MM-DD');
+        await this.$store.dispatch('updateUser', this.user);
+        this.$v.user.$reset();
+        EventBus.$emit('forceRerender');
       }
     },
     deleteUser(id) {
@@ -1256,16 +1248,6 @@ export default {
     listChange() {
       this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
     },
-  },
-  mounted() {
-    EventBus.$on('messageModal', (msg) => {
-      this.messageModal.dismissCountDown = this.messageModal.dismissSecs;
-      this.messageModal.msgText = msg.text;
-      this.messageModal.msgType = msg.type;
-    });
-  },
-  beforeDestroy() {
-    EventBus.$off('messageModal');
   },
 };
 </script>

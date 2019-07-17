@@ -138,7 +138,7 @@
                       (dateDiffNow(v.$model.activeUntil, reactivationPeriod) || !v.$model.verified)"
                       variant="outline-secondary" v-b-tooltip.hover
                       title="Послать письмо подтверждения"
-                      @click="onSubmitMailVerify(v.$model.type, v.$model.value)"
+                      @click="onSubmitMailVerify(uid, v.$model.type, v.$model.value)"
                       :disabled="formPending">
                         <b-spinner small v-if="formPending"
                         label="Идет отправка формы..."></b-spinner>
@@ -608,8 +608,8 @@ export default {
       }
       return true;
     },
-    onSubmitMailVerify(type, value) {
-      this.$store.dispatch('verifyMailSend', { value, type });
+    onSubmitMailVerify(id, type, value) {
+      this.$store.dispatch('verifyMailSend', { id, value, type });
     },
     onSelectImage() {
       const { files } = this.$refs.imageInput.$refs.input;
@@ -664,6 +664,7 @@ export default {
     },
   },
   computed: mapState({
+    uid: state => state.uid,
     profile: state => state.profile,
     progressValue: state => state.uploadProgress,
     progressMax: state => state.uploadProgressMax,

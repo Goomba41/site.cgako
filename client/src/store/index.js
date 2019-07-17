@@ -67,7 +67,7 @@ const actions = {
   // Верификация почты, отсылка письма
   verifyMailSend(context, payload) {
     context.commit('setFormPending');
-    return axios.get(`/api/profile/${context.state.uid}/mail/verify-send`,
+    return axios.get(`/api/profile/${payload.id}/mail/verify-send`,
       {
         headers: { Authorization: `Bearer: ${context.state.jwt}` },
         params: {
@@ -78,7 +78,54 @@ const actions = {
       .then((response) => {
         context.commit('setFormPending');
         EventBus.$emit('message', response.data);
-        // context.commit('setUsers', { users: response.data });
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Сброс активации почты
+  verifyMailReset(context, payload) {
+    context.commit('setFormPending');
+    return axios.get(`/api/users/${payload.id}/mail/verify-reset?dbg`,
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+        params: {
+          value: payload.value,
+          type: payload.type,
+        },
+      })
+      .then((response) => {
+        context.commit('setFormPending');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Блокирование пароля
+  passwordBlock(context, payload) {
+    context.commit('setFormPending');
+    return axios.get(`/api/users/${payload.id}/password/block?dbg`,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        context.commit('setFormPending');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Сброс пароля с генерацией нового и отправкой на почту
+  passwordReset(context, payload) {
+    context.commit('setFormPending');
+    return axios.get(`/api/users/${payload.id}/password/reset?dbg`,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        context.commit('setFormPending');
+        EventBus.$emit('message', response.data);
       })
       .catch((error) => {
         EventBus.$emit('message', error.response.data);
@@ -186,11 +233,26 @@ const actions = {
     return axios.post('/api/users?dbg', dataNew,
       { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
       .then((response) => {
-        EventBus.$emit('messageModal', response.data);
+        EventBus.$emit('message', response.data);
         context.commit('setFormPending');
       })
       .catch((error) => {
-        EventBus.$emit('messageModal', error.response.data);
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Изменение пользователя
+  updateUser(context, dataUpdate) {
+    context.commit('setFormPending');
+
+    return axios.put(`/api/users/${dataUpdate.id}?dbg`, dataUpdate,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
         context.commit('setFormPending');
       });
   },

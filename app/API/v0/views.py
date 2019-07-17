@@ -798,7 +798,7 @@ def update_profile_avatar(current_user, uid):
 @API0.route('/profile/<int:uid>/mail/verify-send', methods=['GET'])
 @token_required
 def verify_mail_send(current_user, uid):
-    """ Изменение данных пользователя через профиль"""
+    """Отправка письма с подтверждением почты."""
 
     try:
         if request.args.get('value') and request.args.get('type'):
@@ -1040,27 +1040,68 @@ def update_users(current_user, uid):
 
         update_data = request.get_json()
 
-        check = CmsUsers.query.filter(
-            (CmsUsers.login == update_data['login']) |
-            (CmsUsers.email == update_data['email']) |
-            (CmsUsers.phone == update_data["phone"])).first()
+        for pop_item in ['id', 'socials', 'photo', 'last_login']:
+            update_data.pop(pop_item, None)
 
-        if check.id != uid:
+        primary_mail = list(
+            filter(
+                lambda mail: mail['type'] == "primary",
+                update_data['email'])
+                )[0]["value"]
+        exist = CmsUsers.exist(sid=uid, **{
+                                  'login': update_data['login'],
+                                  'email': primary_mail,
+                                  'phone': update_data['phone']
+                                  })
+
+        if exist:
             response = Response(
-                response=json.dumps({'type': 'error',
+                response=json.dumps({'type': 'danger',
                                      'text': 'Пользователь с такими данными'
-                                             'существует!'}),
+                                             ' существует!'}),
                 status=422,
                 mimetype='application/json'
             )
         else:
-            CmsUsers.query.filter_by(id=uid).update(update_data)
+            previous = CmsUsers.query.filter_by(id=uid).first().email
+            current = update_data['email']
+            pairs = zip(current, previous)
+
+            changed = [x for x, y in pairs if x != y]
+            if changed:
+                for mail_item in changed:
+                    sended_date = dateutil.parser.parse(
+                        mail_item['activeUntil'])
+                    if sended_date <= datetime.now():
+                        mail_item['activeUntil'] = date_manipulation(
+                            datetime.now(), action="plus")
+                    mail_item['verified'] = False
+                    if mail_item['value']:
+                        token = generate_confirmation_token(
+                            {
+                             "uid": uid,
+                             "value": mail_item['value'],
+                             "type": mail_item['type']
+                            }, expiration=3600)
+                        confirm_url = 'http://192.168.0.96:8080/verify' \
+                                      '/mail/' + token.decode("utf-8")
+                        html = render_template(
+                            'confirmation_mail.html',
+                            confirm_url=confirm_url,
+                            active_time="1 час")
+                        subject = 'Подтверждение адреса электронной ' \
+                                  'почты в CMS сайта ЦГАКО'
+                        send_email(mail_item['value'], subject, html)
+
+            old_data = CmsUsers.query.filter_by(id=uid)
+            old_login = old_data.first().login
+            old_data.update(update_data)
             db.session.commit()
 
             response = Response(
                 response=json.dumps({'type': 'success',
-                                     'text': 'Успешно обновлен пользователь'
-                                             'с id='+str(uid)+'!',
+                                     'text': 'Изменен пользователь '
+                                             '@'+str(old_login)+'!',
                                      'link': url_for('.get_user_by_id',
                                                      uid=uid,
                                                      _external=True)}),
@@ -1098,6 +1139,158 @@ def delete_users(current_user, uid):
             status=200,
             mimetype='application/json'
         )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/users/<int:uid>/mail/verify-reset', methods=['GET'])
+@token_required
+def verify_mail_reset(current_user, uid):
+    """Сброс активации почты пользователя"""
+
+    try:
+        if request.args.get('value') and request.args.get('type'):
+
+            user = CmsUsers.query.filter(
+                (func.json_contains(CmsUsers.email, json.dumps(
+                    {'value': request.args.get('value'),
+                     'type': request.args.get('type')}))) &
+                (CmsUsers.id == uid)).first()
+
+            if user:
+                for mail_item in user.email:
+                    if (mail_item['value'] == request.args.get('value') and
+                            mail_item['type'] == request.args.get('type')):
+                        mail_item['verified'] = False
+                CmsUsers.query.filter_by(id=uid).update({"email": user.email})
+                db.session.commit()
+
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Активация электронного'
+                                                 ' адреса успешно сброшена!'}),
+                    status=200,
+                    mimetype='application/json'
+                )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'У данного пользователя нет'
+                                                 ' почты с такими'
+                                                 ' параметрами!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Не отправлены требуемые'
+                                             ' параметры: почта (value), '
+                                             ' тип почты (type)!'}),
+                status=422,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/users/<int:uid>/password/block', methods=['GET'])
+@token_required
+def users_password_block(current_user, uid):
+    """Блокирование пароля пользователя"""
+
+    try:
+
+        user = CmsUsers.query.filter(CmsUsers.id == uid).first()
+
+        if user:
+            user.password['blocked'] = True
+            CmsUsers.query.filter_by(id=uid).update(
+                {"password": user.password})
+            db.session.commit()
+
+            response = Response(
+                response=json.dumps({'type': 'success',
+                                     'text': 'Пароль пользователя успешно'
+                                             ' заблокирован!'}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Пользователь не найден!'}),
+                status=422,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/users/<int:uid>/password/reset', methods=['GET'])
+@token_required
+def users_password_reset(current_user, uid):
+    """Блокирование пароля пользователя"""
+
+    try:
+
+        user = CmsUsers.query.filter(CmsUsers.id == uid).first()
+
+        if user:
+
+            password = pass_generation(8)
+            user.password['value'] = bcrypt.generate_password_hash(
+                password).decode('utf-8')
+            user.password['activeUntil'] = (
+                datetime.now() + relativedelta(months=1)).isoformat()
+            user.password['blocked'] = False
+            user.password['first_auth'] = True
+
+            CmsUsers.query.filter_by(id=uid).update(
+                {"password": user.password})
+            db.session.commit()
+
+            primary_mail = list(
+                filter(
+                    lambda mail: mail['type'] == "primary",
+                    user.email)
+                    )[0]["value"]
+            html = render_template(
+                'password_change.html',
+                password=password,
+                login=user.login,
+                email=primary_mail,)
+            subject = 'Вам выдан новый пароль ' \
+                      'в CMS сайта ЦГАКО'
+            send_email(primary_mail, subject, html)
+
+            response = Response(
+                response=json.dumps({'type': 'success',
+                                     'text': 'Пароль пользователя успешно'
+                                             ' сброшен! Авторизацонные данные'
+                                             ' высланы на почту!'}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Пользователь не найден!'}),
+                status=422,
+                mimetype='application/json'
+            )
 
     except Exception:
 

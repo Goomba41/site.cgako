@@ -8,7 +8,12 @@
                 <div class="row justify-content-center align-items-center text-center mx-auto p-3">
                     <div class="col mx-auto">
                         <img src="../assets/logo-2.png" alt="ЦГАКО" width=250>
-                        <h3 class="text-primary-color mt-4 mb-4">Панель управления сайтом ЦГАКО</h3>
+                        <h3 class="text-primary-color mt-4 small weight-100">
+                          Панель управления сайтом ЦГАКО
+                        </h3>
+                        <h3 class="text-primary-color mb-4 small">
+                          Подтверждение электронной почты
+                        </h3>
                     </div>
                 </div>
 
