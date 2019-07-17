@@ -189,14 +189,18 @@
 
             </td>
             <td>
+              <span class="weight-100 small d-block mx-auto" v-if="uid==user.id">
+                Для изменения <br> собственного досье <br> воспользуйтесь
+                <router-link :to="{ name: 'UserProfile' }">профилем</router-link>
+              </span>
               <b-button size="sm" title="Изменить досье" v-b-tooltip.hover variant="primary"
-              v-b-modal.edit-modal @click="selectUser(user.id)">
+              v-b-modal.edit-modal @click="selectUser(user.id)" v-if="uid!=user.id">
                 <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
               </b-button>
 
               <b-button size="sm" title="Экстренная связь" v-b-tooltip.hover variant="info"
               v-b-modal.contacts-modal
-              @click="selectUser(user.id)">
+              @click="selectUser(user.id)" v-if="uid!=user.id">
                 <font-awesome-icon :icon="['fa', 'info']" fixed-width />
               </b-button>
 

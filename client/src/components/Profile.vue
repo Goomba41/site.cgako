@@ -6,9 +6,9 @@
 
       <div class="col">
         <b-card tag="article" class="profile-form shaded"
-        header-tag="header" footer-tag="footer">
+        header-tag="header" footer-tag="footer" header-bg-variant="primary">
 
-          <h3 slot="header" class="mb-0 weight-100 small">
+          <h3 slot="header" class="mb-0 small text-light">
             Форма редактирования профиля
           </h3>
           <b-card-text class="text-center">

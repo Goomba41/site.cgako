@@ -207,6 +207,93 @@ schema_user_data = {
     "additionalProperties": False
 }
 
+schema_user_update_data = {
+    "type": "object",
+    "properties": {
+        "login": {
+                    "type": "string",
+                    "pattern": r"\b[a-zA-Z0-9]{4,20}\b",
+                    "minLength": 1
+                 },
+        "name": {
+                    "type": "string",
+                    "pattern": r'\b[а-яА-Я]{4,20}\b',
+                    "minLength": 1
+                 },
+        "surname": {
+                    "type": "string",
+                    "pattern": r'\b[а-яА-Я]{4,20}\b',
+                    "minLength": 1
+                 },
+        "patronymic": {
+                    "type": "string",
+                    "pattern": r'\b[а-яА-Я]{4,20}\b',
+                    "minLength": 1
+                 },
+        "email": {
+                    "type": "array",
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        'properties': {
+                            "value": {
+                                "type": "string",
+                            },
+                            "type": {
+                                "type": "string",
+                                'enum': ["primary", "work", "personal"],
+                            },
+                            "activeUntil": {
+                                "type": "string",
+                                'is_date': True,
+                            },
+                            "verified": {
+                                "type": "boolean",
+                            },
+                        },
+                        "required": [
+                            "verified",
+                            "type",
+                            "value",
+                            "activeUntil"
+                            ],
+                        "if": {
+                            "properties": {
+                              "type": {"const": "primary"}
+                            },
+                            "required": ["type", "value"],
+                          },
+                        "then": {"is_email_primary": True},
+                        "else": {"is_email": True}
+                    },
+                 },
+        "phone": {
+                    "type": "string",
+                    "pattern": r'(^\+7\s\d{3,3}\s\d{3,3}\s\d{2,2}\s\d{2,2}$)',
+                    "minLength": 1
+                 },
+        "birth_date": {
+                    "type": "string",
+                    'is_date': True,
+                    "minLength": 1
+                      },
+        "about_me": {
+                    "type": ["string", "null"],
+                    "pattern": r'(^.{0,140}$)'
+                    },
+        "password": {
+                    "type": "string",
+                    "is_valid": True,
+                    "minLength": 8
+                    },
+    },
+    "required": ["login", "email", "phone",
+                 "birth_date", "name", "surname", "patronymic"],
+    "additionalProperties": False
+}
+
 # ------------------------------------------------------------
 # Кастомные валидаторы
 # ------------------------------------------------------------
@@ -290,3 +377,4 @@ MyValidator = validators.create(
 profile_validator = MyValidator(schema_profile_data)
 password_validator = MyValidator(schema_profile_password)
 user_validator = MyValidator(schema_user_data)
+user_update_validator = MyValidator(schema_user_update_data)

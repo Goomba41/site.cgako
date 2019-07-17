@@ -29,7 +29,7 @@ from functools import wraps
 from app import bcrypt, db, mail
 from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema
 from app.json_validation import profile_validator, password_validator, \
-    user_validator
+    user_validator, user_update_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -1040,74 +1040,102 @@ def update_users(current_user, uid):
 
         update_data = request.get_json()
 
-        for pop_item in ['id', 'socials', 'photo', 'last_login']:
-            update_data.pop(pop_item, None)
-
-        primary_mail = list(
-            filter(
-                lambda mail: mail['type'] == "primary",
-                update_data['email'])
-                )[0]["value"]
-        exist = CmsUsers.exist(sid=uid, **{
-                                  'login': update_data['login'],
-                                  'email': primary_mail,
-                                  'phone': update_data['phone']
-                                  })
-
-        if exist:
+        if current_user.id == uid:
             response = Response(
                 response=json.dumps({'type': 'danger',
-                                     'text': 'Пользователь с такими данными'
-                                             ' существует!'}),
+                                     'text': 'Воспользуйтесь профилем'
+                                             ' для изменения собственных'
+                                             ' данных!'}),
                 status=422,
                 mimetype='application/json'
             )
         else:
-            previous = CmsUsers.query.filter_by(id=uid).first().email
-            current = update_data['email']
-            pairs = zip(current, previous)
+            for pop_item in ['id', 'socials', 'photo', 'last_login', 'status']:
+                update_data.pop(pop_item, None)
 
-            changed = [x for x, y in pairs if x != y]
-            if changed:
-                for mail_item in changed:
-                    sended_date = dateutil.parser.parse(
-                        mail_item['activeUntil'])
-                    if sended_date <= datetime.now():
-                        mail_item['activeUntil'] = date_manipulation(
-                            datetime.now(), action="plus")
-                    mail_item['verified'] = False
-                    if mail_item['value']:
-                        token = generate_confirmation_token(
-                            {
-                             "uid": uid,
-                             "value": mail_item['value'],
-                             "type": mail_item['type']
-                            }, expiration=3600)
-                        confirm_url = 'http://192.168.0.96:8080/verify' \
-                                      '/mail/' + token.decode("utf-8")
-                        html = render_template(
-                            'confirmation_mail.html',
-                            confirm_url=confirm_url,
-                            active_time="1 час")
-                        subject = 'Подтверждение адреса электронной ' \
-                                  'почты в CMS сайта ЦГАКО'
-                        send_email(mail_item['value'], subject, html)
+            if not user_update_validator.is_valid(update_data):
 
-            old_data = CmsUsers.query.filter_by(id=uid)
-            old_login = old_data.first().login
-            old_data.update(update_data)
-            db.session.commit()
+                errors = []
+                for error in sorted(user_update_validator.iter_errors(
+                                    update_data), key=str):
+                    errors.append(error.message)
 
-            response = Response(
-                response=json.dumps({'type': 'success',
-                                     'text': 'Изменен пользователь '
-                                             '@'+str(old_login)+'!',
-                                     'link': url_for('.get_user_by_id',
-                                                     uid=uid,
-                                                     _external=True)}),
-                status=200,
-                mimetype='application/json'
-            )
+                separator = '; '
+                error_text = separator.join(errors)
+                response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+
+            else:
+                primary_mail = list(
+                    filter(
+                        lambda mail: mail['type'] == "primary",
+                        update_data['email'])
+                        )[0]["value"]
+                exist = CmsUsers.exist(sid=uid, **{
+                                          'login': update_data['login'],
+                                          'email': primary_mail,
+                                          'phone': update_data['phone']
+                                          })
+
+                if exist:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'Пользователь с такими'
+                                                     ' данными существует!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    previous = CmsUsers.query.filter_by(id=uid).first().email
+                    current = update_data['email']
+                    pairs = zip(current, previous)
+
+                    changed = [x for x, y in pairs if x != y]
+                    if changed:
+                        for mail_item in changed:
+                            sended_date = dateutil.parser.parse(
+                                mail_item['activeUntil'])
+                            if sended_date <= datetime.now():
+                                mail_item['activeUntil'] = date_manipulation(
+                                    datetime.now(), action="plus")
+                            mail_item['verified'] = False
+                            if mail_item['value']:
+                                token = generate_confirmation_token(
+                                    {
+                                     "uid": uid,
+                                     "value": mail_item['value'],
+                                     "type": mail_item['type']
+                                    }, expiration=3600)
+                                confirm_url = 'http://192.168.0.96:8080/' \
+                                              'verify/mail/' + token.decode(
+                                                "utf-8")
+                                html = render_template(
+                                    'confirmation_mail.html',
+                                    confirm_url=confirm_url,
+                                    active_time="1 час")
+                                subject = 'Подтверждение адреса электронной ' \
+                                          'почты в CMS сайта ЦГАКО'
+                                send_email(mail_item['value'], subject, html)
+
+                    old_data = CmsUsers.query.filter_by(id=uid)
+                    old_login = old_data.first().login
+                    old_data.update(update_data)
+                    db.session.commit()
+
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Изменен пользователь '
+                                                     '@'+str(old_login)+'!',
+                                             'link': url_for('.get_user_by_id',
+                                                             uid=uid,
+                                                             _external=True)}),
+                        status=200,
+                        mimetype='application/json'
+                    )
 
     except Exception:
 

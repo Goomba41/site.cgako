@@ -139,6 +139,9 @@ export default {
     EventBus.$on('sidebarToggle', () => {
       this.sidebarActive = !this.sidebarActive;
     });
+    EventBus.$on('sidebarOff', () => {
+      this.sidebarActive = false;
+    });
     EventBus.$on('forceRerender', () => {
       this.componentKey += 1;
       this.$forceUpdate();

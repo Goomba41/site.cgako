@@ -168,6 +168,14 @@ aside.sidebar.open {
   -webkit-box-align: center !important;
   align-items: center !important;
   cursor: pointer;
+  border-radius:0;
+}
+
+aside.sidebar a.active .list-group-item {
+    z-index: 2;
+    color: #212529;
+    background: linear-gradient(90deg, white 95%, #0B4FA6 2px);
+    border-color: #0B4FA6;
 }
 
 .sidebar .list-group-item:hover {

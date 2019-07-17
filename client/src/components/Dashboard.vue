@@ -97,19 +97,29 @@
 
         <b-row class="pb-3">
           <b-col cols="12">
-            <b-list-group horizontal class="shaded">
-                <b-list-group-item class="text-center flex-fill"
-                :key="name" v-for="(value, name) in projectLangs">
-                  <b-row class="mx-auto justify-content-center align-items-center
-                  text-center vertical-align">
-                    <h3 class="m-0 pr-2 weight-100 small">
-                      <font-awesome-icon :icon="['fa', 'circle']"
-                      :class="'color-' + name" fixed-width/> {{name}}
-                    </h3>
-                    <span style="line-height: 1.2;">{{value}}%</span>
-                  </b-row>
-                </b-list-group-item>
-              </b-list-group>
+            <b-list-group horizontal class="shaded" v-if="Object.keys(projectLangs).length > 0">
+              <b-list-group-item class="text-center flex-fill"
+              :key="name" v-for="(value, name) in projectLangs">
+                <b-row class="mx-auto justify-content-center align-items-center
+                text-center vertical-align">
+                  <h3 class="m-0 pr-2 weight-100 small">
+                    <font-awesome-icon :icon="['fa', 'circle']"
+                    :class="'color-' + name" fixed-width/> {{name}}
+                  </h3>
+                  <span style="line-height: 1.2;">{{value}}%</span>
+                </b-row>
+              </b-list-group-item>
+            </b-list-group>
+            <b-list-group horizontal class="shaded" v-else>
+              <b-list-group-item class="text-center flex-fill">
+                <b-row class="mx-auto justify-content-center align-items-center
+                text-center vertical-align">
+                  <h3 class="m-0 pr-2 small text-danger">
+                    Данные о проекте не могут быть получены!
+                  </h3>
+                </b-row>
+              </b-list-group-item>
+            </b-list-group>
           </b-col>
         </b-row>
 
