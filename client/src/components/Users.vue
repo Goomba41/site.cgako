@@ -106,7 +106,7 @@
               @click="listControl.orderBy.field='surname';
               listControl.orderBy.asc=!listControl.orderBy.asc"/>
               </th>
-            <th scope="col">Роль</th>
+            <th scope="col">Роли</th>
             <th scope="col">Cоц. сети</th>
             <th scope="col">
               Последний вход
@@ -149,7 +149,14 @@
               {{user.surname}} {{user.name.charAt(0)}}.{{user.patronymic.charAt(0)}}.
               <br><b>@{{user.login}}</b>
             </td>
-            <td>...</td>
+            <td style="max-width:10rem;">
+              <b-row class="justify-content-center noselect align-middle align-items-center">
+                <b-badge variant="info" class="m-1"
+                v-for="role in user.roles" v-bind:key="role.title">
+                  {{role.title}}
+                </b-badge>
+              </b-row>
+            </td>
             <td>
               <font-awesome-icon :icon="['fab', 'vk']" fixed-width />
               <font-awesome-icon :icon="['fab', 'odnoklassniki']" fixed-width />

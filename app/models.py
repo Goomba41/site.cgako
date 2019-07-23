@@ -2,15 +2,15 @@
 # -*- coding: utf8 -*-
 
 """Модели данных БД."""
+from datetime import datetime
 
 from app import bcrypt, db, ma
+
+from dateutil.relativedelta import relativedelta
 
 from flask import current_app, json
 
 from sqlalchemy import func
-
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 
 # ------------------------------------------------------------
@@ -19,61 +19,81 @@ from dateutil.relativedelta import relativedelta
 
 #  Обработка полученноых почт от пользователя
 def cms_user_emails(emails):
-    """Обработка пароля для пользователя."""
+    """Обработка почт."""
     for email_item in emails:
-        email_item.update({"verified": False,
-        "activeUntil": (datetime.now() + relativedelta(
+        email_item.update(
+            {"verified": False,
+             "activeUntil": (datetime.now() + relativedelta(
                                 months=1)).isoformat()})
     return emails
 
 
 # ------------------------------------------------------------
+# Ассоциативные таблицы
+# ------------------------------------------------------------
+
+user_role = db.Table(
+    'association_user_role',
+    db.Column(
+        'user_id',
+        db.Integer,
+        db.ForeignKey('cms_users.id'),
+        primary_key=True
+    ),
+    db.Column(
+        'role_id',
+        db.Integer,
+        db.ForeignKey('cms_roles.id'),
+        primary_key=True
+    )
+)
+
+# ------------------------------------------------------------
 # Модели
 # ------------------------------------------------------------
+
 
 class CmsUsers(db.Model):
     """Модель данных пользователя."""
 
     id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
-    login = db.Column(db.String(20), unique=True)
-    password = db.Column(db.JSON(none_as_null=True))
-    socials = db.Column(db.JSON(none_as_null=True))
-    photo = db.Column(db.String(50))
-    name = db.Column(db.String(20))
-    surname = db.Column(db.String(20))
-    patronymic = db.Column(db.String(20))
-    email = db.Column(db.JSON(none_as_null=True))
-    phone = db.Column(db.String(18), unique=True)
-    about_me = db.Column(db.Text())
+    login = db.Column(db.String(20), unique=True, comment="Уникальный логин")
+    password = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Пароль и параметры"
+    )
+    socials = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Идентификаторы социальных сетей"
+    )
+    photo = db.Column(db.String(50), comment="Имя файла фотокарточки")
+    name = db.Column(db.String(20), comment="Имя")
+    surname = db.Column(db.String(20), comment="Фамилия")
+    patronymic = db.Column(db.String(20), comment="Отчество")
+    email = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Электронная почта и параметры"
+    )
+    phone = db.Column(db.String(18), unique=True, comment="Телефон")
+    about_me = db.Column(db.Text(), comment="О себе (например, должность)")
 
-    birth_date = db.Column(db.Date)
-    last_login = db.Column(db.JSON(none_as_null=True))
+    birth_date = db.Column(db.Date, comment="Дата рождения")
+    last_login = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Данные последнего входа"
+    )
 
-    status = db.Column(db.SmallInteger)
+    status = db.Column(
+        db.SmallInteger,
+        comment="Статус записи пользователя (пока не используется)"
+    )
 
-    # department_id = db.Column(db.Integer,
-    # db.ForeignKey("arhiv.department.id"))
-    # post_id = db.Column(db.Integer, db.ForeignKey("arhiv.post.id"))
-    # role_id = db.Column(db.Integer, db.ForeignKey("arhiv.role.id"))
-
-    # important_news = db.relationship('Important_news',
-    # backref = 'user',lazy = 'dynamic')
-    # history = db.relationship('History', backref = 'user_parent',
-    # lazy = 'dynamic')
-    # permission = db.relationship('Permission', backref = 'user',
-    # lazy = 'dynamic')
-    # news = db.relationship('News', backref = 'user',lazy = 'dynamic')
-    # appeals = db.relationship('Appeals', backref = 'user',lazy = 'dynamic')
-    # executor = db.relationship('Executor', backref = 'user',lazy = 'dynamic')
-
-    # employee = db.relationship('Item',
-    # backref='item_employee',
-    # lazy='dynamic',
-    # foreign_keys='Item.employee')
-    # responsible = db.relationship('Item',
-    # backref='item_responsible',
-    # lazy='dynamic',
-    # foreign_keys='Item.responsible')
+    roles = db.relationship(
+        'CmsRoles',
+        secondary=user_role,
+        lazy='subquery',
+        backref=db.backref('users', lazy=True)
+    )
 
     def __init__(self, login, password,
                  name, surname, patronymic,
@@ -187,9 +207,33 @@ class CmsUsers(db.Model):
         return False
 
 
+class CmsRoles(db.Model):
+    """Модель системных ролей."""
+
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
+    title = db.Column(db.String(20), unique=True, comment="Название роли")
+
+    def __init__(self, title):
+        """Конструктор класса."""
+        self.title = title
+
+    def __repr__(self):
+        """Форматирование представления экземпляра класса."""
+        return 'Роль название:%r ' % (self.title)
+
 # ------------------------------------------------------------
 # Схемы
 # ------------------------------------------------------------
+
+
+class CmsRolesSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = CmsRoles
+
 
 class CmsUsersSchema(ma.ModelSchema):
     """Marshmallow-схема для перегона модели в json формат."""
@@ -198,6 +242,7 @@ class CmsUsersSchema(ma.ModelSchema):
         """Мета модели, вносятся доп. параметры."""
 
         model = CmsUsers
+    roles = ma.Nested(CmsRolesSchema, many=True, only=["id", "title"])
 
 
 class CmsProfileSchema(ma.ModelSchema):
@@ -207,5 +252,7 @@ class CmsProfileSchema(ma.ModelSchema):
         """Мета модели, вносятся доп. параметры."""
 
         model = CmsUsers
-        fields = ("login", "surname", "name", "patronymic", "email", "phone",
-                  "birth_date", "about_me", "socials", "photo")
+        fields = (
+            "login", "surname", "name", "patronymic", "email", "phone",
+            "birth_date", "about_me", "socials", "photo"
+        )
