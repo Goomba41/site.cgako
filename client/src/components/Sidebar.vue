@@ -67,7 +67,7 @@ export default {
   methods: {
     sidebarOff() {
       EventBus.$emit('sidebarOff');
-    }
+    },
   },
 };
 </script>

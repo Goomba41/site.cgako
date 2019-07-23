@@ -15,7 +15,7 @@ Vue.use(Router);
 // Объявление роутера с маршрутами
 const router = new Router({
   saveScrollPosition: true,
-  linkExactActiveClass: "active",
+  linkExactActiveClass: 'active',
   routes: [
     {
       path: '/admin-panel',

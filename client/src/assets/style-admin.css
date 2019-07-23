@@ -176,6 +176,7 @@ aside.sidebar a.active .list-group-item {
     color: #212529;
     background: linear-gradient(90deg, white 95%, #0B4FA6 2px);
     border-color: #0B4FA6;
+    color: #0B4FA6;
 }
 
 .sidebar .list-group-item:hover {

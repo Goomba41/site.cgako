@@ -269,7 +269,7 @@
               <div v-b-modal.avatar-modal v-b-tooltip.hover title="Вклеить новую">
                 <font-awesome-icon :icon="['fa', 'upload']" fixed-width />
               </div>
-              <div @click="onSubmitAvatar" v-b-tooltip.hover title="Вырезать">
+              <div @click="deleteProfileAvatar" v-b-tooltip.hover title="Вырезать">
                 <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
               </div>
             </div>
@@ -417,6 +417,8 @@
 
     <b-modal id="avatar-modal"
              title="Вклеить фотокарточку"
+            @hidden="onResetImage"
+            @close="onResetImage"
              hide-footer size="md" centered
             :header-bg-variant="'primary'"
             :header-text-variant="'light'">
@@ -443,8 +445,7 @@
 
         <b-form-group
         description="Товарищам будет проще узнать Вас, если Вы вклеите свою настоящую фотокарточку.
-Она должна соответствовать ГОСТам ДЖиПег, ГиФ или ПэНГэ.
-Если хотите установить фотокарточку по умолчанию, оставьте поле пустым и нажмите сохранить.">
+Она должна соответствовать ГОСТам ДЖиПег, ГиФ или ПэНГэ. Размер ГОСТ 3МБ">
 
           <b-form-file
             ref="imageInput"
@@ -469,7 +470,7 @@
 
         <b-button class="mb-3" type="submit" block variant="primary"
         title="Установить новую фотокарточку" v-b-tooltip.hover
-        :disabled="!$v.imageUpdate.$anyDirty || $v.imageUpdate.$invalid">
+        :disabled="!$v.imageUpdate.$anyDirty || $v.imageUpdate.$invalid || this.file == null">
           <font-awesome-icon :icon="['fa', 'save']" fixed-width />
         </b-button>
 
@@ -511,7 +512,7 @@ export default {
       disabledDates: {
         from: new Date(),
       },
-      files: null,
+      file: null,
       preloadValue: 0,
       isActiveProgress: false,
       isActiveOld: false,
@@ -614,22 +615,25 @@ export default {
     onSelectImage() {
       const { files } = this.$refs.imageInput.$refs.input;
       if (files && files[0]) {
-        const reader = new FileReader();
-        reader.onprogress = (e) => {
-          if (e.lengthComputable) {
-            this.isActiveProgress = true;
-            this.preloadValue = Math.round((e.loaded / e.total) * 100);
-          }
-        };
-        reader.onload = (e) => {
-          this.imageUpdate.imageData = e.target.result;
-          this.file = files;
-          this.imageUpdate.size = formatBytes(files[0].size, 2, 2).number;
-          this.imageUpdate.type = files[0].type;
-          this.$v.imageUpdate.$touch();
-        };
-        reader.readAsDataURL(files[0]);
-        this.$emit('input', files[0]);
+        this.imageUpdate.type = files[0].type;
+        this.imageUpdate.size = formatBytes(files[0].size, 2, 2).number;
+        this.$v.imageUpdate.$touch();
+
+        if (!this.$v.imageUpdate.$invalid) {
+          const reader = new FileReader();
+          reader.onprogress = (e) => {
+            if (e.lengthComputable) {
+              this.isActiveProgress = true;
+              this.preloadValue = Math.round((e.loaded / e.total) * 100);
+            }
+          };
+          reader.onload = (e) => {
+            this.imageUpdate.imageData = e.target.result;
+            this.file = files;
+          };
+          reader.readAsDataURL(files[0]);
+          this.$emit('input', files[0]);
+        }
       }
     },
     onSubmitData(evt) {
@@ -661,6 +665,23 @@ export default {
         this.isActiveProgress = true;
         this.$store.dispatch('updateProfileAvatar', formData);
       }
+    },
+    deleteProfileAvatar() {
+      this.$store.dispatch('deleteProfileAvatar');
+    },
+    onResetImage(evt) {
+      evt.preventDefault();
+      this.file = null;
+      this.imageUpdate.type = '';
+      this.imageUpdate.size = 0;
+      this.imageUpdate.imageData = '';
+      this.isActiveProgress = false;
+      // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+      EventBus.$emit('forceRerender');
     },
   },
   computed: mapState({

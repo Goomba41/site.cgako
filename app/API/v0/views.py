@@ -707,9 +707,10 @@ def update_profile_password(current_user, uid):
 
 
 @API0.route('/profile/<int:uid>/avatar', methods=['PUT'])
+@API0.route('/users/<int:uid>/avatar', methods=['PUT'])
 @token_required
 def update_profile_avatar(current_user, uid):
-    """ Изменение аватара через профиль пользователя"""
+    """ Изменение аватара пользователя"""
 
     try:
         usr_query = CmsUsers.query.filter_by(id=uid)
@@ -719,35 +720,51 @@ def update_profile_avatar(current_user, uid):
             if not len(request.files.getlist('avatar')) > 1:
 
                 avatar_image = request.files['avatar']
-                if usr_query.first().photo:
-                    img_extension = avatar_image.content_type.split('/')[1]
-                    img_file_name = usr_query.first().photo.split('.')[0] + \
-                        '.' + img_extension
-                    os.remove(os.path.join(
-                        current_app.config['CMS_USERS_AVATARS'],
-                        usr_query.first().photo))
+
+                if avatar_image.content_type not in ['image/jpeg',
+                                                     'image/png', 'image/gif']:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'Вы отправили'
+                                                     'файл без расширения'
+                                                     ' или это не изображение'
+                                                     ' (jpeg, png, gif)!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
                 else:
-                    img_extension = avatar_image.content_type.split('/')[1]
-                    img_file_name = uuid.uuid1().hex + '.' + img_extension
+                    if usr_query.first().photo:
+                        img_extension = avatar_image.content_type.split('/')[1]
+                        img_file_name = usr_query.first().photo.split(
+                            '.')[0] + \
+                            '.' + img_extension
+                        avatar_filepath = os.path.join(
+                            current_app.config['CMS_USERS_AVATARS'],
+                            usr_query.first().photo)
+                        if os.path.isfile(avatar_filepath):
+                            os.remove(avatar_filepath)
+                    else:
+                        img_extension = avatar_image.content_type.split('/')[1]
+                        img_file_name = uuid.uuid1().hex + '.' + img_extension
 
-                usr_query.update(
-                    {'photo': img_file_name})
-                db.session.commit()
+                    usr_query.update(
+                        {'photo': img_file_name})
+                    db.session.commit()
 
-                avatar_image.save(
-                    os.path.join(
-                        current_app.config['CMS_USERS_AVATARS'],
-                        img_file_name))
+                    avatar_image.save(
+                        os.path.join(
+                            current_app.config['CMS_USERS_AVATARS'],
+                            img_file_name))
 
-                response = Response(
-                    response=json.dumps({'type': 'success',
-                                         'text': 'Фотокарточка вклеена!',
-                                         'link': url_for('.get_user_by_id',
-                                                         uid=uid,
-                                                         _external=True)}),
-                    status=200,
-                    mimetype='application/json'
-                )
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Фотокарточка вклеена!',
+                                             'link': url_for('.get_user_by_id',
+                                                             uid=uid,
+                                                             _external=True)}),
+                        status=200,
+                        mimetype='application/json'
+                    )
             else:
                 response = Response(
                     response=json.dumps({'type': 'danger',
@@ -757,27 +774,20 @@ def update_profile_avatar(current_user, uid):
                     mimetype='application/json'
                 )
         else:
-            if usr_query.first().photo:
-                os.remove(
-                    os.path.join(
-                        current_app.config['CMS_USERS_AVATARS'],
-                        usr_query.first().photo))
-            usr_query.update({'photo': None})
-            db.session.commit()
-
             response = Response(
-                    response=json.dumps({'type': 'success',
-                                         'text': 'Фотокарточка вырезана!',
-                                         'link': url_for('.get_profile_by_id',
-                                                         uid=uid,
-                                                         _external=True)}),
-                    status=200,
-                    mimetype='application/json'
-                )
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Вы не отправили'
+                                             ' файла!'}),
+                status=422,
+                mimetype='application/json'
+            )
 
         return response
 
         #  Запись файла в формате base64
+        #  Могут возникнуть проблемы при пересылке base64 от клиента серверу
+        #  потому что конвертирование файла в base64 строку
+        #  увеличивает вес приблизительно на 33%
         #  img_data = update_data['avatarForm'].split(';')
         #  img_enc_string = img_data[1].split(',')[1]
         #  img_extension = img_data[0].split('/')[1]
@@ -787,6 +797,43 @@ def update_profile_avatar(current_user, uid):
         #  fh.write(base64.decodebytes(
         #  bytes(img_enc_string, encoding='utf-8')
         #  ))
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/profile/<int:uid>/avatar', methods=['DELETE'])
+@API0.route('/users/<int:uid>/avatar', methods=['DELETE'])
+@token_required
+def delete_profile_avatar(current_user, uid):
+    """ Удаление аватара пользователя"""
+
+    try:
+        usr_query = CmsUsers.query.filter_by(id=uid)
+
+        if usr_query.first().photo:
+            avatar_filepath = os.path.join(
+                    current_app.config['CMS_USERS_AVATARS'],
+                    usr_query.first().photo)
+            if os.path.isfile(avatar_filepath):
+                os.remove(avatar_filepath)
+        usr_query.update({'photo': None})
+        db.session.commit()
+
+        response = Response(
+                response=json.dumps({'type': 'success',
+                                     'text': 'Фотокарточка вырезана!',
+                                     'link': url_for('.get_profile_by_id',
+                                                     uid=uid,
+                                                     _external=True)}),
+                status=200,
+                mimetype='application/json'
+            )
+
+        return response
 
     except Exception:
 

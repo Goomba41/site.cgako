@@ -204,6 +204,17 @@ const actions = {
         console.log(error);
       });
   },
+  // Удалить фотокарточку профиля
+  deleteProfileAvatar(context) {
+    return axios.delete(`/api/profile/${context.state.uid}/avatar?dbg`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
   // Загрузить пользователей
   loadUsers(context, payload) {
     context.commit('setFormPending');
@@ -254,6 +265,37 @@ const actions = {
       .catch((error) => {
         EventBus.$emit('message', error.response.data);
         context.commit('setFormPending');
+      });
+  },
+  // Обновить аватар пользователя
+  updateUserAvatar(context, dataUpdate) {
+    return axios.put(`/api/users/${dataUpdate.id}/avatar?dbg`, dataUpdate.formData,
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+        onUploadProgress: (progressEvent) => {
+          state.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100;
+        },
+      })
+      .then((response) => {
+        state.uploadProgress = 0;
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Удалить фотокарточку пользователя
+  deleteUserAvatar(context, payload) {
+    return axios.delete(`/api/users/${payload.id}/avatar?dbg`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
       });
   },
   // Удалить пользователя

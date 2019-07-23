@@ -23,14 +23,17 @@
               <font-awesome-icon icon="trash" fixed-width />
               Удалить
             </b-dropdown-item>
+<!--
             <b-dropdown-item disabled>
               <font-awesome-icon icon="power-off" fixed-width />
               Отключить
             </b-dropdown-item>
+
             <b-dropdown-item disabled>
               <font-awesome-icon icon="key" fixed-width />
               Блокировать пароль
             </b-dropdown-item>
+-->
           </b-dropdown>
         </b-row>
       </b-col>
@@ -125,6 +128,17 @@
             </td>
             <td>
               <div class="card-profile-image mx-auto">
+                <div  v-if="uid != user.id" class="profile-image-overlay"
+                v-b-tooltip.hover title="Фотокарточка">
+                  <div v-b-modal.avatar-modal v-b-tooltip.hover
+                  @click="selectUser(user.id)" title="Вклеить новую">
+                    <font-awesome-icon :icon="['fa', 'upload']" fixed-width />
+                  </div>
+                  <div v-if="user.photo" v-b-tooltip.hover
+                  title="Вырезать" @click="deleteAvatar(user.id)">
+                    <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
+                  </div>
+                </div>
                 <img v-if="user.photo" :src="'/static/profile_avatars/'+user.photo"
                 alt="Фотокарточка" class="profile-image">
                 <img v-else :src="'/static/profile_avatars/default.png'"
@@ -189,8 +203,8 @@
 
             </td>
             <td>
-              <span class="weight-100 small d-block mx-auto" v-if="uid==user.id">
-                Для изменения <br> собственного досье <br> воспользуйтесь
+              <span class="weight-100 small text-muted d-block mx-auto" v-if="uid==user.id">
+                Для управления <br> собственным досье <br> воспользуйтесь
                 <router-link :to="{ name: 'UserProfile' }">профилем</router-link>
               </span>
               <b-button size="sm" title="Изменить досье" v-b-tooltip.hover variant="primary"
@@ -935,6 +949,77 @@
 
     </b-modal>
 
+    <b-modal id="avatar-modal"
+            @hidden="onResetImage"
+            @close="onResetImage"
+            title="Вклеить фотокарточку"
+            hide-footer size="md" centered
+            :header-bg-variant="'primary'"
+            :header-text-variant="'light'">
+
+      <div class=" row w-100 mx-auto pb-3 justify-content-center align-items-center">
+        <img v-bind:src="imageUpdate.imageData ?
+        imageUpdate.imageData : '/static/profile_avatars/default.png'"
+        alt="Предпросмотр средний квадрат"
+        class="profile-image-preview preview-md preview-square mr-4">
+
+        <img v-bind:src="imageUpdate.imageData ?
+        imageUpdate.imageData : '/static/profile_avatars/default.png'"
+        alt="Предпросмотр средний"
+        class="profile-image-preview preview-md mr-4">
+
+        <img v-bind:src="imageUpdate.imageData ?
+        imageUpdate.imageData : '/static/profile_avatars/default.png'"
+        alt="Предпросмотр маленький"
+        class="profile-image-preview preview-sm mr-4">
+
+      </div>
+
+      <b-form class="w-100" @submit.prevent="onSubmitAvatar(user.id)">
+        <b-form-group
+        description="Товарищам будет проще узнать Вас, если Вы вклеите свою настоящую фотокарточку.
+Она должна соответствовать ГОСТам ДЖиПег, ГиФ или ПэНГэ. Размер ГОСТ 3МБ">
+
+          <b-form-file
+            ref="imageInput"
+            @input="onSelectImage"
+            lang="ru"
+            placeholder="Выберите фотокарточку..."
+            drop-placeholder="Бросьте сюда..."
+            accept="image/jpeg, image/png, image/gif"
+            :state="$v.imageUpdate.$dirty ? !$v.imageUpdate.$anyError : null"
+          ></b-form-file>
+          <b-form-invalid-feedback
+          :state="$v.imageUpdate.$dirty ? !$v.imageUpdate.$anyError : null">
+            <span v-if="!$v.imageUpdate.size.maxValue">
+              Превышен лимит в 3 МБ для фотокарточки!
+            </span>
+            <span v-if="!$v.imageUpdate.type.isImage">
+              Фотокарточка не соответствует ГОСТам ДЖиПег, ГиФ или ПэНГэ!
+            </span>
+          </b-form-invalid-feedback>
+
+        </b-form-group>
+
+        <b-button class="mb-3" type="submit" block variant="primary"
+        title="Установить новую фотокарточку" v-b-tooltip.hover
+        :disabled="!$v.imageUpdate.$anyDirty || $v.imageUpdate.$invalid || this.file == null">
+          <font-awesome-icon :icon="['fa', 'save']" fixed-width />
+        </b-button>
+
+        <div class="row mx-auto pt-3 border-top">
+          <b-progress v-if="isActiveProgress" :max="100" show-progress animated class="w-100">
+            <b-progress-bar :value="progressValue" variant="success"
+            :label="`${((progressValue / progressMax) * 100).toFixed(2)}%`">
+            </b-progress-bar>
+            <b-progress-bar :value="preloadValue" variant="primary"
+            :label="`${preloadValue.toFixed(2)}%`">
+            </b-progress-bar>
+          </b-progress>
+        </div>
+      </b-form>
+    </b-modal>
+
   </main>
 </template>
 
@@ -947,9 +1032,13 @@ import { mapState } from 'vuex';
 import _ from 'lodash';
 import {
   required, sameAs, minLength, maxLength, alphaNum, email, requiredIf,
+  maxValue,
 } from 'vuelidate/lib/validators';
 import Breadcumbs from './Breadcumbs';
-import { EventBus, passwordGenerator, dateDiffNow } from '@/utils';
+import {
+  EventBus, passwordGenerator, dateDiffNow, formatBytes,
+} from '@/utils';
+import { imageType } from '@/validators';
 
 export default {
   name: 'Users',
@@ -961,6 +1050,8 @@ export default {
       deleteGroupPassphrase: '',
       selected: [],
       selectAll: false,
+      preloadValue: 0,
+      isActiveProgress: false,
       listControl: {
         page: 1,
         start: 1,
@@ -999,6 +1090,12 @@ export default {
         phone: '',
         birth_date: '',
         about_me: '',
+      },
+      file: null,
+      imageUpdate: {
+        type: '',
+        size: 0,
+        imageData: '',
       },
     };
   },
@@ -1118,6 +1215,14 @@ export default {
       },
       validationGroupFIO: ['user.name', 'user.surname', 'user.patronymic'],
     },
+    imageUpdate: {
+      size: {
+        maxValue: maxValue(3),
+      },
+      type: {
+        isImage: imageType,
+      },
+    },
   },
   components: { Breadcumbs, Datepicker, VueTelInput },
   computed: mapState({
@@ -1149,6 +1254,60 @@ export default {
           }
         }
       }
+    },
+    onSelectImage() {
+      const { files } = this.$refs.imageInput.$refs.input;
+      if (files && files[0]) {
+        this.imageUpdate.type = files[0].type;
+        this.imageUpdate.size = formatBytes(files[0].size, 2, 2).number;
+        this.$v.imageUpdate.$touch();
+
+        if (!this.$v.imageUpdate.$invalid) {
+          const reader = new FileReader();
+          reader.onprogress = (e) => {
+            if (e.lengthComputable) {
+              this.isActiveProgress = true;
+              this.preloadValue = Math.round((e.loaded / e.total) * 100);
+            }
+          };
+          reader.onload = (e) => {
+            this.imageUpdate.imageData = e.target.result;
+            this.file = files;
+          };
+          reader.readAsDataURL(files[0]);
+          this.$emit('input', files[0]);
+        }
+      }
+    },
+    onResetImage(evt) {
+      evt.preventDefault();
+      this.user = {};
+      this.file = null;
+      this.imageUpdate.type = '';
+      this.imageUpdate.size = 0;
+      this.imageUpdate.imageData = '';
+      this.isActiveProgress = false;
+      // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+      EventBus.$emit('forceRerender');
+    },
+    onSubmitAvatar(id) {
+      this.$v.imageUpdate.$touch();
+
+      if (!this.$v.imageUpdate.$invalid) {
+        const formData = new FormData();
+        if (this.file) {
+          formData.append('avatar', this.file[0]);
+        }
+        this.isActiveProgress = true;
+        this.$store.dispatch('updateUserAvatar', { formData, id });
+      }
+    },
+    deleteAvatar(id) {
+      this.$store.dispatch('deleteUserAvatar', { id });
     },
     onReset(evt) {
       evt.preventDefault();

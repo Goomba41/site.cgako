@@ -1,6 +1,6 @@
 // Проверка mime файла
 export function imageType(value) {
-  if (!value) return true;
+  if (!value) return false;
 
   const mimes = ['image/jpeg', 'image/png', 'image/gif'];
 
