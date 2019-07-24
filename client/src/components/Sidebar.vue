@@ -9,7 +9,7 @@
       <router-link :to="{ name: 'Dashboard' }">
         <b-list-group-item class="noselect" @click="sidebarOff">
           <font-awesome-icon :icon="['fa', 'th-large']" class="pr-3" fixed-width size="2x"/>
-          Панель
+          Главная панель
         </b-list-group-item>
       </router-link>
 
@@ -25,7 +25,15 @@
               <b-list-group-item class="noselect" @click="sidebarOff">
                 <span class="ml-4">
                   <font-awesome-icon :icon="['fa', 'user']" class="" fixed-width size="1x"/>
-                  Пользователи
+                  Оргсовет
+                </span>
+              </b-list-group-item>
+            </router-link>
+            <router-link :to="{ name: 'Roles' }">
+              <b-list-group-item class="noselect" @click="sidebarOff">
+                <span class="ml-4">
+                  <font-awesome-icon :icon="['fa', 'id-card']" class="" fixed-width size="1x"/>
+                  Полномочия
                 </span>
               </b-list-group-item>
             </router-link>
@@ -40,7 +48,7 @@
 
       <b-list-group-item class="noselect" disabled @click="sidebarOff">
         <font-awesome-icon :icon="['fa', 'folder']" class="pr-3" fixed-width size="2x"/>
-        Медиа
+        Материалы
       </b-list-group-item>
 
     </b-list-group>

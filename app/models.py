@@ -48,6 +48,22 @@ user_role = db.Table(
     )
 )
 
+role_permission = db.Table(
+    'association_role_permission',
+    db.Column(
+        'role_id',
+        db.Integer,
+        db.ForeignKey('cms_roles.id'),
+        primary_key=True
+    ),
+    db.Column(
+        'permission_id',
+        db.Integer,
+        db.ForeignKey('association_permission.id'),
+        primary_key=True
+    )
+)
+
 # ------------------------------------------------------------
 # Модели
 # ------------------------------------------------------------
@@ -211,7 +227,20 @@ class CmsRoles(db.Model):
     """Модель системных ролей."""
 
     id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
-    title = db.Column(db.String(20), unique=True, comment="Название роли")
+    title = db.Column(db.String(50), unique=True, comment="Название роли")
+    deletable = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Удаляемая"
+    )
+
+    permissions = db.relationship(
+        'AssociationPermission',
+        secondary=role_permission,
+        lazy='subquery',
+        backref=db.backref('roles', lazy=True)
+    )
 
     def __init__(self, title):
         """Конструктор класса."""
@@ -221,9 +250,104 @@ class CmsRoles(db.Model):
         """Форматирование представления экземпляра класса."""
         return 'Роль название:%r ' % (self.title)
 
+
+class SystemObjects(db.Model):
+    """Модель объектов системы."""
+
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
+    title = db.Column(db.String(50), unique=True, comment="Название объекта")
+    uri = db.Column(db.String(50), unique=True, comment="Идентификатор")
+
+    actions = db.relationship(
+        'SystemObjectsActions',
+        secondary='association_permission'
+    )
+
+    def __init__(self, title):
+        """Конструктор класса."""
+        self.title = title
+
+    def __repr__(self):
+        """Форматирование представления экземпляра класса."""
+        return 'Системный объект название:%r ' % (self.title)
+
+
+class SystemObjectsActions(db.Model):
+    """Модель действий над объектами системы."""
+
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
+    title = db.Column(db.String(50), unique=True, comment="Название действия")
+    uri = db.Column(db.String(50), unique=True, comment="Идентификатор")
+
+    objects = db.relationship(
+        SystemObjects,
+        secondary='association_permission'
+    )
+
+    def __init__(self, title):
+        """Конструктор класса."""
+        self.title = title
+
+    def __repr__(self):
+        """Форматирование представления экземпляра класса."""
+        return 'Действие над объектом название:%r ' % (self.title)
+
+
+class AssociationPermission(db.Model):
+    """Ассоциативная таблица для создания разрешения (объект + действие)."""
+
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True) # noqa: ignore=A003
+
+    object_id = db.Column(db.Integer, db.ForeignKey('system_objects.id'))
+    action_id = db.Column(db.Integer, db.ForeignKey(
+        'system_objects_actions.id'
+    ))
+
+    objects = db.relationship(
+        SystemObjects,
+        backref=db.backref("permission")
+    )
+    actions = db.relationship(
+        SystemObjectsActions,
+        backref=db.backref("permission")
+    )
+
 # ------------------------------------------------------------
 # Схемы
 # ------------------------------------------------------------
+
+
+class SystemObjectsSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = SystemObjects
+        exclude = ("actions", "permission")
+
+
+class SystemObjectsActionsSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = SystemObjectsActions
+        exclude = ("objects", "permission")
+
+
+class AssociationPermissionSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = AssociationPermission
+        exclude = ("roles",)
+
+    actions = ma.Nested(SystemObjectsActionsSchema)
+    objects = ma.Nested(SystemObjectsSchema)
 
 
 class CmsRolesSchema(ma.ModelSchema):
@@ -233,6 +357,7 @@ class CmsRolesSchema(ma.ModelSchema):
         """Мета модели, вносятся доп. параметры."""
 
         model = CmsRoles
+    permissions = ma.Nested(AssociationPermissionSchema, many=True)
 
 
 class CmsUsersSchema(ma.ModelSchema):

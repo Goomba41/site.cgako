@@ -10,6 +10,7 @@ Vue.use(Vuex);
 
 // Источник данных
 const state = {
+  roles: [], // список ролей CMS
   users: [], // список пользователей CMS
   uid: '', // id текущего пользователя
   profile: {}, // профиль текущего пользователя
@@ -20,7 +21,6 @@ const state = {
   jwt: localStorage.getItem('token') || '', // Загрузить токен из хранилища, или инициировать пустой, если нет в хранилище
 };
 
-// Асинхронные операции AJAX
 const actions = {
   // Запрос токена с отсылкой авторизационных данных
   async login(context, userCreds) {
@@ -310,6 +310,29 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  // Загрузить роли
+  loadRoles(context, payload) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/roles?dbg',
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+        params: {
+          limit: payload.limit || 20,
+          start: payload.start || 1,
+        },
+      })
+      .then((response) => {
+        context.commit('setRoles', { roles: response.data });
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+        EventBus.$emit('message', error.response.data);
+      });
+  },
 };
 
 // Мутации данных
@@ -332,6 +355,11 @@ const mutations = {
   setUsers(state, payload) {
     state.users = payload.users;
   },
+  // Установка списка ролей
+  setRoles(state, payload) {
+    state.roles = payload.roles;
+  },
+  // Установка профиля пользователя
   setProfile(state, payload) {
     state.profile = payload.profile;
   },

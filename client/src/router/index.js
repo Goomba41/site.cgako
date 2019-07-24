@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import NProgress from 'nprogress';
 import Activation from '@/components/Activation';
 import Users from '@/components/Users';
+import Roles from '@/components/Roles';
 import Login from '@/components/Login';
 import Dashboard from '@/components/Dashboard';
 import AdminPanel from '@/components/AdminPanel';
@@ -42,8 +43,8 @@ const router = new Router({
           component: Users,
           meta: {
             requiresAuth: true,
-            breadCrumb: 'Пользователи',
-            title: 'CMS - Пользователи',
+            breadCrumb: 'Оргсовет',
+            title: 'CMS - Оргсовет',
           },
         },
         {
@@ -52,8 +53,18 @@ const router = new Router({
           component: Profile,
           meta: {
             requiresAuth: true,
-            breadCrumb: 'Профиль',
-            title: 'CMS - Профиль',
+            breadCrumb: 'Досье',
+            title: 'CMS - Досье',
+          },
+        },
+        {
+          path: 'roles',
+          name: 'Roles',
+          component: Roles,
+          meta: {
+            requiresAuth: true,
+            breadCrumb: 'Полномочия',
+            title: 'CMS - Полномочия',
           },
         },
         {

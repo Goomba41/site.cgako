@@ -64,7 +64,7 @@
                 <b-dropdown-item :to="{ name: 'UserProfile' }">
                     <font-awesome-icon :icon="['fa', 'user-circle']"
                     fixed-width class="mr-3" />
-                    Ваш профиль
+                    Ваше досье
                 </b-dropdown-item>
                 <b-dropdown-divider class="m-0"></b-dropdown-divider>
                 <b-dropdown-item disabled href="#">

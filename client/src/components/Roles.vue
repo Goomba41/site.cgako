@@ -6,8 +6,8 @@
       <b-col align-self="start" class="text-center" sm="8">
         <b-row class="justify-content-start align-middle align-items-center">
           <span class="text-info pr-3">
-            Всего {{ users.count }}
-            {{ users.count | declension(["товарищ", "товарища", "товарищей"]) }}
+            Всего {{ roles.count }}
+            {{ roles.count | declension(["уровень полномочий", "уровня полномочий", "уровней полномочий"]) }}
           </span>
           <b-button title="Новое досье" v-b-tooltip.hover class="mr-1" size="sm" variant="success"
           v-b-modal.new-modal>
@@ -23,46 +23,16 @@
               <font-awesome-icon icon="trash" fixed-width />
               Удалить
             </b-dropdown-item>
-<!--
-            <b-dropdown-item disabled>
-              <font-awesome-icon icon="power-off" fixed-width />
-              Отключить
-            </b-dropdown-item>
-
-            <b-dropdown-item disabled>
-              <font-awesome-icon icon="key" fixed-width />
-              Блокировать пароль
-            </b-dropdown-item>
--->
           </b-dropdown>
         </b-row>
       </b-col>
 
-<!--
-      <b-col sm="4" class="text-center">
-        <b-row class="justify-content-center align-middle align-items-center">
-          <b-col>
-            <b-input-group size="sm">
-              <b-input-group-text slot="prepend">
-                <font-awesome-icon :icon="['fa', 'search']" fixed-width />
-              </b-input-group-text>
-              <b-form-input type="search"
-              title="Найти" v-b-tooltip.hover
-              autocomplete="off"
-              v-model="searchPhrase"
-              v-on:input="searchByText(users.results)"/>
-            </b-input-group>
-          </b-col>
-        </b-row>
-      </b-col>
--->
-
       <b-col sm="4" class="text-center">
         <b-row class="justify-content-end align-middle align-items-center">
           <b-col sm="4">
-            <b-input-group :append="'/ ' + users.pages" size="sm"
+            <b-input-group :append="'/ ' + roles.pages" size="sm"
              title="Навигация по страницам" v-b-tooltip.hover>
-              <b-form-input type="number" min=1 :max="users.pages"
+              <b-form-input type="number" min=1 :max="roles.pages"
               autocomplete="off"
               v-model="listControl.page"
               v-on:input="listBegin(); listChange()"/>
@@ -71,7 +41,7 @@
           <b-col sm="4">
             <b-input-group prepend="По:" size="sm"
              title="Показывать на странице" v-b-tooltip.hover>
-              <b-form-input type="number" min=1 :max="users.count - listControl.start + 1"
+              <b-form-input type="number" min=1 :max="roles.count - listControl.start + 1"
               autocomplete="off"
               v-model="listControl.limit"
               v-on:input="listChange(); listControl.page = 1"/>
@@ -80,7 +50,7 @@
           <b-col sm="4">
             <b-input-group prepend="С:" size="sm"
              title="Начать с записи" v-b-tooltip.hover>
-              <b-form-input type="number" min=1 :max="users.count"
+              <b-form-input type="number" min=1 :max="roles.count"
               autocomplete="off"
               v-model="listControl.start"
               v-on:input="listRows(); listChange()"/>
@@ -90,188 +60,96 @@
       </b-col>
 
     </b-row>
+{{roles.results}}
+    <b-row class="p-3">
+      <b-col sm="6">
 
-    <div class="row p-3">
-      <table class="table table-hover td-align-middle">
-        <thead>
-          <tr class="text-center">
-            <th scope="col">
-              <b-form-checkbox v-model="selectAll" @change="select"></b-form-checkbox>
-            </th>
-            <th scope="col">Фотокарточка</th>
-            <th scope="col">
-              Товарищ
-              <font-awesome-icon icon="sort"
-              fixed-width
-              @click="listControl.orderBy.field='surname';
-              listControl.orderBy.asc=!listControl.orderBy.asc"/>
+        <table class="table table-hover td-align-middle">
+          <thead>
+            <tr class="text-center">
+              <th scope="col">
+                <b-form-checkbox v-model="selectAll" @change="select"></b-form-checkbox>
               </th>
-            <th scope="col">Уровень полномочий</th>
-            <th scope="col">Cоц. сети</th>
-            <th scope="col">
-              Последний вход
-              <font-awesome-icon icon="sort"
-              fixed-width
-              @click="listControl.orderBy.field='last_login';
-              listControl.orderBy.asc=!listControl.orderBy.asc"/>
-            </th>
-            <th scope="col">Управление</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in orderedList" v-bind:key="user.id">
-            <td>
-              <b-form-checkbox
-                v-if="uid != user.id"
-                v-model="selected"
-                :value="user.id"></b-form-checkbox>
-            </td>
-            <td>
-              <div class="card-profile-image mx-auto">
-                <div  v-if="uid != user.id" class="profile-image-overlay"
-                v-b-tooltip.hover title="Фотокарточка">
-                  <div v-b-modal.avatar-modal v-b-tooltip.hover
-                  @click="selectUser(user.id)" title="Вклеить новую">
-                    <font-awesome-icon :icon="['fa', 'upload']" fixed-width />
-                  </div>
-                  <div v-if="user.photo" v-b-tooltip.hover
-                  title="Вырезать" @click="deleteAvatar(user.id)">
-                    <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
-                  </div>
-                </div>
-                <img v-if="user.photo" :src="'/static/profile_avatars/'+user.photo"
-                alt="Фотокарточка" class="profile-image">
-                <img v-else :src="'/static/profile_avatars/default.png'"
-                alt="Фотокарточка" class="profile-image">
-              </div>
-            </td>
-            <td v-bind:title="`${user.surname} ${user.name} ${user.patronymic}`" v-b-tooltip.hover>
-              {{user.surname}} {{user.name.charAt(0)}}.{{user.patronymic.charAt(0)}}.
-              <br><b>@{{user.login}}</b>
-            </td>
-            <td style="max-width:10rem;">
-              <b-row class="justify-content-center noselect align-middle align-items-center">
-                <b-badge variant="info" class="m-1"
-                v-for="role in user.roles" v-bind:key="role.title">
-                  {{role.title}}
-                </b-badge>
-              </b-row>
-            </td>
-            <td>
-              <font-awesome-icon :icon="['fab', 'vk']" fixed-width />
-              <font-awesome-icon :icon="['fab', 'odnoklassniki']" fixed-width />
-              <font-awesome-icon :icon="['fab', 'yandex']" fixed-width />
-              <font-awesome-icon :icon="['fab', 'google']" fixed-width />
-            </td>
-            <td v-bind:title="user.last_login && user.last_login.datetime ?
-            $options.filters.moment(user.last_login.datetime, 'dddd, MMMM Do YYYY, HH:mm:ss') :
-            'Не входил'" v-b-tooltip.hover>
-              {{user.last_login && user.last_login.datetime ?
-                $options.filters.moment(user.last_login.datetime, 'from') : 'Не входил'}}
-              <br>
-              {{user.last_login && user.last_login.ip ?
-                user.last_login.ip : ''}}
-              <font-awesome-icon v-if="user.last_login && user.last_login.agent"
-              :icon="['far', 'window-maximize']" fixed-width
-              v-bind:title="user.last_login && user.last_login.browser ?
-                user.last_login.browser : 'Неизвестный браузер'" v-b-tooltip.hover/>
 
-              <font-awesome-icon v-if="user.last_login && user.last_login.device
-              && user.last_login.device==='pc'"
-              v-bind:icon="['fa', 'desktop']" fixed-width
-              v-bind:title="user.last_login && user.last_login.device ?
-                'Компьютер': 'Неизвестное устройство'" v-b-tooltip.hover/>
-              <font-awesome-icon v-else-if="user.last_login && user.last_login.device
-              && user.last_login.device==='tablet'"
-              v-bind:icon="['fa', 'tablet-alt']" fixed-width
-              v-bind:title="user.last_login && user.last_login.device ?
-                'Планшет' : 'Неизвестное устройство'" v-b-tooltip.hover/>
-              <font-awesome-icon v-else-if="user.last_login && user.last_login.device
-              && user.last_login.device==='mobile'"
-              v-bind:icon="['fa', 'mobile-alt']" fixed-width
-              v-bind:title="user.last_login && user.last_login.device ?
-                'Телефон' : 'Неизвестное устройство'" v-b-tooltip.hover/>
+              <th scope="col">
+                Уровень полномочий
+                <font-awesome-icon icon="sort"
+                fixed-width
+                @click="listControl.orderBy.field='title';
+                listControl.orderBy.asc=!listControl.orderBy.asc"/>
+                </th>
 
-              <font-awesome-icon v-if="user.last_login && user.last_login.os
-              && user.last_login.os.includes('Windows')"
-              v-bind:icon="['fab', 'windows']" fixed-width
-              class="text-primary"
-              v-bind:title="user.last_login && user.last_login.os ?
-                user.last_login.os: 'Неизвестное устройство'" v-b-tooltip.hover/>
-              <font-awesome-icon v-else-if="user.last_login && user.last_login.os
-              && user.last_login.os.includes('Mac')"
-              v-bind:icon="['fab', 'apple']" fixed-width
-              v-bind:title="user.last_login && user.last_login.os ?
-                user.last_login.os : 'Неизвестное устройство'" v-b-tooltip.hover/>
-              <font-awesome-icon v-else-if="user.last_login && user.last_login.os"
-              v-bind:icon="['fab', 'linux']" fixed-width
-              v-bind:title="user.last_login && user.last_login.os ?
-                user.last_login.os : 'Неизвестное устройство'" v-b-tooltip.hover/>
+              <th scope="col">Управление</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="role in orderedList" v-bind:key="role.id">
+              <td>
+                <b-form-checkbox
+                  v-model="selected"
+                  v-if="role.deletable"
+                  :value="role.id"></b-form-checkbox>
+              </td>
+              <td>
+                {{role.title}}
+              </td>
+              <td class="text-left">
+                <b-button size="sm" title="Корректировать" v-b-tooltip.hover variant="primary"
+                v-b-modal.edit-modal @click="selectRole(role.id)">
+                  <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
+                </b-button>
 
-            </td>
-            <td>
-              <span class="weight-100 small text-muted d-block mx-auto" v-if="uid==user.id">
-                Для управления <br> собственным досье <br> воспользуйтесь
-                <router-link :to="{ name: 'UserProfile' }">профилем</router-link>
-              </span>
-              <b-button size="sm" title="Корректировать досье" v-b-tooltip.hover variant="primary"
-              v-b-modal.edit-modal @click="selectUser(user.id)" v-if="uid!=user.id">
-                <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
-              </b-button>
+                <b-button
+                size="sm" title="Привилегии" variant="info"
+                v-b-tooltip.hover
+                v-if="role.permissions.length"
+                @click="selectRole(role.id)"
+                v-b-modal.delete-modal>
+                  <font-awesome-icon :icon="['fa', 'user-check']" fixed-width />
+                </b-button>
 
-              <b-button size="sm" title="Экстренная связь" v-b-tooltip.hover variant="info"
-              v-b-modal.contacts-modal
-              @click="selectUser(user.id)" v-if="uid!=user.id">
-                <font-awesome-icon :icon="['fa', 'info']" fixed-width />
-              </b-button>
+                <b-button
+                size="sm" title="Уничтожить" variant="danger"
+                v-b-tooltip.hover
+                v-if="role.deletable"
+                @click="selectRole(role.id)"
+                v-b-modal.delete-modal>
+                  <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
+                </b-button>
 
-              <b-button v-if="uid != user.id"
-              size="sm" title="Уничтожить досье" variant="danger"
-              v-b-tooltip.hover
-              @click="selectUser(user.id)"
-              v-b-modal.delete-modal>
-                <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
-              </b-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      </b-col>
+      <b-col sm="6">
+        <b-card no-body header-tag="header">
+          <h3 slot="header" class="mb-0 small">
+            Привилегии уровня полномочий
+          </h3>
+          <b-list-group flush v-if="Object.keys(role).length===0">
+            <b-list-group-item class="flex-column align-items-start">
+               <b-form-text slot="description">
+                Нажмите кнопку
+                <font-awesome-icon :icon="['fa', 'user-check']" fixed-width />
+                одного из уровня полномочий, чтобы отобразить список привилегий
+              </b-form-text>
+            </b-list-group-item>
+          </b-list-group>
 
-    <b-modal id="contacts-modal"
-            @hidden="user={}"
-            @close="user={}"
-            title="Экстренная связь"
-            v-b-tooltip.hover
-            hide-footer size="sm" centered
-            header-bg-variant="info"
-            header-text-variant="light">
-      <p v-for="mail in this.user.email" v-bind:key="mail.value">
-        <a v-if="mail.value" :href="`mailto:${mail.value}`" title="Написать на эту почту"
-        v-b-tooltip.hover>
-          <font-awesome-icon title="Личная почта" v-b-tooltip.hover
-          v-if="mail.type==='personal'"
-          v-bind:icon="['fa', 'user']" fixed-width/>
-          <font-awesome-icon title="Основная почта" v-b-tooltip.hover
-          v-else-if="mail.type==='primary'"
-          v-bind:icon="['fa', 'at']" fixed-width/>
-          <font-awesome-icon title="Рабочая почта" v-b-tooltip.hover
-          v-else-if="mail.type==='work'"
-          v-bind:icon="['fa', 'briefcase']" fixed-width/>
-          <font-awesome-icon
-          :title="mail.verified ? 'Подтверждена' : 'Не подтверждена'"
-          v-b-tooltip.hover
-          v-bind:icon="['fa', 'check-circle']"
-          :class="mail.verified ? 'text-success' : 'text-danger'" fixed-width/>
-          {{mail.value}}
-        </a>
-      </p>
-      <p>
-        <font-awesome-icon :icon="['fa', 'phone']" fixed-width class="text-primary"/>
-        {{this.user.phone}}
-      </p>
-    </b-modal>
+          <b-list-group flush v-else>
+            <b-list-group-item class="flex-column align-items-start"
+            v-for="permission in role.permissions" :key="permission.id">
+                {{permission.objects.title}}
+                {{permission.actions.title}}
+            </b-list-group-item>
+
+          </b-list-group>
+        </b-card>
+      </b-col>
+    </b-row>
+<!--
 
     <b-modal id="delete-modal"
             @show="deletePassphrase=''"
@@ -1026,39 +904,31 @@
         </div>
       </b-form>
     </b-modal>
+-->
 
   </main>
 </template>
 
 <script>
-import Datepicker from 'vuejs-datepicker';
-import { ru } from 'vuejs-datepicker/dist/locale';
-import VueTelInput from 'vue-tel-input';
-import moment from 'moment';
 import { mapState } from 'vuex';
 import _ from 'lodash';
-import {
-  required, sameAs, minLength, maxLength, alphaNum, email, requiredIf,
-  maxValue,
-} from 'vuelidate/lib/validators';
+// import {
+  // required, sameAs, minLength, maxLength, alphaNum, email, requiredIf,
+  // maxValue,
+// } from 'vuelidate/lib/validators';
 import Breadcumbs from './Breadcumbs';
-import {
-  EventBus, passwordGenerator, dateDiffNow, formatBytes,
-} from '@/utils';
-import { imageType } from '@/validators';
+import { EventBus } from '@/utils';
+
 
 export default {
-  name: 'Users',
+  name: 'Roles',
   data() {
     return {
-      dateDiffNow,
-      user: {},
+      role: {},
       deletePassphrase: '',
       deleteGroupPassphrase: '',
       selected: [],
       selectAll: false,
-      preloadValue: 0,
-      isActiveProgress: false,
       listControl: {
         page: 1,
         start: 1,
@@ -1068,334 +938,51 @@ export default {
           asc: true,
         },
       },
-      disabledDates: {
-        from: new Date(),
-      },
-      russian: ru,
-      passwordGenerator,
-      isActivePassword: false,
-      newUser: {
-        login: '',
-        password: '',
-        name: '',
-        surname: '',
-        patronymic: '',
-        email: [
-          {
-            type: 'primary',
-            value: '',
-          },
-          {
-            type: 'work',
-            value: '',
-          },
-          {
-            type: 'personal',
-            value: '',
-          },
-        ],
-        phone: '',
-        birth_date: '',
-        about_me: '',
-      },
-      file: null,
-      imageUpdate: {
-        type: '',
-        size: 0,
-        imageData: '',
-      },
     };
   },
   validations: {
-    deletePassphrase: {
-      required,
-      sameAsLogin: sameAs(function sameLogin() {
-        return this.user.login;
-      }),
-    },
-    deleteGroupPassphrase: {
-      required,
-      sameAsPassphrase: sameAs(() => 'Удалить'),
-    },
-    newUser: {
-      login: {
-        required,
-        minLength: minLength(4),
-        maxLength: maxLength(20),
-        alphaNum,
-      },
-      password: {
-        required,
-      },
-      name: {
-        required,
-        minLength: minLength(4),
-        maxLength: maxLength(20),
-        alpha: val => /^[а-яё]*$/i.test(val),
-      },
-      surname: {
-        required,
-        minLength: minLength(4),
-        maxLength: maxLength(20),
-        alpha: val => /^[а-яё]*$/i.test(val),
-      },
-      patronymic: {
-        required,
-        minLength: minLength(4),
-        maxLength: maxLength(20),
-        alpha: val => /^[а-яё]*$/i.test(val),
-      },
-      email: {
-        $each: {
-          value: {
-            email,
-            required: requiredIf((value) => {
-              if (!value) return true;
-              if (value.type === 'primary') {
-                return true;
-              }
-              return false;
-            }),
-          },
-        },
-      },
-      phone: {
-        required,
-        format: val => (val != null && val.length === 16),
-      },
-      birth_date: {
-        required,
-      },
-      about_me: {
-        maxLength: maxLength(140),
-      },
-      validationGroupFIO: ['newUser.name', 'newUser.surname', 'newUser.patronymic'],
-    },
-    user: {
-      login: {
-        required,
-        minLength: minLength(4),
-        maxLength: maxLength(20),
-        alphaNum,
-      },
-      name: {
-        required,
-        minLength: minLength(4),
-        maxLength: maxLength(20),
-        alpha: val => /^[а-яё]*$/i.test(val),
-      },
-      surname: {
-        required,
-        minLength: minLength(4),
-        maxLength: maxLength(20),
-        alpha: val => /^[а-яё]*$/i.test(val),
-      },
-      patronymic: {
-        required,
-        minLength: minLength(4),
-        maxLength: maxLength(20),
-        alpha: val => /^[а-яё]*$/i.test(val),
-      },
-      email: {
-        $each: {
-          value: {
-            email,
-            required: requiredIf((value) => {
-              if (!value) return true;
-              if (value.type === 'primary') {
-                return true;
-              }
-              return false;
-            }),
-          },
-        },
-      },
-      phone: {
-        required,
-        format: val => (val != null && val.length === 16),
-      },
-      birth_date: {
-        required,
-      },
-      about_me: {
-        maxLength: maxLength(140),
-      },
-      validationGroupFIO: ['user.name', 'user.surname', 'user.patronymic'],
-    },
-    imageUpdate: {
-      size: {
-        maxValue: maxValue(3),
-      },
-      type: {
-        isImage: imageType,
-      },
-    },
+    // deletePassphrase: {
+      // required,
+      // sameAsLogin: sameAs(function sameLogin() {
+        // return this.user.login;
+      // }),
+    // },
+    // deleteGroupPassphrase: {
+      // required,
+      // sameAsPassphrase: sameAs(() => 'Удалить'),
+    // },
   },
-  components: { Breadcumbs, Datepicker, VueTelInput },
+  components: { Breadcumbs },
   computed: mapState({
-    users: state => state.users,
+    roles: state => state.roles,
     uid: state => state.uid,
-    reactivationPeriod: state => state.reactivationPeriod,
     orderedList() {
-      return _.orderBy(this.users.results,
+      return _.orderBy(this.roles.results,
         this.listControl.orderBy.field,
         this.listControl.orderBy.asc ? 'asc' : 'desc');
     },
-    progressValue: state => state.uploadProgress,
-    progressMax: state => state.uploadProgressMax,
     formPending: state => state.formPending,
   }),
   beforeMount() {
-    this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
+    this.$store.dispatch('loadRoles', { start: this.listControl.start, limit: this.listControl.limit });
   },
   methods: {
-    dateFormatter(date) {
-      return moment(date).format('YYYY-MM-DD');
-    },
     select() {
       this.selected = [];
       if (!this.selectAll) {
-        for (let i = 0; i < this.users.results.length; i += 1) {
-          if (this.uid !== this.users.results[i].id) {
-            this.selected.push(this.users.results[i].id);
+        for (let i = 0; i < this.roles.results.length; i += 1) {
+          if (this.roles.results[i].deletable) {
+            this.selected.push(this.roles.results[i].id);
           }
         }
       }
     },
-    onSelectImage() {
-      const { files } = this.$refs.imageInput.$refs.input;
-      if (files && files[0]) {
-        this.imageUpdate.type = files[0].type;
-        this.imageUpdate.size = formatBytes(files[0].size, 2, 2).number;
-        this.$v.imageUpdate.$touch();
-
-        if (!this.$v.imageUpdate.$invalid) {
-          const reader = new FileReader();
-          reader.onprogress = (e) => {
-            if (e.lengthComputable) {
-              this.isActiveProgress = true;
-              this.preloadValue = Math.round((e.loaded / e.total) * 100);
-            }
-          };
-          reader.onload = (e) => {
-            this.imageUpdate.imageData = e.target.result;
-            this.file = files;
-          };
-          reader.readAsDataURL(files[0]);
-          this.$emit('input', files[0]);
-        }
-      }
-    },
-    onResetImage(evt) {
-      evt.preventDefault();
-      this.user = {};
-      this.file = null;
-      this.imageUpdate.type = '';
-      this.imageUpdate.size = 0;
-      this.imageUpdate.imageData = '';
-      this.isActiveProgress = false;
-      // Trick to reset/clear native browser form validation state
-      this.show = false;
-      this.$nextTick(() => {
-        this.show = true;
-      });
-      EventBus.$emit('forceRerender');
-    },
-    onSubmitAvatar(id) {
-      this.$v.imageUpdate.$touch();
-
-      if (!this.$v.imageUpdate.$invalid) {
-        const formData = new FormData();
-        if (this.file) {
-          formData.append('avatar', this.file[0]);
-        }
-        this.isActiveProgress = true;
-        this.$store.dispatch('updateUserAvatar', { formData, id });
-      }
-    },
-    deleteAvatar(id) {
-      this.$store.dispatch('deleteUserAvatar', { id });
-    },
-    onReset(evt) {
-      evt.preventDefault();
-      this.$v.newUser.$reset();
-
-      this.newUser.login = '';
-      this.newUser.password = passwordGenerator(8);
-      this.newUser.name = '';
-      this.newUser.surname = '';
-      this.newUser.patronymic = '';
-      this.newUser.phone = '';
-      this.newUser.birth_date = '';
-      this.newUser.about_me = '';
-      this.newUser.email = [
-        {
-          type: 'primary',
-          value: '',
-        },
-        {
-          type: 'work',
-          value: '',
-        },
-        {
-          type: 'personal',
-          value: '',
-        },
-      ];
-      // Trick to reset/clear native browser form validation state
-      this.show = false;
-      this.$nextTick(() => {
-        this.show = true;
-      });
-      EventBus.$emit('forceRerender');
-    },
-    onSubmitPasswordReset(id) {
-      this.$store.dispatch('passwordReset', { id });
-    },
-    onSubmitPasswordBlock(id) {
-      this.$store.dispatch('passwordBlock', { id });
-    },
-    onSubmitMailVerify(id, type, value) {
-      this.$store.dispatch('verifyMailSend', { id, value, type });
-      EventBus.$emit('forceRerender');
-    },
-    onSubmitMailReset(id, type, value) {
-      this.$store.dispatch('verifyMailReset', { id, value, type });
-      EventBus.$emit('forceRerender');
-    },
-    onSubmitNewUser() {
-      this.$v.$touch();
-
-      if (!this.$v.newUser.$invalid) {
-        this.newUser.birth_date = moment(this.newUser.birth_date).format('YYYY-MM-DD');
-        this.$store.dispatch('newUser', this.newUser);
-      }
-    },
-    async onSubmitUpdateUser() {
-      this.$v.user.$touch();
-
-      if (!this.$v.user.$invalid) {
-        this.user.birth_date = moment(this.user.birth_date).format('YYYY-MM-DD');
-        await this.$store.dispatch('updateUser', this.user);
-        this.$v.user.$reset();
-        EventBus.$emit('forceRerender');
-      }
-    },
-    deleteUser(id) {
-      if (Array.isArray(id)) {
-        for (let i = 0; i < id.length; i += 1) {
-          this.$store.dispatch('deleteUser', { id: id[i] });
-        }
-      } else if (!Number.isNaN(id)) {
-        this.$store.dispatch('deleteUser', { id });
-      }
-    },
-    selectUser(id) {
-      this.user = _.find(this.users.results, { id });
+    selectRole(id) {
+      this.role = _.find(this.roles.results, { id });
     },
     listRows() {
       // Просчет количества показываемых строк в зависимости от индекса начальной
-      const newLimit = parseInt(parseInt(this.users.count, 10)
+      const newLimit = parseInt(parseInt(this.roles.count, 10)
       - parseInt(this.listControl.start, 10) + 1, 10);
       const limit = parseInt(this.listControl.limit, 10);
       if (limit > newLimit) {
@@ -1409,14 +996,14 @@ export default {
       вычитаем количество ненужных строк (из количества на странице - сама строка) */
       const newBegin = parseInt(parseInt(this.listControl.limit, 10)
       * parseInt(this.listControl.page, 10) - (parseInt(this.listControl.limit - 1, 10)), 10);
-      if (newBegin > this.users.count) {
-        this.listControl.start = this.users.count;
+      if (newBegin > this.roles.count) {
+        this.listControl.start = this.roles.count;
       } else {
         this.listControl.start = newBegin;
       }
     },
     listChange() {
-      this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
+      this.$store.dispatch('loadRoles', { start: this.listControl.start, limit: this.listControl.limit });
     },
   },
 };

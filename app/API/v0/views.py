@@ -27,7 +27,9 @@ from functools import wraps
 
 
 from app import bcrypt, db, mail
-from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema
+from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
+    CmsRoles, CmsRolesSchema, SystemObjects, SystemObjectsActions, \
+    AssociationPermission, AssociationPermissionSchema
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator
 
@@ -1372,6 +1374,75 @@ def users_password_reset(current_user, uid):
         response = server_error(request.args.get("dbg"))
 
     return response
+
+# ------------------------------------------------------------
+# Роли
+# ------------------------------------------------------------
+
+
+@API0.route('/roles', methods=['GET'])
+@token_required
+def get_roles(current_user):
+    """ Получение полного списка ролей в json"""
+
+    try:
+
+        role_schema = CmsRolesSchema(many=True, exclude=['users'])
+
+        test_schema = AssociationPermissionSchema(exclude=['roles'])
+        test = AssociationPermission.query.first()
+        testdata = test_schema.dump(test)
+        print(testdata.data)
+
+        roles = CmsRoles.query.all()
+        rdata = role_schema.dump(roles)
+        rdata = rdata.data
+
+        rdata = pagination_of_list(
+            rdata,
+            url_for('API0.get_roles',
+                    _external=True),
+            start=request.args.get('start', 1),
+            limit=request.args.get('limit',
+                                   current_app.config['LIMIT'])
+        )
+
+        response = Response(
+            response=json.dumps(rdata),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/roles/<int:rid>', methods=['GET'])
+@token_required
+def get_role_by_id(current_user, rid):
+    """ Получение одной роли по id в json"""
+
+    try:
+
+        role_schema = CmsRolesSchema(exclude=['users'])
+        roles = CmsRoles.query.get(rid)
+        rdata = role_schema.dump(roles)
+
+        response = Response(
+            response=json.dumps(rdata.data),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
 
 # ------------------------------------------------------------
 # Новости
