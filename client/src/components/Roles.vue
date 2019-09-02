@@ -7,7 +7,8 @@
         <b-row class="justify-content-start align-middle align-items-center">
           <span class="text-info pr-3">
             Всего {{ roles.count }}
-            {{ roles.count | declension(["уровень полномочий", "уровня полномочий", "уровней полномочий"]) }}
+            {{ roles.count | declension(["уровень полномочий", "уровня полномочий",
+              "уровней полномочий"]) }}
           </span>
           <b-button title="Новое досье" v-b-tooltip.hover class="mr-1" size="sm" variant="success"
           v-b-modal.new-modal>
@@ -913,11 +914,11 @@
 import { mapState } from 'vuex';
 import _ from 'lodash';
 // import {
-  // required, sameAs, minLength, maxLength, alphaNum, email, requiredIf,
-  // maxValue,
+// required, sameAs, minLength, maxLength, alphaNum, email, requiredIf,
+// maxValue,
 // } from 'vuelidate/lib/validators';
 import Breadcumbs from './Breadcumbs';
-import { EventBus } from '@/utils';
+// import { EventBus } from '@/utils';
 
 
 export default {
@@ -942,14 +943,14 @@ export default {
   },
   validations: {
     // deletePassphrase: {
-      // required,
-      // sameAsLogin: sameAs(function sameLogin() {
-        // return this.user.login;
-      // }),
+    // required,
+    // sameAsLogin: sameAs(function sameLogin() {
+    // return this.user.login;
+    // }),
     // },
     // deleteGroupPassphrase: {
-      // required,
-      // sameAsPassphrase: sameAs(() => 'Удалить'),
+    // required,
+    // sameAsPassphrase: sameAs(() => 'Удалить'),
     // },
   },
   components: { Breadcumbs },

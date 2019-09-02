@@ -18,7 +18,7 @@
                     <b-card-text>
                       <h2 class="">15</h2>
                       <span class="notation">
-                        Польз. CMS
+                        {{$t('dashboard.counters.cmsUsers')}}
                       </span>
                     </b-card-text>
                   </b-card-body>
@@ -40,7 +40,7 @@
                     <b-card-text>
                       <h2 class="">150</h2>
                       <span class="notation">
-                        Клиентов
+                        {{$t('dashboard.counters.siteUsers')}}
                       </span>
                     </b-card-text>
                   </b-card-body>
@@ -62,7 +62,7 @@
                     <b-card-text>
                       <h2 class="">350</h2>
                       <span class="notation">
-                        Новостей
+                        {{$t('dashboard.counters.news')}}
                       </span>
                     </b-card-text>
                   </b-card-body>
@@ -84,7 +84,7 @@
                     <b-card-text>
                       <h2 class="">5</h2>
                       <span class="notation">
-                        Разделов
+                        {{$t('dashboard.counters.sections')}}
                       </span>
                     </b-card-text>
                   </b-card-body>
@@ -123,6 +123,7 @@
           </b-col>
         </b-row>
 
+<!--
         <b-row>
           <b-col cols="8">
             <b-card
@@ -145,6 +146,7 @@
             </b-card>
           </b-col>
         </b-row>
+-->
 
     </main>
 </template>

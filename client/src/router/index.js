@@ -23,7 +23,7 @@ const router = new Router({
       component: AdminPanel,
       meta: {
         requiresAuth: true,
-        breadCrumb: 'CMS',
+        breadCrumb: 'home',
         title: 'CMS',
       },
       children: [
@@ -33,7 +33,7 @@ const router = new Router({
           component: Dashboard,
           meta: {
             requiresAuth: true,
-            breadCrumb: 'Главная панель',
+            breadCrumb: 'dashboard',
             title: 'CMS - Главная панель',
           },
         },
@@ -43,7 +43,7 @@ const router = new Router({
           component: Users,
           meta: {
             requiresAuth: true,
-            breadCrumb: 'Оргсовет',
+            breadCrumb: 'users',
             title: 'CMS - Оргсовет',
           },
         },
@@ -53,7 +53,7 @@ const router = new Router({
           component: Profile,
           meta: {
             requiresAuth: true,
-            breadCrumb: 'Досье',
+            breadCrumb: 'userProfile',
             title: 'CMS - Досье',
           },
         },
@@ -63,7 +63,7 @@ const router = new Router({
           component: Roles,
           meta: {
             requiresAuth: true,
-            breadCrumb: 'Полномочия',
+            breadCrumb: 'permissions',
             title: 'CMS - Полномочия',
           },
         },

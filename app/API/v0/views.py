@@ -317,7 +317,7 @@ def login():
                      "value": mail_item['value'],
                      "type": mail_item['type']
                     }, expiration=3600)
-                confirm_url = 'http://192.168.0.96:8080/verify' \
+                confirm_url = 'http://192.168.0.91:8080/verify' \
                               '/mail/' + token.decode("utf-8")
                 html = render_template(
                     'confirmation_mail.html',
@@ -605,7 +605,7 @@ def update_profile_data(current_user, uid):
                                  "value": mail_item['value'],
                                  "type": mail_item['type']
                                 }, expiration=3600)
-                            confirm_url = 'http://192.168.0.96:8080/verify' \
+                            confirm_url = 'http://192.168.0.91:8080/verify' \
                                           '/mail/' + token.decode("utf-8")
                             html = render_template(
                                 'confirmation_mail.html',
@@ -866,7 +866,7 @@ def verify_mail_send(current_user, uid):
                      "value": request.args.get('value'),
                      "type": request.args.get('type')
                     }, expiration=86400)
-                confirm_url = 'http://192.168.0.96:8080/verify' \
+                confirm_url = 'http://192.168.0.91:8080/verify' \
                               '/mail/' + token.decode("utf-8")
                 html = render_template(
                     'confirmation_mail.html',
@@ -1049,7 +1049,7 @@ def post_users(current_user):
                      "value": primary_mail,
                      "type": "primary"
                     }, expiration=3600)
-                confirm_url = 'http://192.168.0.96:8080/verify' \
+                confirm_url = 'http://192.168.0.91:8080/verify' \
                               '/mail/' + token.decode("utf-8")
                 html = render_template(
                     'user_created.html',
@@ -1159,7 +1159,7 @@ def update_users(current_user, uid):
                                      "value": mail_item['value'],
                                      "type": mail_item['type']
                                     }, expiration=3600)
-                                confirm_url = 'http://192.168.0.96:8080/' \
+                                confirm_url = 'http://192.168.0.91:8080/' \
                                               'verify/mail/' + token.decode(
                                                 "utf-8")
                                 html = render_template(

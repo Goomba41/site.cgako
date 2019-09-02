@@ -1,0 +1,202 @@
+{
+    "pending": "Form sending...",
+    "menu": {
+        "titles": {
+                "navigation": "Navigation",
+                "settings": "Settings"
+            },
+        "menuItems": {
+                "dashboard": "Dashboard",
+                "site": "Site",
+                "users": "CMS Users",
+                "permissions": "Roles and Permissions",
+                "news": "News",
+                "materials": "Materials"
+            }
+    },
+    "navbar": {
+        "tooltips": {
+                "openButton": "Sidebar",
+                "trello": "Trello development roadmap",
+                "github": "Github repository of project",
+                "notifications": "Notifications",
+                "searchPlaceholder": "Search"
+            },
+        "logoText": "CGAKR {sup}",
+        "logoSupText": "cms",
+        "dropdownProfile": {
+                "loginTitle": "You sign in as:",
+                "profile": "Your profile",
+                "settings": "Your settings",
+                "logout": "Sign out"
+            }
+    },
+    "footer": {
+        "tooltips": {
+                "aboutCopyright": "Read about Copyright",
+                "languages": {
+                        "rus": "Russian",
+                        "eng": "English",
+                        "sul": "Soviet Union"
+                    },
+                "developerLinks": {
+                        "email": "Contact with developer by email",
+                        "github": "Developer`s Github",
+                        "vk": "Developer`s VK"
+                    }
+            },
+        "copyrightText": "KRSBI «CGA of KR»"
+    },
+    "breadcrumbs": {
+        "tooltips": {
+                "dataRefresh": "Refresh data"
+            },
+        "crumbs": {
+                "home": "CMS",
+                "dashboard": "Dashboard",
+                "users": "CMS Users",
+                "userProfile": "User profile",
+                "permissions": "Roles and Permissions"
+            }
+    },
+    "dashboard": {
+        "counters": {
+                "cmsUsers": "CMS Users",
+                "siteUsers": "Clients",
+                "news": "News",
+                "sections": "Site section`s"
+            }
+    },
+    "userProfile": {
+        "tooltips": {
+                "photoTitle": "Avatar",
+                "photoUpdate": "Update avatar",
+                "photoDelete": "Delete avatar",
+                "saveButton": "Send form"
+            },
+        "formEdit": {
+                "formTitle": "User edit form",
+                "submitButton": "Send form",
+                "changePasswordButton": "Change password",
+                "formFields": {
+                        "login": {
+                            "placeholder": "Login",
+                            "errors": {
+                                "required": "This field is required.",
+                                "minLength": "This field must contain minimum 4 charachers.",
+                                "maxLength": "This field must contain maximum 20 charachers.",
+                                "alphaNum": "This field must contain only latin and numeric charachers."
+                                },
+                            "successText": "Okay!"
+                            },
+                        "surname": {
+                            "placeholder": "Surname",
+                            "errors": {
+                                "required": "This field is required.",
+                                "minLength": "This field must contain minimum 4 charachers.",
+                                "maxLength": "This field must contain maximum 20 charachers.",
+                                "alpha": "This field must contain only cyrillic charachers."
+                                },
+                            "successText": "Okay!"
+                            },
+                        "name": {
+                            "placeholder": "Name",
+                            "errors": {
+                                "required": "This field is required.",
+                                "minLength": "This field must contain minimum 4 charachers.",
+                                "maxLength": "This field must contain maximum 20 charachers.",
+                                "alpha": "This field must contain only cyrillic charachers."
+                                },
+                            "successText": "Okay!"
+                            },
+                        "patronymic": {
+                            "placeholder": "Patronymic",
+                            "errors": {
+                                "required": "This field is required.",
+                                "minLength": "This field must contain minimum 4 charachers.",
+                                "maxLength": "This field must contain maximum 20 charachers.",
+                                "alpha": "This field must contain only cyrillic charachers."
+                                },
+                            "successText": "Okay!"
+                            },
+                        "emails": {
+                            "placeholder": "Email",
+                            "errors": {
+                                "required": "This field is required.",
+                                "email": "This field must contain only email formatted string."
+                                },
+                            "successText": "Okay!",
+                            "description": " Primary mail is required field. To delete work and/or private email, clean that field and send form. After adding new email address and/or update already existing, we will send confirmation mail on this address.",
+                            "titlePrimary": "Primary email",
+                            "titlePersonal": "Personal email",
+                            "titleWork": "Work email",
+                            "confirmationT": "Confirmed",
+                            "confirmationF": "Not confirmed",
+                            "activity": "Active until: ",
+                            "sendVerification": "Send verification mail"
+                            },
+                        "phone": {
+                            "placeholder": "Phone number",
+                            "errors": {
+                                "required": "This field is required.",
+                                "format": "Incorrect phone number format."
+                                },
+                            "successText": "Okay!"
+                            },
+                        "birthDate": {
+                            "placeholder": "Birthdate (YYYY-MM-DD)",
+                            "errors": {
+                                "required": "This field is required."
+                                },
+                            "successText": "Okay!"
+                            },
+                        "aboutMe": {
+                            "placeholder": "About me",
+                            "errors": {
+                                    "maxLength": "This field can contain maximum 140 charachers."
+                                },
+                            "successText": "Okay!"
+                            }
+                    }
+            },
+        "formPassword": {
+                "formTitle": "Change password",
+                "formDescription": "After saving the form, you will be redirected on sign-in screen for reauthorization",
+                "activeButtonT": "Hide",
+                "activeButtonF": "Show",
+                "saveButton": "Set new password",
+                "formFields": {
+                        "passwordOld": {
+                            "placeholder": "Old password",
+                            "errorText": "",
+                            "successText": "Okay!"
+                        },
+                        "passwordNew": {
+                            "placeholder": "Newly generated password",
+                            "errorText": "",
+                            "successText": "Okay!",
+                            "description": "Password will be generated automatically. Press button with {key} for generating new."
+                        },
+                        "confirmation": {
+                            "text": "I confirm password change"
+                        }
+                }
+        },
+        "formAvatar": {
+                "formTitle": "Update avatar",
+                "formDescription": "It will be easier for other users to recognize you, if you add your real photo. Image must be in one of this formats: JPEG, GIF, PNG. Maximum size of file is 3 MB.",
+                "saveButton": "Set new avatar",
+                "formFields": {
+                        "file": {
+                            "placeholder": "Choose image file...",
+                            "browseButton": "Browse",
+                            "errors": {
+                                    "maxValue": "File size is exceed 3 MB.",
+                                    "isImage": "Chosen file is not one of this formats: JPEG, GIF, PNG."
+                                },
+                            "successText": "Okay!"
+                        }
+                }
+        }
+    }
+}

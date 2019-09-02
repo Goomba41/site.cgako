@@ -3,7 +3,7 @@
     <div class="row pb-4 mx-auto w-100">
       <b-breadcrumb :items="crumbs"
       class="pr-3 p-0 m-0 justify-content-center align-items-center"></b-breadcrumb>
-      <button type="button" title="Обновить данные" v-b-tooltip.hover
+      <button type="button" v-bind:title="$t('breadcrumbs.tooltips.dataRefresh')" v-b-tooltip.hover
       class="btn btn-sm btn-secondary ml-auto" @click="forceRerender">
         <font-awesome-icon icon="sync-alt" fixed-width />
       </button>
@@ -35,7 +35,7 @@ export default {
           to: breadcrumbArray[idx - 1]
             ? `/${breadcrumbArray[idx - 1].route}/${path}`
             : `/${path}`,
-          text: this.$route.matched[idx].meta.breadCrumb || path,
+          text: this.$t(`breadcrumbs.crumbs.${this.$route.matched[idx].meta.breadCrumb}`) || path,
         });
         return breadcrumbArray;
       }, []);

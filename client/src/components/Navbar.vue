@@ -3,14 +3,17 @@
     <b-navbar sticky toggleable="lg" variant="primary">
         <b-navbar-nav class="ml-auto">
             <b-nav-item v-b-toggle.my-collapse class="navbar-pictogram pr-5"
-            href="#" title="Боковое меню" v-b-tooltip.hover @click="sidebarToggle">
+            href="#" v-bind:title="$t('navbar.tooltips.openButton')"
+            v-b-tooltip.hover @click="sidebarToggle">
                 <font-awesome-icon :icon="['fa', 'bars']" fixed-width size="1x"/>
             </b-nav-item>
         </b-navbar-nav>
 
         <b-navbar-brand class="pr-5 text-white" href="#">
             <img src="../assets/logo-1.png" class="p-0 mr-2" alt="ЦГАКО" width=29>
-            ЦГАКО <sup>cms</sup>
+            <i18n path="navbar.logoText">
+              <sup slot="sup">{{$t('navbar.logoSupText')}}</sup>
+            </i18n>
         </b-navbar-brand>
 
         <b-collapse id="nav-collapse" is-nav>
@@ -18,7 +21,7 @@
                 <b-input-group class="mr-sm-2">
                     <b-form-input size="lg"
                     type="search"
-                    placeholder="Поиск">
+                    v-bind:placeholder="$t('navbar.tooltips.searchPlaceholder')">
                     </b-form-input>
                     <b-input-group-append>
                         <b-button variant="outline-primary" class="navbar-search-button text-white">
@@ -33,16 +36,16 @@
 
             <b-nav-item class="navbar-pictogram pr-2"
             href="https://trello.com/b/xgWEmEaD/сайт-цгако" v-b-tooltip.hover
-            title="Дорожная карта развития Trello">
+            v-bind:title="$t('navbar.tooltips.trello')">
                 <font-awesome-icon :icon="['fab', 'trello']" fixed-width size="1x"/>
             </b-nav-item>
             <b-nav-item class="navbar-pictogram pr-2"
             href="https://github.com/Goomba41/site.cgako" v-b-tooltip.hover
-            title="Исходный код проекта на Github">
+            v-bind:title="$t('navbar.tooltips.github')">
                 <font-awesome-icon :icon="['fab', 'github']" fixed-width size="1x"/>
             </b-nav-item>
             <b-nav-item class="navbar-pictogram pr-2" href="#"
-            v-b-tooltip.hover title="Уведомления">
+            v-b-tooltip.hover v-bind:title="$t('navbar.tooltips.notifications')">
                 <font-awesome-layers class="fa-1x">
                     <font-awesome-icon icon="bell" />
                     <font-awesome-icon icon="circle" transform="shrink-6 up-6 right-6"
@@ -57,25 +60,25 @@
                     rounded="circle" alt="Фотокарточка" class="w-100 h-100"></b-img>
                 </template>
                 <b-dropdown-text class="m-0 pl-4 p-3">
-                  Вы вошли как:<br>
+                  {{$t('navbar.dropdownProfile.loginTitle')}}<br>
                   <b>@{{profile.login}}</b>
                 </b-dropdown-text>
                 <b-dropdown-divider class="m-0"></b-dropdown-divider>
                 <b-dropdown-item :to="{ name: 'UserProfile' }">
                     <font-awesome-icon :icon="['fa', 'user-circle']"
                     fixed-width class="mr-3" />
-                    Ваше досье
+                    {{$t('navbar.dropdownProfile.profile')}}
                 </b-dropdown-item>
                 <b-dropdown-divider class="m-0"></b-dropdown-divider>
                 <b-dropdown-item disabled href="#">
                     <font-awesome-icon :icon="['fa', 'cog']"
                     fixed-width class="mr-3" />
-                    Настройки
+                    {{$t('navbar.dropdownProfile.settings')}}
                 </b-dropdown-item>
                 <b-dropdown-item @click="logout">
                     <font-awesome-icon :icon="['fa', 'sign-in-alt']"
                     fixed-width class="mr-3" />
-                    Выйти</b-dropdown-item>
+                    {{$t('navbar.dropdownProfile.logout')}}</b-dropdown-item>
             </b-nav-item-dropdown>
         </b-navbar-nav>
     </b-navbar>

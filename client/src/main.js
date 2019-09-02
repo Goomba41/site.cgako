@@ -7,6 +7,9 @@ import 'vue-tel-input/dist/vue-tel-input.css';
 import BootstrapVue from 'bootstrap-vue';
 import Vuelidate from 'vuelidate';
 import VueLodash from 'vue-lodash';
+import FlagIcon from 'vue-flag-icon';
+
+import { i18n } from '@/utils';
 
 // Импортирование fontawesome и отдельных иконок из него
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -16,7 +19,7 @@ import {
   faBars, faBell, faCog, faUserCircle, faCircle, faSearch, faThLarge, faFolder, faGlobeEurope,
   faChevronDown, faNewspaper, faAt, faSyncAlt, faHeart, faSave, faKey, faTimes, faUpload, faCheck,
   faListOl, faListUl, faList, faUsers, faSort, faPhone, faBan, faDesktop, faMobileAlt, faTabletAlt,
-  faBriefcase, faClock, faCheckCircle, faEnvelope, faIdCard, faUserCheck,
+  faBriefcase, faClock, faCheckCircle, faEnvelope, faIdCard, faUserCheck, faHome, faFileImage,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   faCopyright as farCopyright, faEye as farEye, faEyeSlash as farEyeSlash, faEdit as farEdit,
@@ -42,7 +45,8 @@ library.add(faTrash, faPencilAlt, faInfo, faPlus, faPowerOff,
   faAt, farCopyright, faSyncAlt, faHeart, faSave, faKey, faTimes, farEye, farEyeSlash,
   faUpload, farEdit, faCheck, faListOl, faListUl, faList, faUsers, faSort, faPhone,
   faBan, farWindowMaximize, faDesktop, faTabletAlt, faMobileAlt, faLinux, faWindows,
-  faApple, faBriefcase, faClock, faCheckCircle, faEnvelope, farFile, faIdCard, faUserCheck);
+  faApple, faBriefcase, faClock, faCheckCircle, faEnvelope, farFile, faIdCard, faUserCheck,
+  faHome, faFileImage);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('font-awesome-layers', FontAwesomeLayers);
 Vue.component('font-awesome-layers-text', FontAwesomeLayersText);
@@ -52,6 +56,7 @@ Vue.config.productionTip = false;
 Vue.use(BootstrapVue);
 Vue.use(VueLodash);
 Vue.use(Vuelidate);
+Vue.use(FlagIcon);
 
 // Объявление moment.js с русской локалью
 const moment = require('moment');
@@ -89,6 +94,7 @@ new Vue({
   el: '#app',
   router,
   store,
+  i18n,
   components: { App },
   template: '<App/>',
 });
