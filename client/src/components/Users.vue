@@ -6,10 +6,10 @@
       <b-col align-self="start" class="text-center" sm="8">
         <b-row class="justify-content-start align-middle align-items-center">
           <span class="text-info pr-3">
-            Всего {{ users.count }}
-            {{ users.count | declension(["товарищ", "товарища", "товарищей"]) }}
+            {{ $tc('usersCMS.counter', users.count) }}
           </span>
-          <b-button title="Новое досье" v-b-tooltip.hover class="mr-1" size="sm" variant="success"
+          <b-button v-bind:title="$t('usersCMS.tooltips.newButton')"
+          v-b-tooltip.hover class="mr-1" size="sm" variant="success"
           v-b-modal.new-modal>
             <font-awesome-icon icon="plus" fixed-width />
           </b-button>
@@ -21,7 +21,7 @@
             </template>
             <b-dropdown-item variant="danger" v-b-modal.delete-group-modal>
               <font-awesome-icon icon="trash" fixed-width />
-              Удалить
+              {{ $t('usersCMS.titles.groupActions.deleteButton') }}
             </b-dropdown-item>
 <!--
             <b-dropdown-item disabled>
@@ -61,7 +61,7 @@
         <b-row class="justify-content-end align-middle align-items-center">
           <b-col sm="4">
             <b-input-group :append="'/ ' + users.pages" size="sm"
-             title="Навигация по страницам" v-b-tooltip.hover>
+              v-bind:title="$t('usersCMS.tooltips.pageNavigation')" v-b-tooltip.hover>
               <b-form-input type="number" min=1 :max="users.pages"
               autocomplete="off"
               v-model="listControl.page"
@@ -69,8 +69,8 @@
             </b-input-group>
           </b-col>
           <b-col sm="4">
-            <b-input-group prepend="По:" size="sm"
-             title="Показывать на странице" v-b-tooltip.hover>
+            <b-input-group :prepend="$t('usersCMS.tooltips.pageShowCountTitle')" size="sm"
+              v-bind:title="$t('usersCMS.tooltips.pageShowCount')" v-b-tooltip.hover>
               <b-form-input type="number" min=1 :max="users.count - listControl.start + 1"
               autocomplete="off"
               v-model="listControl.limit"
@@ -78,8 +78,8 @@
             </b-input-group>
           </b-col>
           <b-col sm="4">
-            <b-input-group prepend="С:" size="sm"
-             title="Начать с записи" v-b-tooltip.hover>
+            <b-input-group :prepend="$t('usersCMS.tooltips.pageShowFromTitle')" size="sm"
+              v-bind:title="$t('usersCMS.tooltips.pageShowFrom')" v-b-tooltip.hover>
               <b-form-input type="number" min=1 :max="users.count"
               autocomplete="off"
               v-model="listControl.start"
@@ -98,24 +98,24 @@
             <th scope="col">
               <b-form-checkbox v-model="selectAll" @change="select"></b-form-checkbox>
             </th>
-            <th scope="col">Фотокарточка</th>
+            <th scope="col">{{ $t('usersCMS.titles.photo') }}</th>
             <th scope="col">
-              Товарищ
+              {{ $t('usersCMS.titles.user') }}
               <font-awesome-icon icon="sort"
               fixed-width
               @click="listControl.orderBy.field='surname';
               listControl.orderBy.asc=!listControl.orderBy.asc"/>
               </th>
-            <th scope="col">Уровень полномочий</th>
-            <th scope="col">Cоц. сети</th>
+            <th scope="col">{{ $t('usersCMS.titles.permissions') }}</th>
+            <th scope="col">{{ $t('usersCMS.titles.socials') }}</th>
             <th scope="col">
-              Последний вход
+              {{ $t('usersCMS.titles.lastLogin') }}
               <font-awesome-icon icon="sort"
               fixed-width
               @click="listControl.orderBy.field='last_login';
               listControl.orderBy.asc=!listControl.orderBy.asc"/>
             </th>
-            <th scope="col">Управление</th>
+            <th scope="col">{{ $t('usersCMS.titles.management') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -129,13 +129,16 @@
             <td>
               <div class="card-profile-image mx-auto">
                 <div  v-if="uid != user.id" class="profile-image-overlay"
-                v-b-tooltip.hover title="Фотокарточка">
+                v-b-tooltip.hover
+                v-bind:title="$t('usersCMS.tooltips.photoTitle')">
                   <div v-b-modal.avatar-modal v-b-tooltip.hover
-                  @click="selectUser(user.id)" title="Вклеить новую">
+                  @click="selectUser(user.id)"
+                  v-bind:title="$t('usersCMS.tooltips.photoUpdate')">
                     <font-awesome-icon :icon="['fa', 'upload']" fixed-width />
                   </div>
                   <div v-if="user.photo" v-b-tooltip.hover
-                  title="Вырезать" @click="deleteAvatar(user.id)">
+                  v-bind:title="$t('usersCMS.tooltips.photoDelete')"
+                  @click="deleteAvatar(user.id)">
                     <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
                   </div>
                 </div>
@@ -164,7 +167,7 @@
               <font-awesome-icon :icon="['fab', 'google']" fixed-width />
             </td>
             <td v-bind:title="user.last_login && user.last_login.datetime ?
-            $options.filters.moment(user.last_login.datetime, 'dddd, MMMM Do YYYY, HH:mm:ss') :
+            $options.filters.moment(user.last_login.datetime, 'YYYY-MM-DD, HH:mm:ss') :
             'Не входил'" v-b-tooltip.hover>
               {{user.last_login && user.last_login.datetime ?
                 $options.filters.moment(user.last_login.datetime, 'from') : 'Не входил'}}
@@ -211,23 +214,29 @@
             </td>
             <td>
               <span class="weight-100 small text-muted d-block mx-auto" v-if="uid==user.id">
-                Для управления <br> собственным досье <br> воспользуйтесь
-                <router-link :to="{ name: 'UserProfile' }">профилем</router-link>
+                <i18n path="usersCMS.selfEdit.text">
+                  <br slot="break">
+                  <router-link slot="link" :to="{ name: 'UserProfile' }">
+                    {{$t('usersCMS.selfEdit.linkText')}}
+                  </router-link>
+                </i18n>
               </span>
-              <b-button size="sm" title="Корректировать досье" v-b-tooltip.hover variant="primary"
+              <b-button size="sm" v-bind:title="$t('usersCMS.tooltips.editButton')"
+              v-b-tooltip.hover variant="primary"
               v-b-modal.edit-modal @click="selectUser(user.id)" v-if="uid!=user.id">
                 <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
               </b-button>
 
-              <b-button size="sm" title="Экстренная связь" v-b-tooltip.hover variant="info"
+              <b-button size="sm" v-bind:title="$t('usersCMS.tooltips.contactsButton')"
+              v-b-tooltip.hover variant="info"
               v-b-modal.contacts-modal
               @click="selectUser(user.id)" v-if="uid!=user.id">
                 <font-awesome-icon :icon="['fa', 'info']" fixed-width />
               </b-button>
 
               <b-button v-if="uid != user.id"
-              size="sm" title="Уничтожить досье" variant="danger"
-              v-b-tooltip.hover
+              size="sm" v-bind:title="$t('usersCMS.tooltips.deleteButton')"
+              variant="danger" v-b-tooltip.hover
               @click="selectUser(user.id)"
               v-b-modal.delete-modal>
                 <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
@@ -242,25 +251,30 @@
     <b-modal id="contacts-modal"
             @hidden="user={}"
             @close="user={}"
-            title="Экстренная связь"
+            v-bind:title="$t('usersCMS.contactsModal.title')"
             v-b-tooltip.hover
             hide-footer size="sm" centered
             header-bg-variant="info"
             header-text-variant="light">
       <p v-for="mail in this.user.email" v-bind:key="mail.value">
-        <a v-if="mail.value" :href="`mailto:${mail.value}`" title="Написать на эту почту"
+        <a v-if="mail.value" :href="`mailto:${mail.value}`"
+        v-bind:title="$t('usersCMS.contactsModal.tooltips.sendMail')"
         v-b-tooltip.hover>
-          <font-awesome-icon title="Личная почта" v-b-tooltip.hover
+          <font-awesome-icon v-bind:title="$t('usersCMS.contactsModal.tooltips.private')"
+          v-b-tooltip.hover
           v-if="mail.type==='personal'"
           v-bind:icon="['fa', 'user']" fixed-width/>
-          <font-awesome-icon title="Основная почта" v-b-tooltip.hover
+          <font-awesome-icon v-bind:title="$t('usersCMS.contactsModal.tooltips.primary')"
+          v-b-tooltip.hover
           v-else-if="mail.type==='primary'"
           v-bind:icon="['fa', 'at']" fixed-width/>
-          <font-awesome-icon title="Рабочая почта" v-b-tooltip.hover
+          <font-awesome-icon v-bind:title="$t('usersCMS.contactsModal.tooltips.work')"
+          v-b-tooltip.hover
           v-else-if="mail.type==='work'"
           v-bind:icon="['fa', 'briefcase']" fixed-width/>
           <font-awesome-icon
-          :title="mail.verified ? 'Подтверждена' : 'Не подтверждена'"
+          :title="mail.verified ? $t('usersCMS.contactsModal.tooltips.verifiedT')
+          : $t('usersCMS.contactsModal.tooltips.verifiedF')"
           v-b-tooltip.hover
           v-bind:icon="['fa', 'check-circle']"
           :class="mail.verified ? 'text-success' : 'text-danger'" fixed-width/>
@@ -277,7 +291,7 @@
             @show="deletePassphrase=''"
             @hidden="deletePassphrase=''"
             @close="deletePassphrase=''"
-             title="Уничтожение досье"
+             v-bind:title="$t('usersCMS.deleteModal.title')"
              v-b-tooltip.hover
              hide-footer size="sm" centered
             :header-bg-variant="'danger'"
@@ -286,14 +300,14 @@
       <b-form class="w-100" @submit.prevent="deleteUser(user.id)">
 
         <b-form-group
-        description="Введите позывной товарища, чтобы подтвердить утичтожение">
+        :description="$t('usersCMS.deleteModal.confirmationField.description')">
           <b-input-group>
 
             <b-form-input
               name="confirmation-passphrase"
               autofocus
               v-model="$v.deletePassphrase.$model"
-              placeholder="Подтверждающая фраза"
+              v-bind:placeholder="$t('usersCMS.deleteModal.confirmationField.placeholder')"
               :state="$v.deletePassphrase.$dirty ? !$v.deletePassphrase.$error : null"
               @input="$v.deletePassphrase.$touch()">
             </b-form-input>
@@ -301,7 +315,7 @@
 
         </b-form-group>
         <b-button type="submit" block
-        variant="danger" title="Уничтожить досье товарища"
+        variant="danger" v-bind:title="$t('usersCMS.deleteModal.tooltips.deleteButton')"
         v-b-tooltip.hover
         :disabled="!$v.deletePassphrase.$anyDirty || $v.deletePassphrase.$invalid">
           <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
@@ -311,7 +325,7 @@
           <span class="text-danger notation text-center">
               <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
               size="1x" fixed-width />
-  После удаления товарищ не сможет взаимодействовать с сайтом!
+              {{$t('usersCMS.deleteModal.description')}}
           </span>
         </div>
 
@@ -322,7 +336,7 @@
             @show="deleteGroupPassphrase=''"
             @hidden="deleteGroupPassphrase=''"
             @close="deleteGroupPassphrase=''"
-             title="Уничтожение досье"
+             v-bind:title="$t('usersCMS.deleteGroupModal.title')"
              v-b-tooltip.hover
              hide-footer size="sm" centered
             :header-bg-variant="'danger'"
@@ -330,14 +344,14 @@
 
       <b-form class="w-100" @submit.prevent="deleteUser(selected)">
         <b-form-group
-        description="Введите слово 'Удалить', чтобы подтвердить утичтожение">
+        :description="$t('usersCMS.deleteGroupModal.confirmationField.description')">
           <b-input-group>
 
             <b-form-input
               name="confirmation-passphrase"
               autofocus
               v-model="$v.deleteGroupPassphrase.$model"
-              placeholder="Подтверждающая фраза"
+              v-bind:placeholder="$t('usersCMS.deleteGroupModal.confirmationField.placeholder')"
               :state="$v.deleteGroupPassphrase.$dirty ? !$v.deleteGroupPassphrase.$error : null"
               @input="$v.deleteGroupPassphrase.$touch()">
             </b-form-input>
@@ -345,7 +359,7 @@
 
         </b-form-group>
         <b-button type="submit" block
-        variant="danger" title="Уничтожить пачку досье"
+        variant="danger" v-bind:title="$t('usersCMS.deleteGroupModal.tooltips.deleteButton')"
         v-b-tooltip.hover
         :disabled="!$v.deleteGroupPassphrase.$anyDirty || $v.deleteGroupPassphrase.$invalid">
           <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
@@ -355,7 +369,7 @@
           <span class="text-danger notation text-center">
               <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
               size="1x" fixed-width />
-  После удаления товарищи не смогут взаимодействовать с сайтом!
+              {{$t('usersCMS.deleteGroupModal.description')}}
           </span>
         </div>
 
@@ -363,7 +377,7 @@
     </b-modal>
 
     <b-modal id="new-modal"
-            title="Новое досье"
+            v-bind:title="$t('usersCMS.formNew.formTitle')"
             hide-footer size="xl" centered
             @show="newUser.password=passwordGenerator(size=8)"
             :header-bg-variant="'success'"
@@ -376,7 +390,7 @@
           <b-form-input name="login"
             type="text"
             autofocus
-            placeholder="Логин"
+            v-bind:placeholder="$t('usersCMS.formNew.formFields.login.placeholder')"
             trim
             v-model="$v.newUser.login.$model"
             :state="$v.newUser.login.$dirty ? !$v.newUser.login.$error : null"
@@ -385,16 +399,16 @@
           <b-form-invalid-feedback
           :state="$v.newUser.login.$dirty ? !$v.newUser.login.$error : null">
             <span v-if="!$v.newUser.login.required">
-              Поле обязательно для заполнения!
+              {{$t('usersCMS.formNew.formFields.login.errors.required')}}
             </span>
             <span v-if="!$v.newUser.login.minLength">
-              Поле должно содержать минимум 4 символа!
+              {{$t('usersCMS.formNew.formFields.login.errors.minLength')}}
             </span>
             <span v-if="!$v.newUser.login.maxLength">
-              Поле может содержать максимум 20 символов!
+              {{$t('usersCMS.formNew.formFields.login.errors.maxLength')}}
             </span>
             <span v-if="!$v.newUser.login.alphaNum">
-              Поле может содержать только латинские буквы и цифры!
+              {{$t('usersCMS.formNew.formFields.login.errors.alphaNum')}}
             </span>
           </b-form-invalid-feedback>
 
@@ -406,8 +420,7 @@
               <b-button variant="outline-secondary"
               v-on:click='isActivePassword = !isActivePassword'>
                 <font-awesome-icon fixed-width
-                v-bind:icon="isActivePassword ? ['far', 'eye-slash'] : ['far', 'eye']"
-                v-bind:title="isActivePassword ? 'Скрыть' : 'Показать'" v-b-tooltip.hover/>
+                v-bind:icon="isActivePassword ? ['far', 'eye-slash'] : ['far', 'eye']"/>
               </b-button>
             </b-input-group-prepend>
             <b-form-input
@@ -416,11 +429,11 @@
               name="password"
               readonly disabled
               v-model="$v.newUser.password.$model"
-              placeholder="Новый пароль">
+              v-bind:placeholder="$t('usersCMS.formNew.formFields.password.placeholder')">
             </b-form-input>
             <b-input-group-append>
               <b-button variant="outline-primary"
-              title="Сгенерировать" v-b-tooltip.hover
+              v-bind:title="$t('usersCMS.formNew.tooltips.newPassGen')" v-b-tooltip.hover
               @click="newUser.password = passwordGenerator(size=8)">
                 <font-awesome-icon :icon="['fa', 'key']" fixed-width />
               </b-button>
@@ -430,31 +443,32 @@
           <b-form-invalid-feedback
           :state="$v.newUser.password.$dirty ? !$v.newUser.password.$error : null">
             <span v-if="!$v.newUser.password.required">
-              Поле обязательно для заполнения!
+              {{$t('usersCMS.formNew.formFields.password.errors.required')}}
             </span>
           </b-form-invalid-feedback>
            <b-form-text slot="description">
-            Пароль генерируется автоматически. Нажмите кнопку
-            <font-awesome-icon :icon="['fa', 'key']" fixed-width />
-            чтобы сгенерировать новый.
+            <i18n path="usersCMS.formNew.formFields.password.description">
+              <font-awesome-icon :icon="['fa', 'key']" fixed-width slot="key"/>
+            </i18n>
           </b-form-text>
         </b-form-group>
 
         <b-form-group>
           <b-input-group>
-            <b-form-input placeholder="Фамилия"
+            <b-form-input v-bind:placeholder="$t('usersCMS.formNew.formFields.surname.placeholder')"
             v-model="$v.newUser.surname.$model"
             :state="$v.newUser.surname.$dirty ? !$v.newUser.surname.$error : null"
             name="surname" trim
             @input="$v.newUser.validationGroupFIO.$touch()">
             </b-form-input>
-            <b-form-input placeholder="Имя"
+            <b-form-input v-bind:placeholder="$t('usersCMS.formNew.formFields.name.placeholder')"
             v-model="$v.newUser.name.$model"
             :state="$v.newUser.name.$dirty ? !$v.newUser.name.$error : null"
             name="name" trim
             @input="$v.newUser.validationGroupFIO.$touch()">
             </b-form-input>
-            <b-form-input placeholder="Отчество"
+            <b-form-input
+            v-bind:placeholder="$t('usersCMS.formNew.formFields.patronymic.placeholder')"
             v-model="$v.newUser.patronymic.$model"
             :state="$v.newUser.patronymic.$dirty ? !$v.newUser.patronymic.$error : null"
             name="patronymic" trim
@@ -466,40 +480,40 @@
           :state="$v.newUser.validationGroupFIO.$dirty ?
           !$v.newUser.validationGroupFIO.$anyError : null">
             <span v-if="!$v.newUser.surname.required">
-              Фамилия обязательна для заполнения!
+              {{$t('usersCMS.formNew.formFields.surname.errors.required')}}
             </span>
             <span v-if="!$v.newUser.surname.minLength">
-              Фамилия должна содержать минимум 4 символа!
+              {{$t('usersCMS.formNew.formFields.surname.errors.minLength')}}
             </span>
             <span v-if="!$v.newUser.surname.maxLength">
-              Фамилия может содержать максимум 20 символов!
+              {{$t('usersCMS.formNew.formFields.surname.errors.maxLength')}}
             </span>
             <span v-if="!$v.newUser.surname.alpha">
-              Фамилия может содержать только русские буквы!
+              {{$t('usersCMS.formNew.formFields.surname.errors.alpha')}}
             </span>
             <span v-if="!$v.newUser.name.required">
-              Имя обязательно для заполнения!
+              {{$t('usersCMS.formNew.formFields.name.errors.required')}}
             </span>
             <span v-if="!$v.newUser.name.minLength">
-              Имя должно содержать минимум 4 символа!
+              {{$t('usersCMS.formNew.formFields.name.errors.minLength')}}
             </span>
             <span v-if="!$v.newUser.name.maxLength">
-              Имя может содержать максимум 20 символов!
+              {{$t('usersCMS.formNew.formFields.name.errors.maxLength')}}
             </span>
             <span v-if="!$v.newUser.name.alpha">
-              Имя может содержать только русские буквы!
+              {{$t('usersCMS.formNew.formFields.name.errors.alpha')}}
             </span>
             <span v-if="!$v.newUser.patronymic.required">
-              Отчество обязательно для заполнения!
+              {{$t('usersCMS.formNew.formFields.patronymic.errors.required')}}
             </span>
             <span v-if="!$v.newUser.patronymic.minLength">
-              Отчество должно содержать минимум 4 символа!
+              {{$t('usersCMS.formNew.formFields.patronymic.errors.minLength')}}
             </span>
             <span v-if="!$v.newUser.patronymic.maxLength">
-              Отчество может содержать максимум 20 символов!
+              {{$t('usersCMS.formNew.formFields.patronymic.errors.maxLength')}}
             </span>
             <span v-if="!$v.newUser.patronymic.alpha">
-              Отчество может содержать русские только буквы!
+              {{$t('usersCMS.formNew.formFields.patronymic.errors.alpha')}}
             </span>
           </b-form-invalid-feedback>
         </b-form-group>
@@ -507,20 +521,26 @@
         <b-form-group class="text-justify">
           <b-form-group v-for="(v, index) in $v.newUser.email.$each.$iter" v-bind:key="index">
             <b-input-group>
-              <b-input-group-text slot="prepend">
-                <font-awesome-icon v-b-tooltip.hover title="Личная почта"
-                v-if="v.$model.type==='personal'"
-                v-bind:icon="['fa', 'user']" fixed-width/>
-                <font-awesome-icon v-b-tooltip.hover title="Основная почта"
-                v-else-if="v.$model.type==='primary'"
-                v-bind:icon="['fa', 'envelope']" fixed-width/>
-                <font-awesome-icon v-b-tooltip.hover title="Рабочая почта"
-                v-else-if="v.$model.type==='work'"
-                v-bind:icon="['fa', 'briefcase']" fixed-width/>
+
+              <b-input-group-text slot="prepend" v-b-tooltip.hover
+                :title="$t('usersCMS.formNew.formFields.emails.titlePrimary')"
+                v-if="v.$model.type==='primary'">
+                  <font-awesome-icon v-bind:icon="['fa', 'envelope']" fixed-width/>
+                </b-input-group-text>
+                <b-input-group-text slot="prepend" v-b-tooltip.hover
+                :title="$t('usersCMS.formNew.formFields.emails.titlePersonal')"
+                v-else-if="v.$model.type==='personal'">
+                  <font-awesome-icon v-bind:icon="['fa', 'user']" fixed-width/>
+                </b-input-group-text>
+                <b-input-group-text slot="prepend" v-b-tooltip.hover
+                :title="$t('usersCMS.formNew.formFields.emails.titleWork')"
+                v-else-if="v.$model.type==='work'">
+                  <font-awesome-icon v-bind:icon="['fa', 'briefcase']" fixed-width/>
               </b-input-group-text>
+
               <b-form-input
                 type="email"
-                placeholder="Email"
+                v-bind:placeholder="$t('usersCMS.formNew.formFields.emails.placeholder')"
                 name="email"
                 v-model="v.value.$model"
                 trim
@@ -531,19 +551,15 @@
             <b-form-invalid-feedback
             :state="v.value.$dirty ? !v.value.$error : null">
               <span v-if="!v.value.required">
-                Поле обязательно для заполнения!
+                {{$t('usersCMS.formNew.formFields.emails.errors.required')}}
               </span>
               <span v-if="!v.value.email">
-                Поле может содержать только email-адрес (example@example.ru)!
+                {{$t('usersCMS.formNew.formFields.emails.errors.email')}}
               </span>
             </b-form-invalid-feedback>
           </b-form-group>
           <b-form-text slot="description">
-            Основная почта
-            <font-awesome-icon :icon="['fa', 'envelope']" fixed-width />
-            обязательна для заполнения.
-            Для неё будет отправлено письмо с авторизационными данными и
-            ссылкой подтверждения.
+            {{$t('usersCMS.formNew.formFields.emails.description')}}
           </b-form-text>
         </b-form-group>
 
@@ -552,7 +568,7 @@
           autocomplete="off"
           :onlyCountries="['RU']"
           :disabledFetchingCountry="true"
-          :placeholder="'Номер телефона'"
+          v-bind:placeholder="$t('usersCMS.formNew.formFields.phone.placeholder')"
           name="phone"
           v-model="$v.newUser.phone.$model"
           :wrapperClasses="$v.newUser.phone.$dirty ?
@@ -568,10 +584,10 @@
           <b-form-invalid-feedback
           :state="$v.newUser.phone.$dirty ? !$v.newUser.phone.$error : null">
             <span v-if="!$v.newUser.phone.required">
-              Поле обязательно для заполнения!
+              {{$t('usersCMS.formNew.formFields.phone.errors.required')}}
             </span>
             <span v-if="!$v.newUser.phone.format ">
-              Неправильное количество цифр в номере!
+              {{$t('usersCMS.formNew.formFields.phone.errors.format')}}
             </span>
           </b-form-invalid-feedback>
         </b-form-group>
@@ -579,7 +595,7 @@
         <b-form-group>
           <datepicker
           autocomplete="off"
-          :placeholder="'Дата рождения (ГГГГ-MM-ДД)'"
+          v-bind:placeholder="$t('usersCMS.formNew.formFields.birthDate.placeholder')"
           :format="dateFormatter" :bootstrap-styling="true"
           :language="russian" :typeable=false :required=true
           :monday-first=true :disabledDates="disabledDates"
@@ -591,13 +607,14 @@
           <b-form-invalid-feedback
           :state="$v.newUser.birth_date.$dirty ? !$v.newUser.birth_date.$error : null">
             <span v-if="!$v.newUser.birth_date.required">
-              Поле обязательно для заполнения!
+              {{$t('usersCMS.formNew.formFields.birthDate.errors.required')}}
             </span>
           </b-form-invalid-feedback>
         </b-form-group>
 
         <b-form-group>
-          <b-form-textarea placeholder="О себе"
+          <b-form-textarea
+          v-bind:placeholder="$t('usersCMS.formNew.formFields.aboutMe.placeholder')"
           autocomplete="off"
           rows="2" max-rows="6" no-resize
           v-model="$v.newUser.about_me.$model" name="about_me"
@@ -607,7 +624,7 @@
           <b-form-invalid-feedback
           :state="$v.newUser.about_me.$dirty ? !$v.newUser.about_me.$error : null">
             <span v-if="!$v.newUser.about_me.maxLength">
-              Поле может содержать максимум 140 символов!
+              {{$t('usersCMS.formNew.formFields.aboutMe.errors.maxLength')}}
             </span>
           </b-form-invalid-feedback>
         </b-form-group>
@@ -615,17 +632,16 @@
         <b-row>
           <b-col>
             <b-button type="submit" variant="success" block
-            title="Внести новое досье" v-b-tooltip.hover
+            v-bind:title="$t('usersCMS.formNew.tooltips.submitButton')" v-b-tooltip.hover
             :disabled="!$v.newUser.$anyDirty || $v.newUser.$invalid">
               <font-awesome-icon v-if="!formPending"
               :icon="['fa', 'save']" fixed-width />
-              <b-spinner small v-if="formPending"
-              label="Идет отправка досье..."></b-spinner>
+              <b-spinner small v-if="formPending"></b-spinner>
             </b-button>
           </b-col>
           <b-col>
             <b-button type="reset" variant="danger" block
-            title="Стереть данные" v-b-tooltip.hover
+            v-bind:title="$t('usersCMS.formNew.tooltips.clearButton')" v-b-tooltip.hover
             :disabled="!$v.newUser.$anyDirty">
               <font-awesome-icon v-if="!formPending"
               :icon="['fa', 'times']" fixed-width />
@@ -639,9 +655,7 @@
           <span class="text-danger notation text-center">
               <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
               size="1x" fixed-width />
-  Авторизационные данные будут отправлены пользователю
-  на основную почту. Будьте внимательны при её заполнении,
-  чтобы данные для входа не попали в чужие руки!
+              {{$t('usersCMS.formNew.description')}}
           </span>
         </div>
 
@@ -652,7 +666,7 @@
     <b-modal id="edit-modal"
             @hidden="user={}"
             @close="user={}"
-            title="Исправить досье"
+            v-bind:title="$t('usersCMS.formEdit.formTitle')"
             hide-footer size="xl" centered
             :header-bg-variant="'primary'"
             :header-text-variant="'light'">
@@ -666,7 +680,7 @@
               <b-form-input name="login"
                 type="text"
                 autofocus
-                placeholder="Логин"
+                v-bind:placeholder="$t('usersCMS.formEdit.formFields.login.placeholder')"
                 trim
                 v-model="$v.user.login.$model"
                 :state="$v.user.login.$dirty ? !$v.user.login.$error : null"
@@ -675,16 +689,16 @@
               <b-form-invalid-feedback
               :state="$v.user.login.$dirty ? !$v.user.login.$error : null">
                 <span v-if="!$v.user.login.required">
-                  Поле обязательно для заполнения!
+                  {{$t('usersCMS.formEdit.formFields.login.errors.required')}}
                 </span>
                 <span v-if="!$v.user.login.minLength">
-                  Поле должно содержать минимум 4 символа!
+                  {{$t('usersCMS.formEdit.formFields.login.errors.minLength')}}
                 </span>
                 <span v-if="!$v.user.login.maxLength">
-                  Поле может содержать максимум 20 символов!
+                  {{$t('usersCMS.formEdit.formFields.login.errors.maxLength')}}
                 </span>
                 <span v-if="!$v.user.login.alphaNum">
-                  Поле может содержать только латинские буквы и цифры!
+                  {{$t('usersCMS.formEdit.formFields.login.errors.alphaNum')}}
                 </span>
               </b-form-invalid-feedback>
 
@@ -692,19 +706,22 @@
 
             <b-form-group>
               <b-input-group>
-                <b-form-input placeholder="Фамилия"
+                <b-form-input
+                v-bind:placeholder="$t('usersCMS.formEdit.formFields.surname.placeholder')"
                 v-model="$v.user.surname.$model"
                 :state="$v.user.surname.$dirty ? !$v.user.surname.$error : null"
                 name="surname" trim
                 @input="$v.user.validationGroupFIO.$touch()">
                 </b-form-input>
-                <b-form-input placeholder="Имя"
+                <b-form-input
+                v-bind:placeholder="$t('usersCMS.formEdit.formFields.name.placeholder')"
                 v-model="$v.user.name.$model"
                 :state="$v.user.name.$dirty ? !$v.user.name.$error : null"
                 name="name" trim
                 @input="$v.user.validationGroupFIO.$touch()">
                 </b-form-input>
-                <b-form-input placeholder="Отчество"
+                <b-form-input
+                v-bind:placeholder="$t('usersCMS.formEdit.formFields.patronymic.placeholder')"
                 v-model="$v.user.patronymic.$model"
                 :state="$v.user.patronymic.$dirty ? !$v.user.patronymic.$error : null"
                 name="patronymic" trim
@@ -716,40 +733,40 @@
               :state="$v.user.validationGroupFIO.$dirty ?
               !$v.user.validationGroupFIO.$anyError : null">
                 <span v-if="!$v.user.surname.required">
-                  Фамилия обязательна для заполнения!
+                  {{$t('usersCMS.formEdit.formFields.surname.errors.required')}}
                 </span>
                 <span v-if="!$v.user.surname.minLength">
-                  Фамилия должна содержать минимум 4 символа!
+                  {{$t('usersCMS.formEdit.formFields.surname.errors.minLength')}}
                 </span>
                 <span v-if="!$v.user.surname.maxLength">
-                  Фамилия может содержать максимум 20 символов!
+                  {{$t('usersCMS.formEdit.formFields.surname.errors.maxLength')}}
                 </span>
                 <span v-if="!$v.user.surname.alpha">
-                  Фамилия может содержать только русские буквы!
+                  {{$t('usersCMS.formEdit.formFields.surname.errors.alpha')}}
                 </span>
                 <span v-if="!$v.user.name.required">
-                  Имя обязательно для заполнения!
+                  {{$t('usersCMS.formEdit.formFields.name.errors.required')}}
                 </span>
                 <span v-if="!$v.user.name.minLength">
-                  Имя должно содержать минимум 4 символа!
+                  {{$t('usersCMS.formEdit.formFields.name.errors.minLength')}}
                 </span>
                 <span v-if="!$v.user.name.maxLength">
-                  Имя может содержать максимум 20 символов!
+                  {{$t('usersCMS.formEdit.formFields.name.errors.maxLength')}}
                 </span>
                 <span v-if="!$v.user.name.alpha">
-                  Имя может содержать только русские буквы!
+                  {{$t('usersCMS.formEdit.formFields.name.errors.alpha')}}
                 </span>
                 <span v-if="!$v.user.patronymic.required">
-                  Отчество обязательно для заполнения!
+                  {{$t('usersCMS.formEdit.formFields.patronymic.errors.required')}}
                 </span>
                 <span v-if="!$v.user.patronymic.minLength">
-                  Отчество должно содержать минимум 4 символа!
+                  {{$t('usersCMS.formEdit.formFields.patronymic.errors.minLength')}}
                 </span>
                 <span v-if="!$v.user.patronymic.maxLength">
-                  Отчество может содержать максимум 20 символов!
+                  {{$t('usersCMS.formEdit.formFields.patronymic.errors.maxLength')}}
                 </span>
                 <span v-if="!$v.user.patronymic.alpha">
-                  Отчество может содержать русские только буквы!
+                  {{$t('usersCMS.formEdit.formFields.patronymic.errors.alpha')}}
                 </span>
               </b-form-invalid-feedback>
             </b-form-group>
@@ -757,20 +774,26 @@
             <b-form-group class="text-justify">
               <b-form-group v-for="(v, index) in $v.user.email.$each.$iter" v-bind:key="index">
                 <b-input-group>
-                  <b-input-group-text slot="prepend">
-                    <font-awesome-icon v-b-tooltip.hover title="Личная почта"
-                    v-if="v.$model.type==='personal'"
-                    v-bind:icon="['fa', 'user']" fixed-width/>
-                    <font-awesome-icon v-b-tooltip.hover title="Основная почта"
-                    v-else-if="v.$model.type==='primary'"
-                    v-bind:icon="['fa', 'envelope']" fixed-width/>
-                    <font-awesome-icon v-b-tooltip.hover title="Рабочая почта"
-                    v-else-if="v.$model.type==='work'"
-                    v-bind:icon="['fa', 'briefcase']" fixed-width/>
+
+                  <b-input-group-text slot="prepend" v-b-tooltip.hover
+                    :title="$t('usersCMS.formEdit.formFields.emails.titlePrimary')"
+                    v-if="v.$model.type==='primary'">
+                      <font-awesome-icon v-bind:icon="['fa', 'envelope']" fixed-width/>
+                    </b-input-group-text>
+                    <b-input-group-text slot="prepend" v-b-tooltip.hover
+                    :title="$t('usersCMS.formEdit.formFields.emails.titlePersonal')"
+                    v-else-if="v.$model.type==='personal'">
+                      <font-awesome-icon v-bind:icon="['fa', 'user']" fixed-width/>
+                    </b-input-group-text>
+                    <b-input-group-text slot="prepend" v-b-tooltip.hover
+                    :title="$t('usersCMS.formEdit.formFields.emails.titleWork')"
+                    v-else-if="v.$model.type==='work'">
+                      <font-awesome-icon v-bind:icon="['fa', 'briefcase']" fixed-width/>
                   </b-input-group-text>
+
                   <b-form-input
                     type="email"
-                    placeholder="Email"
+                    v-bind:placeholder="$t('usersCMS.formEdit.formFields.emails.placeholder')"
                     name="email"
                     v-model="v.value.$model"
                     trim
@@ -780,56 +803,56 @@
                     <b-button v-if="v.$model.value && !v.value.$dirty &&
                     (dateDiffNow(v.$model.activeUntil, reactivationPeriod) || !v.$model.verified)"
                     variant="outline-secondary" v-b-tooltip.hover
-                    title="Послать письмо подтверждения"
+                    v-bind:title="$t('usersCMS.formEdit.formFields.emails.sendVerification')"
                     @click="onSubmitMailVerify(user.id, v.$model.type, v.$model.value)"
                     :disabled="formPending">
-                      <b-spinner small v-if="formPending"
-                      label="Идет отправка..."></b-spinner>
+                      <b-spinner small v-if="formPending"></b-spinner>
                       <font-awesome-icon v-else v-bind:icon="['fa', 'envelope']" fixed-width/>
                     </b-button>
-                    <b-button v-if="v.$model.value && (!v.value.$dirty && v.$model.verified)"
+                    <b-button
+                    v-if="v.$model.value && (!v.value.$dirty &&
+                      v.$model.verified && v.$model.type!=='primary')"
                     variant="outline-danger" v-b-tooltip.hover
-                    title="Сбросить активацию почты"
+                    v-bind:title="$t('usersCMS.formEdit.formFields.emails.resetActivation')"
                     @click="onSubmitMailReset(user.id, v.$model.type, v.$model.value)"
                     :disabled="formPending">
-                      <b-spinner small v-if="formPending"
-                      label="Обработка..."></b-spinner>
+                      <b-spinner small v-if="formPending"></b-spinner>
                       <font-awesome-icon v-else v-bind:icon="['fa', 'ban']" fixed-width/>
                     </b-button>
-                    <b-input-group-text v-if="v.$model.value">
+                    <b-input-group-text v-if="v.$model.value" v-b-tooltip.hover
+                      :title="v.$model.verified ?
+                      $t('usersCMS.formEdit.formFields.emails.confirmationT') :
+                      $t('usersCMS.formEdit.formFields.emails.confirmationF')" >
+                        <font-awesome-icon
+                        v-bind:icon="['fa', 'check-circle']"
+                        :class="v.$model.verified ? 'text-success' : 'text-danger'" fixed-width/>
+                      </b-input-group-text>
 
-                      <font-awesome-icon
-                      :title="v.$model.verified ? 'Подтверждена' : 'Не подтверждена'"
-                      v-bind:icon="['fa', 'check-circle']"
-                      :class="v.$model.verified ? 'text-success' : 'text-danger'" fixed-width/>
-
-                      <font-awesome-icon :title="v.$model.activeUntil ?
-                      'Активен до: '+
-                      $options.filters.moment(v.$model.activeUntil,
-                                              'dddd, MMMM Do YYYY, HH:mm:ss') :
-                      'Необходима активация'"
-                      v-if="v.$model.activeUntil || v.$model.verified"
-                      v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
-
-                    </b-input-group-text>
+                      <b-input-group-text v-if="v.$model.value" v-b-tooltip.hover
+                       :title="v.$model.activeUntil ?
+                        $t('usersCMS.formEdit.formFields.emails.activity')+
+                        $options.filters.moment(v.$model.activeUntil,
+                                                'YYYY-MM-DD, HH:mm:ss') :
+                        'Необходима активация'">
+                        <font-awesome-icon
+                        v-if="v.$model.activeUntil || v.$model.verified"
+                        v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
+                      </b-input-group-text>
                   </b-input-group-append>
                 </b-input-group>
 
                 <b-form-invalid-feedback
                 :state="v.value.$dirty ? !v.value.$error : null">
                   <span v-if="!v.value.required">
-                    Поле обязательно для заполнения!
+                    {{$t('usersCMS.formEdit.formFields.emails.errors.required')}}
                   </span>
                   <span v-if="!v.value.email">
-                    Поле может содержать только email-адрес (example@example.ru)!
+                    {{$t('usersCMS.formEdit.formFields.emails.errors.email')}}
                   </span>
                 </b-form-invalid-feedback>
               </b-form-group>
               <b-form-text slot="description">
-                Основная почта
-                <font-awesome-icon :icon="['fa', 'envelope']" fixed-width />
-                обязательна для заполнения.
-                На добавленную или измененную почту будет отправлено письмо с ссылкой подтверждения.
+                {{$t('usersCMS.formEdit.formFields.emails.description')}}
               </b-form-text>
             </b-form-group>
 
@@ -838,7 +861,7 @@
               autocomplete="off"
               :onlyCountries="['RU']"
               :disabledFetchingCountry="true"
-              :placeholder="'Номер телефона'"
+              v-bind:placeholder="$t('usersCMS.formEdit.formFields.phone.placeholder')"
               name="phone"
               v-model="$v.user.phone.$model"
               :wrapperClasses="$v.user.phone.$dirty ?
@@ -854,10 +877,10 @@
               <b-form-invalid-feedback
               :state="$v.user.phone.$dirty ? !$v.user.phone.$error : null">
                 <span v-if="!$v.user.phone.required">
-                  Поле обязательно для заполнения!
+                  {{$t('usersCMS.formEdit.formFields.phone.errors.required')}}
                 </span>
                 <span v-if="!$v.user.phone.format ">
-                  Неправильное количество цифр в номере!
+                  {{$t('usersCMS.formEdit.formFields.phone.errors.format')}}
                 </span>
               </b-form-invalid-feedback>
             </b-form-group>
@@ -865,7 +888,7 @@
             <b-form-group>
               <datepicker
               autocomplete="off"
-              :placeholder="'Дата рождения (ГГГГ-MM-ДД)'"
+              v-bind:placeholder="$t('usersCMS.formEdit.formFields.birthDate.placeholder')"
               :format="dateFormatter" :bootstrap-styling="true"
               :language="russian" :typeable=false :required=true
               :monday-first=true :disabledDates="disabledDates"
@@ -877,13 +900,14 @@
               <b-form-invalid-feedback
               :state="$v.user.birth_date.$dirty ? !$v.user.birth_date.$error : null">
                 <span v-if="!$v.user.birth_date.required">
-                  Поле обязательно для заполнения!
+                  {{$t('usersCMS.formEdit.formFields.birthDate.errors.required')}}
                 </span>
               </b-form-invalid-feedback>
             </b-form-group>
 
             <b-form-group>
-          <b-form-textarea placeholder="О себе"
+          <b-form-textarea
+          v-bind:placeholder="$t('usersCMS.formEdit.formFields.aboutMe.placeholder')"
           autocomplete="off"
           rows="2" max-rows="6" no-resize
           v-model="$v.user.about_me.$model" name="about_me"
@@ -893,36 +917,46 @@
           <b-form-invalid-feedback
           :state="$v.user.about_me.$dirty ? !$v.user.about_me.$error : null">
             <span v-if="!$v.user.about_me.maxLength">
-              Поле может содержать максимум 140 символов!
+              {{$t('usersCMS.formEdit.formFields.aboutMe.errors.maxLength')}}
             </span>
           </b-form-invalid-feedback>
         </b-form-group>
           </b-col>
 
           <b-col cols="5" v-if="uid!=user.id">
-            <h4 class="text-danger">Опасная зона</h4>
+            <h4 class="text-danger">
+              {{$t('usersCMS.formEdit.dangerZone.title')}}
+            </h4>
             <b-card no-body
             border-variant="danger">
               <b-list-group flush>
                 <b-list-group-item class="flex-column align-items-start align-middle">
                   <div class="d-flex w-100 pb-2 justify-content-between align-items-center">
-                    <h6 class="m-0">Сбросить пароль</h6>
+                    <h6 class="m-0">
+                      {{$t('usersCMS.formEdit.dangerZone.functions.resetPassword.title')}}
+                    </h6>
                     <b-button @click="onSubmitPasswordReset(user.id)"
-                    size="sm" title="Сбросить пароль" variant="outline-danger"
-                    v-b-tooltip.hover>Сделать сброс</b-button>
+                    size="sm" variant="outline-danger">
+                      {{$t('usersCMS.formEdit.dangerZone.functions.resetPassword.button')}}
+                    </b-button>
                   </div>
-                  <small class="text-muted">Эта функция сгенерирует одноразовый
-                  пароль и пошлет его на основную почту пользователя</small>
+                  <small class="text-muted">
+                    {{$t('usersCMS.formEdit.dangerZone.functions.resetPassword.description')}}
+                    </small>
                 </b-list-group-item>
                 <b-list-group-item class="flex-column align-items-start align-middle">
                   <div class="d-flex w-100 pb-2 justify-content-between align-items-center">
-                    <h6 class="m-0">Блокировать пароль</h6>
+                    <h6 class="m-0">
+                      {{$t('usersCMS.formEdit.dangerZone.functions.blockPassword.title')}}
+                    </h6>
                     <b-button @click="onSubmitPasswordBlock(user.id)"
-                    size="sm" title="Блокировать пароль" variant="outline-danger"
-                    v-b-tooltip.hover>Заблокировать</b-button>
+                    size="sm" variant="outline-danger">
+                      {{$t('usersCMS.formEdit.dangerZone.functions.blockPassword.button')}}
+                    </b-button>
                   </div>
-                  <small class="text-muted">Эта функция заблокирует пароль
-                  пользователя и он не сможет войти в систему</small>
+                  <small class="text-muted">
+                    {{$t('usersCMS.formEdit.dangerZone.functions.blockPassword.description')}}
+                  </small>
                 </b-list-group-item>
               </b-list-group>
             </b-card>
@@ -933,23 +967,24 @@
         <b-row>
           <b-col>
             <b-button type="submit" variant="primary" block
-            title="Внести новое досье" v-b-tooltip.hover
+            v-bind:title="$t('usersCMS.formEdit.tooltips.submitButton')" v-b-tooltip.hover
             :disabled="!$v.user.$anyDirty || $v.user.$invalid || formPending">
               <font-awesome-icon v-if="!formPending"
               :icon="['fa', 'save']" fixed-width />
-              <b-spinner small v-if="formPending"
-              label="Идет отправка досье..."></b-spinner>
+              <b-spinner small v-if="formPending"></b-spinner>
             </b-button>
           </b-col>
         </b-row>
 
         <div class="row mx-auto mt-3 pl-3 pr-3 pt-3 border-top">
+<!--
           <span class="text-danger notation text-center">
               <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
               size="1x" fixed-width />
   <b>При сбросе основной почты</b> и выходе из CMS, пользователь больше не сможет войти!
   Будьте осторожны!
           </span>
+-->
         </div>
 
       </b-form>
@@ -959,7 +994,7 @@
     <b-modal id="avatar-modal"
             @hidden="onResetImage"
             @close="onResetImage"
-            title="Вклеить фотокарточку"
+            v-bind:title="$t('usersCMS.formAvatar.formTitle')"
             hide-footer size="md" centered
             :header-bg-variant="'primary'"
             :header-text-variant="'light'">
@@ -967,49 +1002,45 @@
       <div class=" row w-100 mx-auto pb-3 justify-content-center align-items-center">
         <img v-bind:src="imageUpdate.imageData ?
         imageUpdate.imageData : '/static/profile_avatars/default.png'"
-        alt="Предпросмотр средний квадрат"
         class="profile-image-preview preview-md preview-square mr-4">
 
         <img v-bind:src="imageUpdate.imageData ?
         imageUpdate.imageData : '/static/profile_avatars/default.png'"
-        alt="Предпросмотр средний"
         class="profile-image-preview preview-md mr-4">
 
         <img v-bind:src="imageUpdate.imageData ?
         imageUpdate.imageData : '/static/profile_avatars/default.png'"
-        alt="Предпросмотр маленький"
         class="profile-image-preview preview-sm mr-4">
 
       </div>
 
       <b-form class="w-100" @submit.prevent="onSubmitAvatar(user.id)">
         <b-form-group
-        description="Товарищам будет проще узнать Вас, если Вы вклеите свою настоящую фотокарточку.
-Она должна соответствовать ГОСТам ДЖиПег, ГиФ или ПэНГэ. Размер ГОСТ 3МБ">
+        :description="$t('usersCMS.formAvatar.formDescription')">
 
           <b-form-file
             ref="imageInput"
             @input="onSelectImage"
             lang="ru"
-            placeholder="Выберите фотокарточку..."
-            drop-placeholder="Бросьте сюда..."
+            v-bind:placeholder="$t('userProfile.formAvatar.formFields.file.placeholder')"
+            v-bind:browse-text="$t('userProfile.formAvatar.formFields.file.browseButton')"
             accept="image/jpeg, image/png, image/gif"
             :state="$v.imageUpdate.$dirty ? !$v.imageUpdate.$anyError : null"
           ></b-form-file>
           <b-form-invalid-feedback
           :state="$v.imageUpdate.$dirty ? !$v.imageUpdate.$anyError : null">
             <span v-if="!$v.imageUpdate.size.maxValue">
-              Превышен лимит в 3 МБ для фотокарточки!
+              {{$t('usersCMS.formAvatar.formFields.file.errors.maxValue')}}
             </span>
             <span v-if="!$v.imageUpdate.type.isImage">
-              Фотокарточка не соответствует ГОСТам ДЖиПег, ГиФ или ПэНГэ!
+              {{$t('usersCMS.formAvatar.formFields.file.errors.isImage')}}
             </span>
           </b-form-invalid-feedback>
 
         </b-form-group>
 
         <b-button class="mb-3" type="submit" block variant="primary"
-        title="Установить новую фотокарточку" v-b-tooltip.hover
+        v-bind:title="$t('usersCMS.formAvatar.saveButton')" v-b-tooltip.hover
         :disabled="!$v.imageUpdate.$anyDirty || $v.imageUpdate.$invalid || this.file == null">
           <font-awesome-icon :icon="['fa', 'save']" fixed-width />
         </b-button>
@@ -1115,7 +1146,7 @@ export default {
     },
     deleteGroupPassphrase: {
       required,
-      sameAsPassphrase: sameAs(() => 'Удалить'),
+      sameAsPassphrase: val => (val === 'Удалить' || val === 'Delete'),
     },
     newUser: {
       login: {

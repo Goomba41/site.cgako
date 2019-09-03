@@ -8,9 +8,11 @@
                 <div class="row justify-content-center align-items-center text-center mx-auto p-3">
                     <div class="col mx-auto">
                         <img src="../assets/logo-2.png" alt="ЦГАКО" width=250>
-                        <h1 class="text-gradient mt-4 mb-0">ЦГАКО CMS</h1>
+                        <h1 class="text-gradient mt-4 mb-0">
+                          {{$t('login.title.h1')}}
+                        </h1>
                         <h3 class="text-primary-color mb-0 weight-100">
-                          Вход в панель управления сайтом ЦГАКО
+                          {{$t('login.title.h2')}}
                         </h3>
                     </div>
                 </div>
@@ -26,12 +28,14 @@
                             </div>
 
                             <input v-model="username" v-bind:class="{ 'is-invalid': userError }"
-                            placeholder="Логин" aria-label="Username"
+                            v-bind:placeholder="$t('login.formPlaceholders.login')"
+                            aria-label="Username"
                             type="text" class="form-control"
                             required autofocus>
                             <input v-model="password" v-bind:class="{ 'is-invalid': passwordError }"
                             v-bind:type="isActivePassword ? 'text' : 'password'"
-                            placeholder="Пароль" aria-label="Password"
+                            v-bind:placeholder="$t('login.formPlaceholders.password')"
+                            aria-label="Password"
                             class="form-control"
                             required>
 
@@ -40,14 +44,15 @@
                                 v-on:click='isActivePassword = !isActivePassword'>
                                   <font-awesome-icon fixed-width
                                   v-bind:icon="isActivePassword?['far','eye-slash']:['far', 'eye']"
-                                  v-bind:title="isActivePassword ? 'Скрыть' : 'Показать'"/>
+                                  v-bind:title="isActivePassword
+                                  ? $t('login.tooltips.activeButtonT')
+                                  : $t('login.tooltips.activeButtonF')" v-b-tooltip.hover/>
                                 </b-button>
                                 <button class="btn btn-primary" type="submit"
                                 :disabled="disableButton">
                                     <font-awesome-icon v-if="!formPending"
                                     :icon="['fa', 'sign-in-alt']" fixed-width />
-                                    <b-spinner small v-if="formPending"
-                                    label="Идет аутентификация..."></b-spinner>
+                                    <b-spinner small v-if="formPending"></b-spinner>
                                 </button>
                             </div>
 
@@ -93,7 +98,7 @@ bcc=anton.borodawkin@yandex.ru"
                     <span class="text-danger notation">
                         <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
                         size="1x" fixed-width />
-Уважаемые пользователи, <b>НИКОМУ</b> не сообщайте свои данные для входа!
+                        {{$t('login.description')}}
                     </span>
                 </div>
 

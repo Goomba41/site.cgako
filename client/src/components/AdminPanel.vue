@@ -10,20 +10,22 @@
                     <h1 class="text-danger noselect">
                       <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
                       size="1x" fixed-width />
-                      Вы выходите из системы!
+                      {{$t('adminPanel.text.danger')}}
                       <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
                       size="1x" fixed-width />
                     </h1>
                     <p class="noselect">
-                        Вы были неактивны {{ idleTime*1000 | duration('humanize') }}.
-                        Будет осуществлен выход через
-                        <span class="text-danger">
-                            <b>{{ UICountdown }}</b>
+                      <i18n path="adminPanel.text.info">
+                        <span slot="time-inactive">
+                          {{ idleTime*1000 | duration('as', 'minutes') }}
                         </span>
-                        секунд.
+                        <span slot="time-leaving" class="text-danger">
+                          <b>{{ UICountdown }}</b>
+                        </span>
+                      </i18n>
                     </p>
                     <button class="btn btn-primary btn-lg reset-button" @click="UIReset">
-                      Продолжить работу
+                      {{$t('adminPanel.text.continueButton')}}
                     </button>
                 </span>
             </div>
