@@ -7,6 +7,7 @@
         </a>
         {{$t('footer.copyrightText')}}, 2019
       </span>
+
       <span class="caption p-3 ml-auto">
 
         <span @click="setLocale('ru')">
@@ -49,10 +50,7 @@ export default {
   },
   methods: {
     setLocale(locale) {
-      import(`../langs/${locale}.json`).then((msgs) => {
-        this.$i18n.setLocaleMessage(locale, msgs);
-        this.$i18n.locale = locale;
-      });
+      this.$store.dispatch('changeLocale', locale);
     },
   },
 };

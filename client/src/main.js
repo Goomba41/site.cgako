@@ -3,6 +3,7 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'vue-tel-input/dist/vue-tel-input.css';
+import 'vue-multiselect/dist/vue-multiselect.min.css';
 
 import BootstrapVue from 'bootstrap-vue';
 import Vuelidate from 'vuelidate';
@@ -20,6 +21,7 @@ import {
   faChevronDown, faNewspaper, faAt, faSyncAlt, faHeart, faSave, faKey, faTimes, faUpload, faCheck,
   faListOl, faListUl, faList, faUsers, faSort, faPhone, faBan, faDesktop, faMobileAlt, faTabletAlt,
   faBriefcase, faClock, faCheckCircle, faEnvelope, faIdCard, faUserCheck, faHome, faFileImage,
+  faLanguage,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   faCopyright as farCopyright, faEye as farEye, faEyeSlash as farEyeSlash, faEdit as farEdit,
@@ -46,7 +48,7 @@ library.add(faTrash, faPencilAlt, faInfo, faPlus, faPowerOff,
   faUpload, farEdit, faCheck, faListOl, faListUl, faList, faUsers, faSort, faPhone,
   faBan, farWindowMaximize, faDesktop, faTabletAlt, faMobileAlt, faLinux, faWindows,
   faApple, faBriefcase, faClock, faCheckCircle, faEnvelope, farFile, faIdCard, faUserCheck,
-  faHome, faFileImage);
+  faHome, faFileImage, faLanguage);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('font-awesome-layers', FontAwesomeLayers);
 Vue.component('font-awesome-layers-text', FontAwesomeLayersText);

@@ -10,6 +10,7 @@ import AdminPanel from '@/components/AdminPanel';
 import Profile from '@/components/Profile';
 import Index from '@/components/Index';
 import store from '@/store';
+import { i18n } from '@/utils';
 
 Vue.use(Router);
 
@@ -140,6 +141,10 @@ router.beforeEach((to, from, next) => {
   } else {
     next();
   }
+  import(`../langs/${store.state.locale}.json`).then((msgs) => {
+    i18n.setLocaleMessage(`${store.state.locale}`, msgs);
+    i18n.locale = store.state.locale;
+  });
 });
 
 // Перед загрузкой страницы старт прогресс-бара

@@ -4,7 +4,9 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import axios from 'axios';
 import _ from 'lodash';
-import { isValidJwt, EventBus, currentUserLogin } from '@/utils';
+import {
+  isValidJwt, EventBus, currentUserLogin, i18n,
+} from '@/utils';
 
 Vue.use(Vuex);
 
@@ -19,6 +21,7 @@ const state = {
   formPending: false,
   reactivationPeriod: 7,
   jwt: localStorage.getItem('token') || '', // Загрузить токен из хранилища, или инициировать пустой, если нет в хранилище
+  locale: localStorage.getItem('locale') || 'ru',
 };
 
 const actions = {
@@ -333,6 +336,13 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  changeLocale(context, locale) {
+    context.commit('setLocale', { locale });
+    import(`../langs/${locale}.json`).then((msgs) => {
+      i18n.setLocaleMessage(locale, msgs);
+      i18n.locale = locale;
+    });
+  },
 };
 
 // Мутации данных
@@ -345,6 +355,11 @@ const mutations = {
   setJwtToken(state, payload) {
     localStorage.token = payload.jwt;
     state.jwt = payload.jwt;
+  },
+  // Установка локали
+  setLocale(state, payload) {
+    localStorage.locale = payload.locale;
+    state.locale = payload.locale;
   },
   // Очистка токена аутентификации
   unsetJwtToken(state) {

@@ -57,6 +57,27 @@
       <b-list-group-item class="heading noselect">
         <h3 class="m-0 weight-100 small">{{$t('menu.titles.settings')}}</h3>
       </b-list-group-item>
+
+      <b-list-group-item class="noselect">
+        <font-awesome-icon :icon="['fa', 'language']" class="pr-3" fixed-width size="2x"/>
+        <multiselect v-model="value" :options="options"
+        :show-labels="false" :searchable="false" :close-on-select="true"
+        :hideSelected="true" :allowEmpty="false">
+          <template slot="singleLabel" slot-scope="props">
+            <flag :iso="props.option.class" :squared="false"></flag>
+            <span class="pl-1">
+              {{ $t('footer.tooltips.languages.' + props.option.translation) }}
+            </span>
+          </template>
+          <template slot="option" slot-scope="props">
+            <flag :iso="props.option.class" :squared="false"></flag>
+            <span class="pl-1">
+              {{ $t('footer.tooltips.languages.' + props.option.translation) }}
+            </span>
+          </template>
+        </multiselect>
+      </b-list-group-item>
+
     </b-list-group>
 
   </aside>
@@ -65,13 +86,21 @@
 
 <script>
 import { EventBus } from '@/utils';
+import Multiselect from 'vue-multiselect';
 
 export default {
   name: 'Sidebar',
   data() {
     return {
+      value: { locale: 'ru', class: 'ru', translation: 'rus' },
+      options: [
+        { locale: 'ru', class: 'ru', translation: 'rus' },
+        { locale: 'su', class: 'su', translation: 'sul' },
+        { locale: 'en', class: 'us', translation: 'eng' },
+      ],
     };
   },
+  components: { Multiselect },
   methods: {
     sidebarOff() {
       EventBus.$emit('sidebarOff');
