@@ -22,6 +22,14 @@ const state = {
   reactivationPeriod: 7,
   jwt: localStorage.getItem('token') || '', // Загрузить токен из хранилища, или инициировать пустой, если нет в хранилище
   locale: localStorage.getItem('locale') || 'ru',
+  languages: {
+    value: { locale: 'ru', class: 'ru', translation: 'rus' },
+    options: [
+      { locale: 'ru', class: 'ru', translation: 'rus' },
+      { locale: 'su', class: 'su', translation: 'sul' },
+      { locale: 'en', class: 'us', translation: 'eng' },
+    ],
+  },
 };
 
 const actions = {
@@ -336,12 +344,18 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
-  changeLocale(context, locale) {
-    context.commit('setLocale', { locale });
-    import(`../langs/${locale}.json`).then((msgs) => {
-      i18n.setLocaleMessage(locale, msgs);
-      i18n.locale = locale;
+  // Смена локали
+  changeLocale(context, value) {
+    const lang = value.locale;
+    context.commit('setLocale', { lang, value });
+    import(`../langs/${lang}.json`).then((msgs) => {
+      i18n.setLocaleMessage(lang, msgs);
+      i18n.locale = lang;
     });
+  },
+  // Предустановка локали в селекторе после перезагрузки
+  presetLocale(context, value) {
+    state.languages.value = _.find(state.languages.options, { locale: value });
   },
 };
 
@@ -358,8 +372,9 @@ const mutations = {
   },
   // Установка локали
   setLocale(state, payload) {
-    localStorage.locale = payload.locale;
-    state.locale = payload.locale;
+    localStorage.locale = payload.lang;
+    state.locale = payload.lang;
+    state.languages.value = payload.value;
   },
   // Очистка токена аутентификации
   unsetJwtToken(state) {

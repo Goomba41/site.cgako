@@ -144,6 +144,7 @@ router.beforeEach((to, from, next) => {
   import(`../langs/${store.state.locale}.json`).then((msgs) => {
     i18n.setLocaleMessage(`${store.state.locale}`, msgs);
     i18n.locale = store.state.locale;
+    store.dispatch('presetLocale', store.state.locale);
   });
 });
 

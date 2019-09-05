@@ -60,7 +60,7 @@
 
       <b-list-group-item class="noselect">
         <font-awesome-icon :icon="['fa', 'language']" class="pr-3" fixed-width size="2x"/>
-        <multiselect v-model="value" :options="options"
+        <multiselect :value="value" :options="options" @input="changeLocale"
         :show-labels="false" :searchable="false" :close-on-select="true"
         :hideSelected="true" :allowEmpty="false">
           <template slot="singleLabel" slot-scope="props">
@@ -86,25 +86,25 @@
 
 <script>
 import { EventBus } from '@/utils';
+import { mapState, mapActions } from 'vuex';
 import Multiselect from 'vue-multiselect';
 
 export default {
   name: 'Sidebar',
   data() {
     return {
-      value: { locale: 'ru', class: 'ru', translation: 'rus' },
-      options: [
-        { locale: 'ru', class: 'ru', translation: 'rus' },
-        { locale: 'su', class: 'su', translation: 'sul' },
-        { locale: 'en', class: 'us', translation: 'eng' },
-      ],
     };
   },
+  computed: mapState({
+    value: state => state.languages.value,
+    options: state => state.languages.options,
+  }),
   components: { Multiselect },
   methods: {
     sidebarOff() {
       EventBus.$emit('sidebarOff');
     },
+    ...mapActions(['changeLocale']),
   },
 };
 </script>
