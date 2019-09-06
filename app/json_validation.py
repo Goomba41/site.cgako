@@ -182,6 +182,19 @@ schema_user_data = {
                         "else": {"is_email": True}
                     },
                  },
+        "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        'properties': {
+                            "id": {
+                                "type": "number",
+                            },
+                        },
+                        "required": ["id"],
+                    },
+                 },
         "phone": {
                     "type": "string",
                     "pattern": r'(^\+7\s\d{3,3}\s\d{3,3}\s\d{2,2}\s\d{2,2}$)',
@@ -267,6 +280,19 @@ schema_user_update_data = {
                           },
                         "then": {"is_email_primary": True},
                         "else": {"is_email": True}
+                    },
+                 },
+        "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        'properties': {
+                            "id": {
+                                "type": "number",
+                            },
+                        },
+                        "required": ["id"],
                     },
                  },
         "phone": {

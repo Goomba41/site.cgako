@@ -300,8 +300,10 @@
             <h3>{{profile.surname}}<br>
             {{profile.name}} {{profile.patronymic}}<br>
             @{{profile.login}}</h3>
-            <h2 class="pb-4">Роль</h2>
-            <p v-if=profile.about_me class="text-justify m-0 pt-3">{{profile.about_me}}</p>
+            <h3 class="pb-4">
+              {{_.join(_.map(profile.roles, 'title'), ', ')}}
+            </h3>
+            <p v-if="profile.about_me" class="text-justify m-0 pt-3">{{profile.about_me}}</p>
           </b-card-text>
 <!--
           <div slot="footer" class="text-left">

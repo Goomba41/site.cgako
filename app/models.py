@@ -357,6 +357,9 @@ class CmsRolesSchema(ma.ModelSchema):
         """Мета модели, вносятся доп. параметры."""
 
         model = CmsRoles
+        exclude = ("users",)
+        #  fields = ("id", "title",)
+
     permissions = ma.Nested(AssociationPermissionSchema, many=True)
 
 
@@ -367,7 +370,7 @@ class CmsUsersSchema(ma.ModelSchema):
         """Мета модели, вносятся доп. параметры."""
 
         model = CmsUsers
-    roles = ma.Nested(CmsRolesSchema, many=True, only=["id", "title"])
+    roles = ma.Nested(CmsRolesSchema, many=True)
 
 
 class CmsProfileSchema(ma.ModelSchema):
@@ -379,5 +382,6 @@ class CmsProfileSchema(ma.ModelSchema):
         model = CmsUsers
         fields = (
             "login", "surname", "name", "patronymic", "email", "phone",
-            "birth_date", "about_me", "socials", "photo"
+            "birth_date", "about_me", "socials", "photo", "roles"
         )
+    roles = ma.Nested(CmsRolesSchema, many=True, only=["id", "title"])

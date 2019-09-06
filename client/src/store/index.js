@@ -234,7 +234,7 @@ const actions = {
       {
         headers: { Authorization: `Bearer: ${context.state.jwt}` },
         params: {
-          limit: payload.limit || 20,
+          limit: payload.limit || undefined,
           start: payload.start || 1,
         },
       })
@@ -329,7 +329,7 @@ const actions = {
       {
         headers: { Authorization: `Bearer: ${context.state.jwt}` },
         params: {
-          limit: payload.limit || 20,
+          limit: payload.limit || undefined,
           start: payload.start || 1,
         },
       })

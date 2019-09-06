@@ -375,6 +375,16 @@
                         "maxLength":"This field can contain maximum 140 charachers."
                     },
                     "successText":"Okay!"
+                },
+                "roles":{
+                    "placeholder":"User system roles",
+                    "selectLabel":"Press Enter to select",
+                    "selectedLabel":"Selected",
+                    "deselectLabel":"Press Enter to remove",
+                    "errors":{
+                        "search":"Role not found!"
+                    },
+                    "successText":"Okay!"
                 }
             }
         },
@@ -460,6 +470,16 @@
                     "placeholder":"About me",
                     "errors":{
                         "maxLength":"This field can contain maximum 140 charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "roles":{
+                    "placeholder":"User system roles",
+                    "selectLabel":"Press Enter to select",
+                    "selectedLabel":"Selected",
+                    "deselectLabel":"Press Enter to remove",
+                    "errors":{
+                        "search":"Role not found!"
                     },
                     "successText":"Okay!"
                 }

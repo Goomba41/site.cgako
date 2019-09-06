@@ -29,7 +29,7 @@ from functools import wraps
 from app import bcrypt, db, mail
 from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     CmsRoles, CmsRolesSchema, SystemObjects, SystemObjectsActions, \
-    AssociationPermission, AssociationPermissionSchema
+    AssociationPermission, AssociationPermissionSchema, user_role
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator
 
@@ -544,6 +544,7 @@ def update_profile_data(current_user, uid):
 
         #  Фото попать обязательно
         update_data.pop('photo', None)
+        update_data.pop('roles', None)
         #  Не попать после реализации
         update_data.pop('socials', None)
 
@@ -932,7 +933,7 @@ def get_users(current_user):
                     _external=True),
             start=request.args.get('start', 1),
             limit=request.args.get('limit',
-                                   current_app.config['LIMIT'])
+                                   CmsUsers.query.count())
         )
 
         response = Response(
@@ -1032,6 +1033,24 @@ def post_users(current_user):
                     phone=post_data['phone'],
                     about_me=post_data.get('about_me', None)
                 )
+
+                new_roles = post_data.pop('roles', None)
+
+                if new_roles is not None:
+                    for role in new_roles:
+                        #  Проверить, существует ли роль в базе,
+                        #  если нет, то ничего
+                        #  иначе добавить пользователю роль
+                        role_exist = CmsRoles.query.filter_by(
+                            id=role['id']).first()
+                        if role_exist is not None:
+                            user.roles.append(role_exist)
+                    if not user.roles:
+                        user.roles.append(
+                            CmsRoles.query.filter_by(id=4).first())
+                else:
+                    user.roles.append(CmsRoles.query.filter_by(id=4).first())
+
                 db.session.add(user)
                 db.session.commit()
 
@@ -1040,7 +1059,6 @@ def post_users(current_user):
                 additional_mails = []
                 for mail_item in post_data['email']:
                     if mail_item['value'] and mail_item['type'] != "primary":
-                        print("got")
                         additional_mails.append(mail_item['value'])
 
                 token = generate_confirmation_token(
@@ -1099,6 +1117,7 @@ def update_users(current_user, uid):
                 mimetype='application/json'
             )
         else:
+            #  Удаление лишних полей для валидации json
             for pop_item in ['id', 'socials', 'photo', 'last_login', 'status']:
                 update_data.pop(pop_item, None)
 
@@ -1119,6 +1138,9 @@ def update_users(current_user, uid):
                     )
 
             else:
+                #  Получить основную почту из полученных данных
+                #  и проверить пользователя на существование
+                #  с такой почтой, логином, паролем
                 primary_mail = list(
                     filter(
                         lambda mail: mail['type'] == "primary",
@@ -1139,10 +1161,13 @@ def update_users(current_user, uid):
                         mimetype='application/json'
                     )
                 else:
+                    #  Составить попарный список предыдущих и полученных почт
                     previous = CmsUsers.query.filter_by(id=uid).first().email
                     current = update_data['email']
                     pairs = zip(current, previous)
 
+                    #  И проверить, если почта изменилась,
+                    #  сбросить активацию и отправить письмо с токеном
                     changed = [x for x, y in pairs if x != y]
                     if changed:
                         for mail_item in changed:
@@ -1172,6 +1197,25 @@ def update_users(current_user, uid):
 
                     old_data = CmsUsers.query.filter_by(id=uid)
                     old_login = old_data.first().login
+
+                    #  Обработка списка ролей
+                    new_roles = update_data.pop('roles', None)
+
+                    if new_roles is not None:
+                        old_roles = old_data.first()
+                        old_roles.roles.clear()
+                        for role in new_roles:
+                            #  Проверить, существует ли роль в базе,
+                            #  если нет, то ничего
+                            #  иначе добавить пользователю роль
+                            role_exist = CmsRoles.query.filter_by(
+                                id=role['id']).first()
+                            if role_exist is not None:
+                                old_roles.roles.append(role_exist)
+                        if not old_roles.roles:
+                            old_roles.roles.append(
+                                CmsRoles.query.filter_by(id=4).first())
+
                     old_data.update(update_data)
                     db.session.commit()
 
@@ -1389,10 +1433,10 @@ def get_roles(current_user):
 
         role_schema = CmsRolesSchema(many=True, exclude=['users'])
 
-        test_schema = AssociationPermissionSchema(exclude=['roles'])
-        test = AssociationPermission.query.first()
-        testdata = test_schema.dump(test)
-        print(testdata.data)
+        #  test_schema = AssociationPermissionSchema(exclude=['roles'])
+        #  test = AssociationPermission.query.first()
+        #  testdata = test_schema.dump(test)
+        #  print(testdata.data)
 
         roles = CmsRoles.query.all()
         rdata = role_schema.dump(roles)
@@ -1404,7 +1448,7 @@ def get_roles(current_user):
                     _external=True),
             start=request.args.get('start', 1),
             limit=request.args.get('limit',
-                                   current_app.config['LIMIT'])
+                                   CmsRoles.query.count())
         )
 
         response = Response(

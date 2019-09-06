@@ -629,6 +629,20 @@
           </b-form-invalid-feedback>
         </b-form-group>
 
+        <b-form-group>
+          <multiselect v-model="$v.newUser.roles.$model"
+          v-bind:placeholder="$t('usersCMS.formEdit.formFields.roles.placeholder')"
+          label="title" track-by="title"
+          :options="roles.results" :multiple="true" :allowEmpty="false"
+          :selectLabel="$t('usersCMS.formEdit.formFields.roles.selectLabel')"
+          :selectedLabel="$t('usersCMS.formEdit.formFields.roles.selectedLabel')"
+          :deselectLabel="$t('usersCMS.formEdit.formFields.roles.deselectLabel')">
+            <span slot="noResult">
+              {{$t('usersCMS.formEdit.formFields.roles.errors.search')}}
+            </span>
+          </multiselect>
+        </b-form-group>
+
         <b-row>
           <b-col>
             <b-button type="submit" variant="success" block
@@ -664,8 +678,8 @@
     </b-modal>
 
     <b-modal id="edit-modal"
-            @hidden="user={}"
-            @close="user={}"
+            @hidden="onResetEdit"
+            @close="onResetImage"
             v-bind:title="$t('usersCMS.formEdit.formTitle')"
             hide-footer size="xl" centered
             :header-bg-variant="'primary'"
@@ -906,21 +920,36 @@
             </b-form-group>
 
             <b-form-group>
-          <b-form-textarea
-          v-bind:placeholder="$t('usersCMS.formEdit.formFields.aboutMe.placeholder')"
-          autocomplete="off"
-          rows="2" max-rows="6" no-resize
-          v-model="$v.user.about_me.$model" name="about_me"
-          :state="$v.user.about_me.$dirty ? !$v.user.about_me.$error : null">
-          </b-form-textarea>
+              <b-form-textarea
+              v-bind:placeholder="$t('usersCMS.formEdit.formFields.aboutMe.placeholder')"
+              autocomplete="off"
+              rows="2" max-rows="6" no-resize
+              v-model="$v.user.about_me.$model" name="about_me"
+              :state="$v.user.about_me.$dirty ? !$v.user.about_me.$error : null">
+              </b-form-textarea>
 
-          <b-form-invalid-feedback
-          :state="$v.user.about_me.$dirty ? !$v.user.about_me.$error : null">
-            <span v-if="!$v.user.about_me.maxLength">
-              {{$t('usersCMS.formEdit.formFields.aboutMe.errors.maxLength')}}
-            </span>
-          </b-form-invalid-feedback>
-        </b-form-group>
+              <b-form-invalid-feedback
+              :state="$v.user.about_me.$dirty ? !$v.user.about_me.$error : null">
+                <span v-if="!$v.user.about_me.maxLength">
+                  {{$t('usersCMS.formEdit.formFields.aboutMe.errors.maxLength')}}
+                </span>
+              </b-form-invalid-feedback>
+            </b-form-group>
+
+            <b-form-group>
+              <multiselect v-model="$v.user.roles.$model"
+              v-bind:placeholder="$t('usersCMS.formEdit.formFields.roles.placeholder')"
+              label="title" track-by="title"
+              :options="roles.results" :multiple="true" :allowEmpty="false"
+              :selectLabel="$t('usersCMS.formEdit.formFields.roles.selectLabel')"
+              :selectedLabel="$t('usersCMS.formEdit.formFields.roles.selectedLabel')"
+              :deselectLabel="$t('usersCMS.formEdit.formFields.roles.deselectLabel')">
+                <span slot="noResult">
+                  {{$t('usersCMS.formEdit.formFields.roles.errors.search')}}
+                </span>
+              </multiselect>
+            </b-form-group>
+
           </b-col>
 
           <b-col cols="5" v-if="uid!=user.id">
@@ -1072,11 +1101,13 @@ import {
   required, sameAs, minLength, maxLength, alphaNum, email, requiredIf,
   maxValue,
 } from 'vuelidate/lib/validators';
+import Multiselect from 'vue-multiselect';
 import Breadcumbs from './Breadcumbs';
 import {
   EventBus, passwordGenerator, dateDiffNow, formatBytes,
 } from '@/utils';
 import { imageType } from '@/validators';
+
 
 export default {
   name: 'Users',
@@ -1128,6 +1159,7 @@ export default {
         phone: '',
         birth_date: '',
         about_me: '',
+        roles: '',
       },
       file: null,
       imageUpdate: {
@@ -1200,6 +1232,9 @@ export default {
       about_me: {
         maxLength: maxLength(140),
       },
+      roles: {
+        required,
+      },
       validationGroupFIO: ['newUser.name', 'newUser.surname', 'newUser.patronymic'],
     },
     user: {
@@ -1248,6 +1283,9 @@ export default {
       birth_date: {
         required,
       },
+      roles: {
+        required,
+      },
       about_me: {
         maxLength: maxLength(140),
       },
@@ -1262,9 +1300,12 @@ export default {
       },
     },
   },
-  components: { Breadcumbs, Datepicker, VueTelInput },
+  components: {
+    Breadcumbs, Datepicker, VueTelInput, Multiselect,
+  },
   computed: mapState({
     users: state => state.users,
+    roles: state => state.roles,
     uid: state => state.uid,
     reactivationPeriod: state => state.reactivationPeriod,
     orderedList() {
@@ -1278,6 +1319,7 @@ export default {
   }),
   beforeMount() {
     this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
+    this.$store.dispatch('loadRoles', {});
   },
   methods: {
     dateFormatter(date) {
@@ -1374,6 +1416,15 @@ export default {
         },
       ];
       // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+      EventBus.$emit('forceRerender');
+    },
+    onResetEdit(evt) {
+      evt.preventDefault();
+      this.$v.user.$reset();
       this.show = false;
       this.$nextTick(() => {
         this.show = true;

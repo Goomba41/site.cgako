@@ -375,6 +375,16 @@
                         "maxLength":"Это поле может содержать максимум 140 символов."
                     },
                     "successText":"Все в порядке!"
+                },
+                "roles":{
+                    "placeholder":"Системные роли пользователя",
+                    "selectLabel":"Нажмите Enter для выбора",
+                    "selectedLabel":"Выбрано",
+                    "deselectLabel":"Нажмите Enter чтобы убрать",
+                    "errors":{
+                        "search":"Роль не найдена!"
+                    },
+                    "successText":"Все в порядке!"
                 }
             }
         },
@@ -460,6 +470,16 @@
                     "placeholder":"О себе",
                     "errors":{
                         "maxLength":"Это поле может содержать максимум 140 символов."
+                    },
+                    "successText":"Все в порядке!"
+                },
+                "roles":{
+                    "placeholder":"Системные роли пользователя",
+                    "selectLabel":"Нажмите Enter для выбора",
+                    "selectedLabel":"Выбрано",
+                    "deselectLabel":"Нажмите Enter чтобы убрать",
+                    "errors":{
+                        "search":"Роль не найдена!"
                     },
                     "successText":"Все в порядке!"
                 }

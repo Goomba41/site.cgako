@@ -7,8 +7,8 @@
         <b-row class="justify-content-start align-middle align-items-center">
           <span class="text-info pr-3">
             Всего {{ roles.count }}
-            {{ roles.count | declension(["уровень полномочий", "уровня полномочий",
-              "уровней полномочий"]) }}
+            {{ roles.count | declension(["ролей", "роли",
+              "ролей"]) }}
           </span>
           <b-button title="Новое досье" v-b-tooltip.hover class="mr-1" size="sm" variant="success"
           v-b-modal.new-modal>
@@ -61,7 +61,8 @@
       </b-col>
 
     </b-row>
-{{roles.results}}
+{{roles.results}}<br><br>
+{{role}}
     <b-row class="p-3">
       <b-col sm="6">
 
@@ -73,7 +74,7 @@
               </th>
 
               <th scope="col">
-                Уровень полномочий
+                Роль
                 <font-awesome-icon icon="sort"
                 fixed-width
                 @click="listControl.orderBy.field='title';
@@ -127,7 +128,7 @@
       <b-col sm="6">
         <b-card no-body header-tag="header">
           <h3 slot="header" class="mb-0 small">
-            Привилегии уровня полномочий
+            Разрешения роли
           </h3>
           <b-list-group flush v-if="Object.keys(role).length===0">
             <b-list-group-item class="flex-column align-items-start">
@@ -142,8 +143,8 @@
           <b-list-group flush v-else>
             <b-list-group-item class="flex-column align-items-start"
             v-for="permission in role.permissions" :key="permission.id">
-                {{permission.objects.title}}
-                {{permission.actions.title}}
+                <span title="Объект" v-b-tooltip.hover><b>{{permission.objects.title}}</b></span>
+                <span title="Разрешение" v-b-tooltip.hover>{{permission.actions.title}}</span>
             </b-list-group-item>
 
           </b-list-group>
