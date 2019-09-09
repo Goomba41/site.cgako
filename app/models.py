@@ -384,4 +384,4 @@ class CmsProfileSchema(ma.ModelSchema):
             "login", "surname", "name", "patronymic", "email", "phone",
             "birth_date", "about_me", "socials", "photo", "roles"
         )
-    roles = ma.Nested(CmsRolesSchema, many=True, only=["id", "title"])
+    roles = ma.Nested(CmsRolesSchema, many=True)

@@ -885,3 +885,73 @@ img.profile-image-preview.preview-square {
 .color-JavaScript {
     color: #f1e05a;
 }
+
+/*
+---------------------------- Мультиселектор перезапись стиля -----------------------------
+*/
+
+.multiselect, .multiselect__input, .multiselect__single {
+    font-family: inherit;
+/*
+    font-size: 1rem;
+*/
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+}
+
+.multiselect__tags {
+    min-height: 40px;
+    display: block;
+    padding: 8px 40px 0 8px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    background: #fff;
+    font-size: 14px;
+}
+
+.multiselect__input {
+    color: #6c757d;
+    padding-top: 2px;
+    font-size: 1rem;
+    padding-left: 0.25rem !important;
+}
+
+.multiselect__input::placeholder {
+    color: #6c757d;
+}
+
+.multiselect__option--highlight {
+    background: #28a745;
+    outline: none;
+    color: #fff;
+}
+
+.multiselect__option--selected.multiselect__option--highlight {
+    background: #dc3545;
+    color: #fff;
+}
+
+.multiselect__tag {
+    position: relative;
+    display: inline-block;
+    padding: 4px 26px 4px 10px;
+    border-radius: 5px;
+    margin-right: 10px;
+    color: #fff;
+    line-height: 1;
+    background: #17a2b8;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+}
+
+.multiselect__placeholder {
+    color: #6c757d;
+    display: inline-block;
+    margin-bottom: 10px;
+    padding-top: 2px;
+    font-size: 1rem;
+    padding-left: 0.25rem !important;
+}

@@ -1178,7 +1178,9 @@ export default {
     },
     deleteGroupPassphrase: {
       required,
-      sameAsPassphrase: val => (val === 'Удалить' || val === 'Delete'),
+      sameAsPassphrase: sameAs(function samePassphrase() {
+        return this.$t('usersCMS.deleteGroupModal.confirmationField.passphrase');
+      }),
     },
     newUser: {
       login: {

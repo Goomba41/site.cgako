@@ -1488,6 +1488,84 @@ def get_role_by_id(current_user, rid):
     return response
 
 
+@API0.route('/roles/<int:rid>', methods=['DELETE'])
+@token_required
+def delete_roles(current_user, rid):
+    """ Удаление записи роли из БД"""
+
+    try:
+
+        role = CmsRoles.query.get(rid)
+
+        if role.deletable:
+            db.session.delete(role)
+
+            #  После удаления роли запросить пользователей без ролей
+            #  если есть, добавить обозначенную роль
+            uwr = CmsUsers.query.filter(CmsUsers.roles == None).all() # noqa: ignore=E711
+            if uwr:
+                # Пользователь (придумать 'по умолчанию")
+                base_role = CmsRoles.query.get(4)
+                for u in uwr:
+                    u.roles.append(base_role)
+
+            db.session.commit()
+
+            response = Response(
+                response=json.dumps({'type': 'success',
+                                     'text': 'Успешно удалено!'}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Эту роль нельзя удалить!'}),
+                status=401,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+# ------------------------------------------------------------
+# Разрешения
+# ------------------------------------------------------------
+
+
+#  @API0.route('/permissions/<int:uid>/<string:obj>', methods=['GET'])
+#  @token_required
+#  def get_permissions_for_object(current_user, uid, obj):
+#  """ Получение списка разрешений для объекта в json"""
+
+#  try:
+#  print(current_user.roles)
+#  for role in current_user.roles:
+#  print(role.permissions)
+#  for permission in role.permissions:
+#  print(permission.objects)
+#  print(permission.actions)
+#  role_schema = CmsRolesSchema(exclude=['users'])
+#  roles = CmsRoles.query.get(rid)
+#  rdata = role_schema.dump(roles)
+
+#  response = Response(
+#  response=json.dumps("ok"),
+#  status=200,
+#  mimetype='application/json'
+#  )
+
+#  except Exception:
+
+#  response = server_error(request.args.get("dbg"))
+
+#  return response
+
+
 # ------------------------------------------------------------
 # Новости
 # ------------------------------------------------------------

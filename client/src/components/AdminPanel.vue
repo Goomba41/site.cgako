@@ -43,6 +43,7 @@
 
 <script>
 import { EventBus } from '@/utils';
+import { mapState } from 'vuex';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import Footerline from './Footer';
@@ -63,7 +64,9 @@ export default {
       componentKey: 0,
     };
   },
-
+  computed: mapState({
+    profile: state => state.profile,
+  }),
   methods: {
 
     // *** ОТСЧЕТ ВРЕМЕНИ ПРОСТОЯ ***//

@@ -282,7 +282,8 @@
             },
             "confirmationField": {
                 "placeholder": "Подтверждающая фраза",
-                "description": "Введите «Удалить» для подтверждения удаления"
+                "description": "Введите «Удалить» для подтверждения удаления",
+                "passphrase": "Удалить"
             }
         },
         "formNew":{
@@ -511,6 +512,69 @@
                     "errors":{
                         "maxValue":"Размер файла превышает 3 MB.",
                         "isImage":"Выбранный файл в некорректном формате: JPEG, GIF, PNG."
+                    },
+                    "successText":"Все в порядке!"
+                }
+            }
+        }
+    },
+    "rolesPermissions":{
+        "counter":"Нет ролей | Всего 1 роль | Всего {n} роли | Всего {n} ролей",
+        "tooltips": {
+            "pageNavigation":"Навигация по страницам",
+            "pageShowCount":"Показать записей на странице",
+            "pageShowCountTitle":"По:",
+            "pageShowFrom":"Начать с записи",
+            "pageShowFromTitle":"С:",
+            "newRoleButton":"Новая роль",
+            "editRoleButton":"Редактировать роль",
+            "permissionsRoleButton":"Разрешения роли",
+            "deleteRoleButton":"Удалить роль"
+        },
+        "titles": {
+            "groupActions": {
+                "deleteButton":"Удалить"
+            },
+            "role":"Роль",
+            "management":"Управление",
+            "rolePermissionsTitle": "Разрешения роли",
+            "rolePermissionsDesc": "Нажмите кнопку с {icon} одной из роли для отображения списка разрешений"
+        },
+        "deleteModal": {
+            "title":"Удаление роли",
+            "tooltips": {
+                "deleteButton": "Удалить роль"
+            },
+            "confirmationField": {
+                "placeholder": "Подтверждающая фраза",
+                "description": "Введите имя роли для подтверждения удаления"
+            }
+        },
+        "deleteGroupModal": {
+            "title":"Удаление группы",
+            "tooltips": {
+                "deleteButton": "Удалить группу"
+            },
+            "confirmationField": {
+                "placeholder": "Подтверждающая фраза",
+                "description": "Введите «Удалить» для подтверждения удаления",
+                "passphrase": "Удалить"
+            }
+        },
+        "formNew":{
+            "formTitle":"Новая роль",
+            "tooltips":{
+                "submitButton":"Отправить форму",
+                "clearButton":"Очистить форму"
+            },
+            "formFields":{
+                "title":{
+                    "placeholder":"Имя",
+                    "errors":{
+                        "required":"Это поле обязательно для заполнения.",
+                        "minLength":"Это поле должно содержать минимум 4 символа.",
+                        "maxLength":"Это поле может содерждать максимум 50 символов.",
+                        "alphaNum":"Это поле может содержать только латинские, кириллические и цифровые символы."
                     },
                     "successText":"Все в порядке!"
                 }

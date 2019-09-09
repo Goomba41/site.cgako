@@ -37,7 +37,7 @@
             "languages":{
                 "rus":"Russian",
                 "eng":"English",
-                "sul":"Soviet Union"
+                "sul":"Communistic"
             },
             "developerLinks":{
                 "email":"Contact with developer by email",
@@ -282,7 +282,8 @@
             },
             "confirmationField": {
                 "placeholder": "Confirmating phrase",
-                "description": "Enter «Delete» for confirm deletion"
+                "description": "Enter «Delete» for confirm deletion",
+                "passphrase": "Delete"
             }
         },
         "formNew":{
@@ -383,6 +384,197 @@
                     "deselectLabel":"Press Enter to remove",
                     "errors":{
                         "search":"Role not found!"
+                    },
+                    "successText":"Okay!"
+                }
+            }
+        },
+        "formEdit":{
+            "formTitle":"Edit user form",
+            "tooltips":{
+                "submitButton":"Send form"
+            },
+            "formFields":{
+                "login":{
+                    "placeholder":"Login",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 20 charachers.",
+                        "alphaNum":"This field must contain only latin and numeric charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "surname":{
+                    "placeholder":"Surname",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 20 charachers.",
+                        "alpha":"This field must contain only cyrillic charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "name":{
+                    "placeholder":"Name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 20 charachers.",
+                        "alpha":"This field must contain only cyrillic charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "patronymic":{
+                    "placeholder":"Patronymic",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 20 charachers.",
+                        "alpha":"This field must contain only cyrillic charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "emails":{
+                    "placeholder":"Email",
+                    "errors":{
+                        "required":"This field is required.",
+                        "email":"This field must contain only email formatted string."
+                    },
+                    "successText":"Okay!",
+                    "description":" Primary mail is required field. On added or updated address we will send mail with confirmation link.",
+                    "titlePrimary":"Primary email",
+                    "titlePersonal":"Personal email",
+                    "titleWork":"Work email",
+                    "confirmationT":"Confirmed",
+                    "confirmationF":"Not confirmed",
+                    "activity":"Active until: ",
+                    "sendVerification":"Send verification mail",
+                    "resetActivation":"Reset mail activation"
+                },
+                "phone":{
+                    "placeholder":"Phone number",
+                    "errors":{
+                        "required":"This field is required.",
+                        "format":"Incorrect phone number format."
+                    },
+                    "successText":"Okay!"
+                },
+                "birthDate":{
+                    "placeholder":"Birthdate (YYYY-MM-DD)",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Okay!"
+                },
+                "aboutMe":{
+                    "placeholder":"About me",
+                    "errors":{
+                        "maxLength":"This field can contain maximum 140 charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "roles":{
+                    "placeholder":"User system roles",
+                    "selectLabel":"Press Enter to select",
+                    "selectedLabel":"Selected",
+                    "deselectLabel":"Press Enter to remove",
+                    "errors":{
+                        "search":"Role not found!"
+                    },
+                    "successText":"Okay!"
+                }
+            },
+            "dangerZone": {
+                "title":"Danger zone",
+                "functions": {
+                    "resetPassword": {
+                        "title": "Reset password",
+                        "description": "This function generate one time password and send him on user primary mail address",
+                        "button": "Do a reset"
+                    },
+                    "blockPassword": {
+                        "title": "Block password",
+                        "description": "This function block user password and he will not be able to sign in",
+                        "button": "Blocking"
+                    }
+                }
+            }
+        },
+        "formAvatar":{
+            "formTitle":"Update avatar",
+            "formDescription":"It will be easier for other users to recognize you, if you add your real photo. Image must be in one of this formats: JPEG, GIF, PNG. Maximum size of file is 3 MB.",
+            "saveButton":"Set new avatar",
+            "formFields":{
+                "file":{
+                    "placeholder":"Choose image file...",
+                    "browseButton":"Browse",
+                    "errors":{
+                        "maxValue":"File size is exceed 3 MB.",
+                        "isImage":"Chosen file is not one of this formats: JPEG, GIF, PNG."
+                    },
+                    "successText":"Okay!"
+                }
+            }
+        }
+    },
+    "rolesPermissions":{
+        "counter":"no roles | Total 1 role | Total {n} roles | Total {n} roles",
+        "tooltips": {
+            "pageNavigation":"Pages navigation",
+            "pageShowCount":"Show records per page",
+            "pageShowCountTitle":"Per:",
+            "pageShowFrom":"Start from record",
+            "pageShowFromTitle":"From:",
+            "newRoleButton":"New role",
+            "editRoleButton":"Edit role",
+            "permissionsRoleButton":"Role permissions",
+            "deleteRoleButton":"Delete role"
+        },
+        "titles": {
+            "groupActions": {
+                "deleteButton":"Delete"
+            },
+            "role":"Role",
+            "management":"Management",
+            "rolePermissionsTitle": "Role permissions",
+            "rolePermissionsDesc": "Press button with {icon} one of the roles for permissions list display"
+        },
+        "deleteModal": {
+            "title":"Role delete",
+            "tooltips": {
+                "deleteButton": "Delete role"
+            },
+            "confirmationField": {
+                "placeholder": "Confirmating phrase",
+                "description": "Enter role name for confirm deletion"
+            }
+        },
+        "deleteGroupModal": {
+            "title":"Roles delete",
+            "tooltips": {
+                "deleteButton": "Delete roles"
+            },
+            "confirmationField": {
+                "placeholder": "Confirmating phrase",
+                "description": "Enter «Delete» for confirm deletion",
+                "passphrase": "Delete"
+            }
+        },
+        "formNew":{
+            "formTitle":"New role form",
+            "tooltips":{
+                "submitButton":"Send form",
+                "clearButton":"Clear form"
+            },
+            "formFields":{
+                "title":{
+                    "placeholder":"Name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 50 charachers.",
+                        "alphaNum":"This field must contain only latin, cyrillic and numeric charachers."
                     },
                     "successText":"Okay!"
                 }

@@ -344,6 +344,18 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  // Удалить роль
+  deleteRole(context, payload) {
+    return axios.delete(`/api/roles/${payload.id}?dbg`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        EventBus.$emit('message', error.response.data);
+      });
+  },
   // Смена локали
   changeLocale(context, value) {
     const lang = value.locale;
