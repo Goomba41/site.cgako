@@ -31,7 +31,8 @@ from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     CmsRoles, CmsRolesSchema, SystemObjects, SystemObjectsActions, \
     AssociationPermission, AssociationPermissionSchema, user_role
 from app.json_validation import profile_validator, password_validator, \
-    user_validator, user_update_validator
+    user_validator, user_update_validator, role_validator, \
+    role_update_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -1524,6 +1525,167 @@ def delete_roles(current_user, rid):
                 status=401,
                 mimetype='application/json'
             )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/roles', methods=['POST'])
+@token_required
+def post_role(current_user):
+    """ Добавление записи пользователя в БД"""
+
+    try:
+
+        post_data = request.get_json()
+
+        if not role_validator.is_valid(post_data):
+            errors = []
+            for error in sorted(role_validator.iter_errors(
+                                post_data), key=str):
+                errors.append(error.message)
+
+            separator = '; '
+            error_text = separator.join(errors)
+            print(error_text)
+            response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': error_text}),
+                    status=422,
+                    mimetype='application/json'
+                )
+        else:
+
+            exist = CmsRoles.exist(**{
+                                      'title': post_data['title']
+                                      })
+
+            if exist:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Уже есть такая роль!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+            else:
+                role = CmsRoles(
+                    title=post_data['title'],
+                )
+
+                #  new_roles = post_data.pop('roles', None)
+
+                #  if new_roles is not None:
+                #  for role in new_roles:
+                #  role_exist = CmsRoles.query.filter_by(
+                #  id=role['id']).first()
+                #  if role_exist is not None:
+                #  user.roles.append(role_exist)
+                #  if not user.roles:
+                #  user.roles.append(
+                #  CmsRoles.query.filter_by(id=4).first())
+                #  else:
+                #  user.roles.append(CmsRoles.query.filter_by(id=4).first())
+
+                db.session.add(role)
+                db.session.commit()
+
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Добавлена роль '
+                                                 '«'+str(role.title)+'»!',
+                                         'link': url_for('.get_role_by_id',
+                                                         rid=role.id,
+                                                         _external=True)}),
+                    status=200,
+                    mimetype='application/json'
+                )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/roles/<int:rid>', methods=['PUT'])
+@token_required
+def update_roles(current_user, rid):
+    """ Изменение записи системной роли в БД"""
+
+    try:
+
+        update_data = request.get_json()
+        print(update_data)
+
+        for pop_item in ['id', 'deletable']:
+            update_data.pop(pop_item, None)
+
+        new_roles = update_data.pop('permissions', None)
+
+        if not role_update_validator.is_valid(update_data):
+            errors = []
+            for error in sorted(role_update_validator.iter_errors(
+                                update_data), key=str):
+                errors.append(error.message)
+                print(error.message)
+
+            separator = '; '
+            error_text = separator.join(errors)
+            response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': error_text}),
+                    status=422,
+                    mimetype='application/json'
+                )
+
+        else:
+
+            exist = CmsRoles.exist(rid=rid, **{
+                                      'title': update_data['title']
+                                      })
+
+            if exist:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Роль с таким'
+                                                 ' именем существует!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+            else:
+                old_data = CmsRoles.query.filter_by(id=rid)
+                old_title = old_data.first().title
+
+                #  new_roles = update_data.pop('permissions', None)
+
+                #  if new_roles is not None:
+                #  old_roles = old_data.first()
+                #  old_roles.roles.clear()
+                #  for role in new_roles:
+                #  role_exist = CmsRoles.query.filter_by(
+                #  id=role['id']).first()
+                #  if role_exist is not None:
+                #  old_roles.roles.append(role_exist)
+                #  if not old_roles.roles:
+                #  old_roles.roles.append(
+                #  CmsRoles.query.filter_by(id=4).first())
+
+                old_data.update(update_data)
+                db.session.commit()
+
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Изменена роль '
+                                                 '«'+str(old_title)+'»!',
+                                         'link': url_for('.get_role_by_id',
+                                                         rid=rid,
+                                                         _external=True)}),
+                    status=200,
+                    mimetype='application/json'
+                )
 
     except Exception:
 

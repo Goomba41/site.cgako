@@ -100,6 +100,23 @@ table.table.td-align-middle td {
   text-align: center;
 }
 
+.overflowed {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.overflowed::-webkit-scrollbar {
+width: 0.5rem;
+/*
+background-color: #0B4FA6;
+*/
+}
+
+.overflowed::-webkit-scrollbar-thumb {
+-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+background-color: #FED540;
+}
+
 /*
 ---------------------------- Блокиратор -----------------------------
 */

@@ -68,7 +68,7 @@
 {{role}}<br><br>
 -->
     <b-row class="p-3">
-      <b-col sm="6">
+      <b-col sm="4">
 
         <table class="table table-hover td-align-middle">
           <thead>
@@ -132,8 +132,8 @@
         </table>
 
       </b-col>
-      <b-col sm="6">
-        <b-card no-body header-tag="header">
+      <b-col sm="4">
+        <b-card no-body header-tag="header" >
           <h3 slot="header" class="mb-0 small">
             {{ $t('rolesPermissions.titles.rolePermissionsTitle') }}
           </h3>
@@ -147,27 +147,47 @@
             </b-list-group-item>
           </b-list-group>
 
-          <b-list-group flush v-else>
+          <b-list-group flush class="overflowed" v-else>
             <b-list-group-item class="flex-column align-items-start"
             v-for="permission in role.permissions" :key="permission.id">
                 <span title="Объект" v-b-tooltip.hover><b>{{permission.objects.title}}</b></span>
+                <font-awesome-icon :icon="['fa', 'long-arrow-alt-right']" fixed-width/>
                 <span title="Разрешение" v-b-tooltip.hover>{{permission.actions.title}}</span>
             </b-list-group-item>
 
           </b-list-group>
         </b-card>
       </b-col>
+      <b-col sm="4">
+
+        <div>
+          <label class="typo__label">Simple select / dropdown</label>
+          <multiselect v-model="value" :options="options"
+          placeholder="Pick some" label="name"
+          :multiple="true" :taggable="false"
+          :close-on-select="false" :clear-on-select="false" :hide-selected="true"
+          :preserve-search="true" track-by="name" :preselect-first="true">
+            <template slot="selection" slot-scope="{ values, search, isOpen }">
+              <span class="multiselect__single" v-if="values.length &amp;&amp; !isOpen">
+                {{ values.length }} options selected
+              </span>
+            </template>
+          </multiselect>
+          <pre class="language-json"><code>{{ value }}</code></pre>
+        </div>
+
+      </b-col>
     </b-row>
 
     <b-modal id="delete-modal"
-            @show="deletePassphrase=''"
-            @hidden="deletePassphrase=''"
-            @close="deletePassphrase=''"
-            v-bind:title="$t('rolesPermissions.deleteModal.title')"
-             v-b-tooltip.hover
-             hide-footer size="sm" centered
-            :header-bg-variant="'danger'"
-            :header-text-variant="'light'">
+    @show="deletePassphrase=''"
+    @hidden="deletePassphrase=''"
+    @close="deletePassphrase=''"
+    v-bind:title="$t('rolesPermissions.deleteModal.title')"
+     v-b-tooltip.hover
+     hide-footer size="sm" centered
+    :header-bg-variant="'danger'"
+    :header-text-variant="'light'">
 
       <b-form class="w-100" @submit.prevent="deleteRole(role.id)">
 
@@ -208,14 +228,14 @@
 
 
     <b-modal id="delete-group-modal"
-            @show="deleteGroupPassphrase=''"
-            @hidden="deleteGroupPassphrase=''"
-            @close="deleteGroupPassphrase=''"
-            v-bind:title="$t('rolesPermissions.deleteGroupModal.title')"
-             v-b-tooltip.hover
-             hide-footer size="sm" centered
-            :header-bg-variant="'danger'"
-            :header-text-variant="'light'">
+    @show="deleteGroupPassphrase=''"
+    @hidden="deleteGroupPassphrase=''"
+    @close="deleteGroupPassphrase=''"
+    v-bind:title="$t('rolesPermissions.deleteGroupModal.title')"
+     v-b-tooltip.hover
+     hide-footer size="sm" centered
+    :header-bg-variant="'danger'"
+    :header-text-variant="'light'">
 
       <b-form class="w-100" @submit.prevent="deleteRole(selected)">
         <b-form-group
@@ -257,13 +277,13 @@
 
 
     <b-modal id="new-modal"
-            v-bind:title="$t('rolesPermissions.formNew.formTitle')"
-            hide-footer size="sm" centered
-            :header-bg-variant="'success'"
-            :header-text-variant="'light'"
-            @hidden="onReset">
+    v-bind:title="$t('rolesPermissions.formNew.formTitle')"
+    hide-footer size="sm" centered
+    :header-bg-variant="'success'"
+    :header-text-variant="'light'"
+    @hidden="onReset">
 
-      <b-form class="w-100" @submit.prevent="" @reset="onReset">
+      <b-form class="w-100" @submit.prevent="onSubmitNewRole" @reset="onReset">
 
         <b-form-group>
           <b-form-input name="title"
@@ -331,258 +351,51 @@
       </b-form>
 
     </b-modal>
-<!--
+
     <b-modal id="edit-modal"
-            @hidden="user={}"
-            @close="user={}"
-            title="Исправить досье"
-            hide-footer size="xl" centered
+            @hidden="role={}"
+            @close="role={}"
+            v-bind:title="$t('rolesPermissions.formEdit.formTitle')"
+            hide-footer size="sm" centered
             :header-bg-variant="'primary'"
             :header-text-variant="'light'">
 
-      <b-form class="w-100" @submit.prevent="onSubmitUpdateUser">
+      <b-form class="w-100" @submit.prevent="onSubmitUpdateRole">
         <b-row>
 
-          <b-col :cols="uid!=user.id? 7 : 12" >
-
+          <b-col>
             <b-form-group>
-              <b-form-input name="login"
+              <b-form-input name="title"
                 type="text"
                 autofocus
-                placeholder="Логин"
+                v-bind:placeholder="$t('rolesPermissions.formEdit.formFields.title.placeholder')"
                 trim
-                v-model="$v.user.login.$model"
-                :state="$v.user.login.$dirty ? !$v.user.login.$error : null"
+                v-model="$v.role.title.$model"
+                :state="$v.role.title.$dirty ? !$v.role.title.$error : null"
               ></b-form-input>
 
               <b-form-invalid-feedback
-              :state="$v.user.login.$dirty ? !$v.user.login.$error : null">
-                <span v-if="!$v.user.login.required">
-                  Поле обязательно для заполнения!
+              :state="$v.role.title.$dirty ? !$v.role.title.$error : null">
+                <span v-if="!$v.role.title.required">
+                  {{$t('rolesPermissions.formEdit.formFields.title.errors.required')}}
                 </span>
-                <span v-if="!$v.user.login.minLength">
-                  Поле должно содержать минимум 4 символа!
+                <span v-if="!$v.role.title.minLength">
+                  {{$t('rolesPermissions.formEdit.formFields.title.errors.minLength')}}
                 </span>
-                <span v-if="!$v.user.login.maxLength">
-                  Поле может содержать максимум 20 символов!
+                <span v-if="!$v.role.title.maxLength">
+                  {{$t('rolesPermissions.formEdit.formFields.title.errors.maxLength')}}
                 </span>
-                <span v-if="!$v.user.login.alphaNum">
-                  Поле может содержать только латинские буквы и цифры!
-                </span>
-              </b-form-invalid-feedback>
-
-            </b-form-group>
-
-            <b-form-group>
-              <b-input-group>
-                <b-form-input placeholder="Фамилия"
-                v-model="$v.user.surname.$model"
-                :state="$v.user.surname.$dirty ? !$v.user.surname.$error : null"
-                name="surname" trim
-                @input="$v.user.validationGroupFIO.$touch()">
-                </b-form-input>
-                <b-form-input placeholder="Имя"
-                v-model="$v.user.name.$model"
-                :state="$v.user.name.$dirty ? !$v.user.name.$error : null"
-                name="name" trim
-                @input="$v.user.validationGroupFIO.$touch()">
-                </b-form-input>
-                <b-form-input placeholder="Отчество"
-                v-model="$v.user.patronymic.$model"
-                :state="$v.user.patronymic.$dirty ? !$v.user.patronymic.$error : null"
-                name="patronymic" trim
-                @input="$v.user.validationGroupFIO.$touch()">
-                </b-form-input>
-              </b-input-group>
-
-              <b-form-invalid-feedback
-              :state="$v.user.validationGroupFIO.$dirty ?
-              !$v.user.validationGroupFIO.$anyError : null">
-                <span v-if="!$v.user.surname.required">
-                  Фамилия обязательна для заполнения!
-                </span>
-                <span v-if="!$v.user.surname.minLength">
-                  Фамилия должна содержать минимум 4 символа!
-                </span>
-                <span v-if="!$v.user.surname.maxLength">
-                  Фамилия может содержать максимум 20 символов!
-                </span>
-                <span v-if="!$v.user.surname.alpha">
-                  Фамилия может содержать только русские буквы!
-                </span>
-                <span v-if="!$v.user.name.required">
-                  Имя обязательно для заполнения!
-                </span>
-                <span v-if="!$v.user.name.minLength">
-                  Имя должно содержать минимум 4 символа!
-                </span>
-                <span v-if="!$v.user.name.maxLength">
-                  Имя может содержать максимум 20 символов!
-                </span>
-                <span v-if="!$v.user.name.alpha">
-                  Имя может содержать только русские буквы!
-                </span>
-                <span v-if="!$v.user.patronymic.required">
-                  Отчество обязательно для заполнения!
-                </span>
-                <span v-if="!$v.user.patronymic.minLength">
-                  Отчество должно содержать минимум 4 символа!
-                </span>
-                <span v-if="!$v.user.patronymic.maxLength">
-                  Отчество может содержать максимум 20 символов!
-                </span>
-                <span v-if="!$v.user.patronymic.alpha">
-                  Отчество может содержать русские только буквы!
+                <span v-if="!$v.role.title.alpha">
+                  {{$t('rolesPermissions.formEdit.formFields.title.errors.alpha')}}
                 </span>
               </b-form-invalid-feedback>
+
             </b-form-group>
 
-            <b-form-group class="text-justify">
-              <b-form-group v-for="(v, index) in $v.user.email.$each.$iter" v-bind:key="index">
-                <b-input-group>
-                  <b-input-group-text slot="prepend">
-                    <font-awesome-icon v-b-tooltip.hover title="Личная почта"
-                    v-if="v.$model.type==='personal'"
-                    v-bind:icon="['fa', 'user']" fixed-width/>
-                    <font-awesome-icon v-b-tooltip.hover title="Основная почта"
-                    v-else-if="v.$model.type==='primary'"
-                    v-bind:icon="['fa', 'envelope']" fixed-width/>
-                    <font-awesome-icon v-b-tooltip.hover title="Рабочая почта"
-                    v-else-if="v.$model.type==='work'"
-                    v-bind:icon="['fa', 'briefcase']" fixed-width/>
-                  </b-input-group-text>
-                  <b-form-input
-                    type="email"
-                    placeholder="Email"
-                    name="email"
-                    v-model="v.value.$model"
-                    trim
-                    :state="v.value.$dirty ? !v.value.$error : null"
-                  ></b-form-input>
-                  <b-input-group-append>
-                    <b-button v-if="v.$model.value && !v.value.$dirty &&
-                    (dateDiffNow(v.$model.activeUntil, reactivationPeriod) || !v.$model.verified)"
-                    variant="outline-secondary" v-b-tooltip.hover
-                    title="Послать письмо подтверждения"
-                    @click="onSubmitMailVerify(user.id, v.$model.type, v.$model.value)"
-                    :disabled="formPending">
-                      <b-spinner small v-if="formPending"
-                      label="Идет отправка..."></b-spinner>
-                      <font-awesome-icon v-else v-bind:icon="['fa', 'envelope']" fixed-width/>
-                    </b-button>
-                    <b-button v-if="v.$model.value && (!v.value.$dirty && v.$model.verified)"
-                    variant="outline-danger" v-b-tooltip.hover
-                    title="Сбросить активацию почты"
-                    @click="onSubmitMailReset(user.id, v.$model.type, v.$model.value)"
-                    :disabled="formPending">
-                      <b-spinner small v-if="formPending"
-                      label="Обработка..."></b-spinner>
-                      <font-awesome-icon v-else v-bind:icon="['fa', 'ban']" fixed-width/>
-                    </b-button>
-                    <b-input-group-text v-if="v.$model.value">
-
-                      <font-awesome-icon
-                      :title="v.$model.verified ? 'Подтверждена' : 'Не подтверждена'"
-                      v-bind:icon="['fa', 'check-circle']"
-                      :class="v.$model.verified ? 'text-success' : 'text-danger'" fixed-width/>
-
-                      <font-awesome-icon :title="v.$model.activeUntil ?
-                      'Активен до: '+
-                      $options.filters.moment(v.$model.activeUntil,
-                                              'dddd, MMMM Do YYYY, HH:mm:ss') :
-                      'Необходима активация'"
-                      v-if="v.$model.activeUntil || v.$model.verified"
-                      v-bind:icon="['fa', 'clock']" fixed-width class="text-primary"/>
-
-                    </b-input-group-text>
-                  </b-input-group-append>
-                </b-input-group>
-
-                <b-form-invalid-feedback
-                :state="v.value.$dirty ? !v.value.$error : null">
-                  <span v-if="!v.value.required">
-                    Поле обязательно для заполнения!
-                  </span>
-                  <span v-if="!v.value.email">
-                    Поле может содержать только email-адрес (example@example.ru)!
-                  </span>
-                </b-form-invalid-feedback>
-              </b-form-group>
-              <b-form-text slot="description">
-                Основная почта
-                <font-awesome-icon :icon="['fa', 'envelope']" fixed-width />
-                обязательна для заполнения.
-                На добавленную или измененную почту будет отправлено письмо с ссылкой подтверждения.
-              </b-form-text>
-            </b-form-group>
-
-            <b-form-group>
-              <vue-tel-input
-              autocomplete="off"
-              :onlyCountries="['RU']"
-              :disabledFetchingCountry="true"
-              :placeholder="'Номер телефона'"
-              name="phone"
-              v-model="$v.user.phone.$model"
-              :wrapperClasses="$v.user.phone.$dirty ?
-              (!$v.user.phone.$error ?
-              'is-valid input-group' : 'is-invalid input-group') : 'input-group'"
-              :inputClasses="$v.user.phone.$dirty ?
-              (!$v.user.phone.$error ?
-              'is-valid form-control' : 'is-invalid form-control') : 'form-control'"
-
-              :is-valid="$v.user.phone.$dirty ? !$v.user.phone.$error : null"
-              />
-
-              <b-form-invalid-feedback
-              :state="$v.user.phone.$dirty ? !$v.user.phone.$error : null">
-                <span v-if="!$v.user.phone.required">
-                  Поле обязательно для заполнения!
-                </span>
-                <span v-if="!$v.user.phone.format ">
-                  Неправильное количество цифр в номере!
-                </span>
-              </b-form-invalid-feedback>
-            </b-form-group>
-
-            <b-form-group>
-              <datepicker
-              autocomplete="off"
-              :placeholder="'Дата рождения (ГГГГ-MM-ДД)'"
-              :format="dateFormatter" :bootstrap-styling="true"
-              :language="russian" :typeable=false :required=true
-              :monday-first=true :disabledDates="disabledDates"
-              v-model="$v.user.birth_date.$model" name="birth_date"
-              :input-class="($v.user.birth_date.$dirty) ?
-              ((!$v.user.birth_date.$error) ? 'is-valid' : 'is-invalid') : null">
-              </datepicker>
-
-              <b-form-invalid-feedback
-              :state="$v.user.birth_date.$dirty ? !$v.user.birth_date.$error : null">
-                <span v-if="!$v.user.birth_date.required">
-                  Поле обязательно для заполнения!
-                </span>
-              </b-form-invalid-feedback>
-            </b-form-group>
-
-            <b-form-group>
-          <b-form-textarea placeholder="О себе"
-          autocomplete="off"
-          rows="2" max-rows="6" no-resize
-          v-model="$v.user.about_me.$model" name="about_me"
-          :state="$v.user.about_me.$dirty ? !$v.user.about_me.$error : null">
-          </b-form-textarea>
-
-          <b-form-invalid-feedback
-          :state="$v.user.about_me.$dirty ? !$v.user.about_me.$error : null">
-            <span v-if="!$v.user.about_me.maxLength">
-              Поле может содержать максимум 140 символов!
-            </span>
-          </b-form-invalid-feedback>
-        </b-form-group>
           </b-col>
 
-          <b-col cols="5" v-if="uid!=user.id">
+<!--
+          <b-col cols="5">
             <h4 class="text-danger">Опасная зона</h4>
             <b-card no-body
             border-variant="danger">
@@ -590,7 +403,7 @@
                 <b-list-group-item class="flex-column align-items-start align-middle">
                   <div class="d-flex w-100 pb-2 justify-content-between align-items-center">
                     <h6 class="m-0">Сбросить пароль</h6>
-                    <b-button @click="onSubmitPasswordReset(user.id)"
+                    <b-button @click=""
                     size="sm" title="Сбросить пароль" variant="outline-danger"
                     v-b-tooltip.hover>Сделать сброс</b-button>
                   </div>
@@ -600,7 +413,7 @@
                 <b-list-group-item class="flex-column align-items-start align-middle">
                   <div class="d-flex w-100 pb-2 justify-content-between align-items-center">
                     <h6 class="m-0">Блокировать пароль</h6>
-                    <b-button @click="onSubmitPasswordBlock(user.id)"
+                    <b-button @click=""
                     size="sm" title="Блокировать пароль" variant="outline-danger"
                     v-b-tooltip.hover>Заблокировать</b-button>
                   </div>
@@ -610,22 +423,24 @@
               </b-list-group>
             </b-card>
           </b-col>
+-->
 
         </b-row>
 
         <b-row>
           <b-col>
             <b-button type="submit" variant="primary" block
-            title="Внести новое досье" v-b-tooltip.hover
-            :disabled="!$v.user.$anyDirty || $v.user.$invalid || formPending">
+            v-bind:title="$t('rolesPermissions.formEdit.tooltips.submitButton')"
+            v-b-tooltip.hover
+            :disabled="!$v.role.$anyDirty || $v.role.$invalid || formPending">
               <font-awesome-icon v-if="!formPending"
               :icon="['fa', 'save']" fixed-width />
-              <b-spinner small v-if="formPending"
-              label="Идет отправка досье..."></b-spinner>
+              <b-spinner small v-if="formPending"></b-spinner>
             </b-button>
           </b-col>
         </b-row>
 
+<!--
         <div class="row mx-auto mt-3 pl-3 pr-3 pt-3 border-top">
           <span class="text-danger notation text-center">
               <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
@@ -634,11 +449,12 @@
   Будьте осторожны!
           </span>
         </div>
+-->
 
       </b-form>
 
     </b-modal>
--->
+
 <!--
     <b-modal id="avatar-modal"
             @hidden="onResetImage"
@@ -721,6 +537,7 @@ import _ from 'lodash';
 import {
   required, sameAs, minLength, maxLength,
 } from 'vuelidate/lib/validators';
+import Multiselect from 'vue-multiselect';
 import Breadcumbs from './Breadcumbs';
 import { EventBus } from '@/utils';
 
@@ -746,6 +563,15 @@ export default {
       newRole: {
         title: '',
       },
+      value: [],
+      options: [
+        { name: 'Vue.js', language: 'JavaScript' },
+        { name: 'Adonis', language: 'JavaScript' },
+        { name: 'Rails', language: 'Ruby' },
+        { name: 'Sinatra', language: 'Ruby' },
+        { name: 'Laravel', language: 'PHP' },
+        { name: 'Phoenix', language: 'Elixir' },
+      ],
     };
   },
   validations: {
@@ -766,12 +592,19 @@ export default {
         required,
         minLength: minLength(4),
         maxLength: maxLength(50),
-        // alphaNum,
-        alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9]*$/i.test(val),
+        alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s]*$/i.test(val),
+      },
+    },
+    role: {
+      title: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(50),
+        alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s]*$/i.test(val),
       },
     },
   },
-  components: { Breadcumbs },
+  components: { Breadcumbs, Multiselect },
   computed: mapState({
     roles: state => state.roles,
     uid: state => state.uid,
@@ -811,6 +644,22 @@ export default {
         this.show = true;
       });
       EventBus.$emit('forceRerender');
+    },
+    onSubmitNewRole() {
+      this.$v.$touch();
+
+      if (!this.$v.newRole.$invalid) {
+        this.$store.dispatch('newRole', this.newRole);
+      }
+    },
+    async onSubmitUpdateRole() {
+      this.$v.role.$touch();
+
+      if (!this.$v.role.$invalid) {
+        await this.$store.dispatch('updateRole', this.role);
+        this.$v.role.$reset();
+        EventBus.$emit('forceRerender');
+      }
     },
     deleteRole(id) {
       if (Array.isArray(id)) {

@@ -320,6 +320,34 @@ schema_user_update_data = {
     "additionalProperties": False
 }
 
+#  Роли CMS
+
+schema_role_data = {
+    "type": "object",
+    "properties": {
+        "title": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я ]{4,20}$",
+                    "minLength": 4
+                 },
+    },
+    "required": ["title"],
+    "additionalProperties": False
+}
+
+schema_role_update_data = {
+    "type": "object",
+    "properties": {
+        "title": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я ]{4,20}$",
+                    "minLength": 4
+                 },
+    },
+    "required": ["title"],
+    "additionalProperties": False
+}
+
 # ------------------------------------------------------------
 # Кастомные валидаторы
 # ------------------------------------------------------------
@@ -404,3 +432,5 @@ profile_validator = MyValidator(schema_profile_data)
 password_validator = MyValidator(schema_profile_password)
 user_validator = MyValidator(schema_user_data)
 user_update_validator = MyValidator(schema_user_update_data)
+role_validator = MyValidator(schema_role_data)
+role_update_validator = MyValidator(schema_role_update_data)

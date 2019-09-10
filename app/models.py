@@ -250,6 +250,23 @@ class CmsRoles(db.Model):
         """Форматирование представления экземпляра класса."""
         return 'Роль название:%r ' % (self.title)
 
+    @classmethod
+    def exist(cls, rid=None, **kwargs):
+        """Проверка существования пользователя с данными в базе."""
+        if rid is None:
+            exist = cls.query.filter(
+                        cls.title == kwargs.get('title')
+                    ).first()
+        else:
+            exist = cls.query.filter(
+                    (
+                        cls.title == kwargs.get('title')
+                    ) &
+                    (cls.id != rid)).first()
+        if exist:
+            return True
+        return False
+
 
 class SystemObjects(db.Model):
     """Модель объектов системы."""

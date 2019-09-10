@@ -344,6 +344,36 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  // Создать новую роль
+  newRole(context, dataNew) {
+    context.commit('setFormPending');
+
+    return axios.post('/api/roles?dbg', dataNew,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Изменение системной роли
+  updateRole(context, dataUpdate) {
+    context.commit('setFormPending');
+
+    return axios.put(`/api/roles/${dataUpdate.id}?dbg`, dataUpdate,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
   // Удалить роль
   deleteRole(context, payload) {
     return axios.delete(`/api/roles/${payload.id}?dbg`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
