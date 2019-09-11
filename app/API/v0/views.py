@@ -991,7 +991,7 @@ def post_users(current_user):
 
             separator = '; '
             error_text = separator.join(errors)
-            print(error_text)
+
             response = Response(
                     response=json.dumps({'type': 'danger',
                                          'text': error_text}),
@@ -1550,7 +1550,7 @@ def post_role(current_user):
 
             separator = '; '
             error_text = separator.join(errors)
-            print(error_text)
+
             response = Response(
                     response=json.dumps({'type': 'danger',
                                          'text': error_text}),
@@ -1575,19 +1575,15 @@ def post_role(current_user):
                     title=post_data['title'],
                 )
 
-                #  new_roles = post_data.pop('roles', None)
+                new_permissions = post_data.pop('permissions', None)
 
-                #  if new_roles is not None:
-                #  for role in new_roles:
-                #  role_exist = CmsRoles.query.filter_by(
-                #  id=role['id']).first()
-                #  if role_exist is not None:
-                #  user.roles.append(role_exist)
-                #  if not user.roles:
-                #  user.roles.append(
-                #  CmsRoles.query.filter_by(id=4).first())
-                #  else:
-                #  user.roles.append(CmsRoles.query.filter_by(id=4).first())
+                if new_permissions is not None:
+                    for permission in new_permissions:
+                        permission_exist = \
+                            AssociationPermission.query.filter_by(
+                                id=permission['id']).first()
+                        if permission_exist is not None:
+                            role.permissions.append(permission_exist)
 
                 db.session.add(role)
                 db.session.commit()
@@ -1618,19 +1614,15 @@ def update_roles(current_user, rid):
     try:
 
         update_data = request.get_json()
-        print(update_data)
 
         for pop_item in ['id', 'deletable']:
             update_data.pop(pop_item, None)
-
-        new_roles = update_data.pop('permissions', None)
 
         if not role_update_validator.is_valid(update_data):
             errors = []
             for error in sorted(role_update_validator.iter_errors(
                                 update_data), key=str):
                 errors.append(error.message)
-                print(error.message)
 
             separator = '; '
             error_text = separator.join(errors)
@@ -1659,19 +1651,18 @@ def update_roles(current_user, rid):
                 old_data = CmsRoles.query.filter_by(id=rid)
                 old_title = old_data.first().title
 
-                #  new_roles = update_data.pop('permissions', None)
+                new_permissions = update_data.pop('permissions', None)
 
-                #  if new_roles is not None:
-                #  old_roles = old_data.first()
-                #  old_roles.roles.clear()
-                #  for role in new_roles:
-                #  role_exist = CmsRoles.query.filter_by(
-                #  id=role['id']).first()
-                #  if role_exist is not None:
-                #  old_roles.roles.append(role_exist)
-                #  if not old_roles.roles:
-                #  old_roles.roles.append(
-                #  CmsRoles.query.filter_by(id=4).first())
+                if new_permissions is not None:
+                    old_permissions = old_data.first()
+                    old_permissions.permissions.clear()
+                    for permission in new_permissions:
+                        permission_exist = \
+                            AssociationPermission.query.filter_by(
+                                id=permission['id']).first()
+                        if permission_exist is not None:
+                            old_permissions.permissions.append(
+                                permission_exist)
 
                 old_data.update(update_data)
                 db.session.commit()
@@ -1699,33 +1690,28 @@ def update_roles(current_user, rid):
 # ------------------------------------------------------------
 
 
-#  @API0.route('/permissions/<int:uid>/<string:obj>', methods=['GET'])
-#  @token_required
-#  def get_permissions_for_object(current_user, uid, obj):
-#  """ Получение списка разрешений для объекта в json"""
+@API0.route('/permissions/', methods=['GET'])
+@token_required
+def get_permissions(current_user):
+    """ Получение списка разрешений для объекта в json"""
 
-#  try:
-#  print(current_user.roles)
-#  for role in current_user.roles:
-#  print(role.permissions)
-#  for permission in role.permissions:
-#  print(permission.objects)
-#  print(permission.actions)
-#  role_schema = CmsRolesSchema(exclude=['users'])
-#  roles = CmsRoles.query.get(rid)
-#  rdata = role_schema.dump(roles)
+    try:
+        permission_schema = AssociationPermissionSchema(many=True)
+        permissions = AssociationPermission.query.all()
+        pdata = permission_schema.dump(permissions)
+        pdata = pdata.data
 
-#  response = Response(
-#  response=json.dumps("ok"),
-#  status=200,
-#  mimetype='application/json'
-#  )
+        response = Response(
+            response=json.dumps(pdata),
+            status=200,
+            mimetype='application/json'
+        )
 
-#  except Exception:
+    except Exception:
 
-#  response = server_error(request.args.get("dbg"))
+        response = server_error(request.args.get("dbg"))
 
-#  return response
+    return response
 
 
 # ------------------------------------------------------------

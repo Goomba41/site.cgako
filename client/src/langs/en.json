@@ -577,6 +577,17 @@
                         "alphaNum":"This field must contain only latin, cyrillic and numeric charachers."
                     },
                     "successText":"Okay!"
+                },
+                "permissions":{
+                    "placeholder":"Role permissions",
+                    "counter":"no permissions selected | 1 permission selected | {n} permissions selected | {n} permissions selected",
+                    "selectLabel":"Press Enter to select",
+                    "selectedLabel":"Selected",
+                    "deselectLabel":"Press Enter to remove",
+                    "errors":{
+                        "search":"Permission not found!"
+                    },
+                    "successText":"Okay!"
                 }
             }
         },
@@ -593,6 +604,17 @@
                         "minLength":"This field must contain minimum 4 charachers.",
                         "maxLength":"This field must contain maximum 50 charachers.",
                         "alpha":"This field must contain only latin, cyrillic and numeric charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "permissions":{
+                    "placeholder":"Role permissions",
+                    "counter":"no permissions selected | 1 permission selected | {n} permissions selected | {n} permissions selected",
+                    "selectLabel":"Press Enter to select",
+                    "selectedLabel":"Selected",
+                    "deselectLabel":"Press Enter to remove",
+                    "errors":{
+                        "search":"Permission not found!"
                     },
                     "successText":"Okay!"
                 }

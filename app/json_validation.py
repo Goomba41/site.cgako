@@ -330,6 +330,19 @@ schema_role_data = {
                     "pattern": "^[a-zA-Z0-9а-яА-Я ]{4,20}$",
                     "minLength": 4
                  },
+        "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        'properties': {
+                            "id": {
+                                "type": "number",
+                            },
+                        },
+                        "required": ["id"],
+                    },
+                 },
     },
     "required": ["title"],
     "additionalProperties": False
@@ -342,6 +355,19 @@ schema_role_update_data = {
                     "type": "string",
                     "pattern": "^[a-zA-Z0-9а-яА-Я ]{4,20}$",
                     "minLength": 4
+                 },
+        "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        'properties': {
+                            "id": {
+                                "type": "number",
+                            },
+                        },
+                        "required": ["id"],
+                    },
                  },
     },
     "required": ["title"],

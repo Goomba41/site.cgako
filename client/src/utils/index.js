@@ -6,11 +6,6 @@ import ru from '../langs/ru.json';
 Vue.use(VueI18n);
 
 VueI18n.prototype.getChoiceIndex = function plur(choice, choicesLength) {
-  // this === VueI18n instance, so the locale property also exists here
-  // if (this.locale !== 'ru') {
-  // proceed to the default implementation
-  // }
-
   if (choice === 0) {
     return 0;
   }

@@ -10,8 +10,6 @@ import Vuelidate from 'vuelidate';
 import VueLodash from 'vue-lodash';
 import FlagIcon from 'vue-flag-icon';
 
-import { i18n } from '@/utils';
-
 // Импортирование fontawesome и отдельных иконок из него
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
@@ -37,6 +35,8 @@ import Vue from 'vue';
 import App from './App';
 import router from './router';
 import store from './store';
+
+import { i18n } from '@/utils';
 
 // Добавление иконок в библиотеку
 library.add(faTrash, faPencilAlt, faInfo, faPlus, faPowerOff,

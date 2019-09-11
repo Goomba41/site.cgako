@@ -12,6 +12,7 @@ Vue.use(Vuex);
 
 // Источник данных
 const state = {
+  permissions: [], // список разрешений CMS
   roles: [], // список ролей CMS
   users: [], // список пользователей CMS
   uid: '', // id текущего пользователя
@@ -62,6 +63,19 @@ const actions = {
   // Выход с сайта с удалением токена из локального хранилища и хранилища состояния
   logout(context) {
     context.commit('unsetJwtToken');
+  },
+  // Смена локали
+  changeLocale(context, value) {
+    const lang = value.locale;
+    context.commit('setLocale', { lang, value });
+    import(`../langs/${lang}.json`).then((msgs) => {
+      i18n.setLocaleMessage(lang, msgs);
+      i18n.locale = lang;
+    });
+  },
+  // Предустановка локали в селекторе после перезагрузки
+  presetLocale(context, value) {
+    state.languages.value = _.find(state.languages.options, { locale: value });
   },
   // Информация о проекте Github API
   loadGithubInfo() {
@@ -386,18 +400,24 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
-  // Смена локали
-  changeLocale(context, value) {
-    const lang = value.locale;
-    context.commit('setLocale', { lang, value });
-    import(`../langs/${lang}.json`).then((msgs) => {
-      i18n.setLocaleMessage(lang, msgs);
-      i18n.locale = lang;
-    });
-  },
-  // Предустановка локали в селекторе после перезагрузки
-  presetLocale(context, value) {
-    state.languages.value = _.find(state.languages.options, { locale: value });
+  // Загрузить разрешения
+  loadPermissions(context) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/permissions?dbg',
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+      })
+      .then((response) => {
+        context.commit('setPermissions', { permissions: response.data });
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+        EventBus.$emit('message', error.response.data);
+      });
   },
 };
 
@@ -430,6 +450,10 @@ const mutations = {
   // Установка списка ролей
   setRoles(state, payload) {
     state.roles = payload.roles;
+  },
+  // Установка списка ролей
+  setPermissions(state, payload) {
+    state.permissions = payload.permissions;
   },
   // Установка профиля пользователя
   setProfile(state, payload) {

@@ -77,6 +77,7 @@
               v-on:input="listChange(); listControl.page = 1"/>
             </b-input-group>
           </b-col>
+<!--
           <b-col sm="4">
             <b-input-group :prepend="$t('usersCMS.tooltips.pageShowFromTitle')" size="sm"
               v-bind:title="$t('usersCMS.tooltips.pageShowFrom')" v-b-tooltip.hover>
@@ -86,6 +87,7 @@
               v-on:input="listRows(); listChange()"/>
             </b-input-group>
           </b-col>
+-->
         </b-row>
       </b-col>
 
@@ -632,7 +634,7 @@
         <b-form-group>
           <multiselect v-model="$v.newUser.roles.$model"
           v-bind:placeholder="$t('usersCMS.formEdit.formFields.roles.placeholder')"
-          label="title" track-by="title"
+          label="title" track-by="title" :hideSelected="true"
           :options="roles.results" :multiple="true" :allowEmpty="false"
           :selectLabel="$t('usersCMS.formEdit.formFields.roles.selectLabel')"
           :selectedLabel="$t('usersCMS.formEdit.formFields.roles.selectedLabel')"
@@ -939,7 +941,7 @@
             <b-form-group>
               <multiselect v-model="$v.user.roles.$model"
               v-bind:placeholder="$t('usersCMS.formEdit.formFields.roles.placeholder')"
-              label="title" track-by="title"
+              label="title" track-by="title" :hideSelected="true"
               :options="roles.results" :multiple="true" :allowEmpty="false"
               :selectLabel="$t('usersCMS.formEdit.formFields.roles.selectLabel')"
               :selectedLabel="$t('usersCMS.formEdit.formFields.roles.selectedLabel')"

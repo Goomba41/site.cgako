@@ -14,7 +14,7 @@
                       <font-awesome-icon :icon="['fa', 'exclamation-triangle']"
                       size="1x" fixed-width />
                     </h1>
-                    <p class="noselect">
+                    <p class="nozselect">
                       <i18n path="adminPanel.text.info">
                         <span slot="time-inactive">
                           {{ idleTime*1000 | duration('as', 'minutes') }}

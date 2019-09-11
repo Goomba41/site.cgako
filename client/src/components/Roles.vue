@@ -49,6 +49,7 @@
               v-on:input="listChange(); listControl.page = 1"/>
             </b-input-group>
           </b-col>
+<!--
           <b-col sm="4">
             <b-input-group :prepend="$t('rolesPermissions.tooltips.pageShowFromTitle')" size="sm"
              v-bind:title="$t('rolesPermissions.tooltips.pageShowFrom')"
@@ -59,16 +60,14 @@
               v-on:input="listRows(); listChange()"/>
             </b-input-group>
           </b-col>
+-->
         </b-row>
       </b-col>
 
     </b-row>
-<!--
-{{roles.results}}<br><br>
-{{role}}<br><br>
--->
+
     <b-row class="p-3">
-      <b-col sm="4">
+      <b-col sm="6">
 
         <table class="table table-hover td-align-middle">
           <thead>
@@ -99,21 +98,12 @@
               <td>
                 {{role.title}}
               </td>
-              <td class="text-left">
+              <td class="text-center">
                 <b-button size="sm"
                 v-bind:title="$t('rolesPermissions.tooltips.editRoleButton')"
                 v-b-tooltip.hover variant="primary"
                 v-b-modal.edit-modal @click="selectRole(role.id)">
                   <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
-                </b-button>
-
-                <b-button
-                size="sm" variant="info"
-                v-bind:title="$t('rolesPermissions.tooltips.permissionsRoleButton')"
-                v-b-tooltip.hover
-                v-if="role.permissions.length"
-                @click="selectRole(role.id)">
-                  <font-awesome-icon :icon="['fa', 'user-check']" fixed-width />
                 </b-button>
 
                 <b-button
@@ -130,51 +120,6 @@
             </tr>
           </tbody>
         </table>
-
-      </b-col>
-      <b-col sm="4">
-        <b-card no-body header-tag="header" >
-          <h3 slot="header" class="mb-0 small">
-            {{ $t('rolesPermissions.titles.rolePermissionsTitle') }}
-          </h3>
-          <b-list-group flush v-if="Object.keys(role).length===0">
-            <b-list-group-item class="flex-column align-items-start">
-               <b-form-text slot="description">
-                <i18n path="rolesPermissions.titles.rolePermissionsDesc">
-                  <font-awesome-icon :icon="['fa', 'user-check']" fixed-width slot="icon"/>
-                </i18n>
-              </b-form-text>
-            </b-list-group-item>
-          </b-list-group>
-
-          <b-list-group flush class="overflowed" v-else>
-            <b-list-group-item class="flex-column align-items-start"
-            v-for="permission in role.permissions" :key="permission.id">
-                <span title="Объект" v-b-tooltip.hover><b>{{permission.objects.title}}</b></span>
-                <font-awesome-icon :icon="['fa', 'long-arrow-alt-right']" fixed-width/>
-                <span title="Разрешение" v-b-tooltip.hover>{{permission.actions.title}}</span>
-            </b-list-group-item>
-
-          </b-list-group>
-        </b-card>
-      </b-col>
-      <b-col sm="4">
-
-        <div>
-          <label class="typo__label">Simple select / dropdown</label>
-          <multiselect v-model="value" :options="options"
-          placeholder="Pick some" label="name"
-          :multiple="true" :taggable="false"
-          :close-on-select="false" :clear-on-select="false" :hide-selected="true"
-          :preserve-search="true" track-by="name" :preselect-first="true">
-            <template slot="selection" slot-scope="{ values, search, isOpen }">
-              <span class="multiselect__single" v-if="values.length &amp;&amp; !isOpen">
-                {{ values.length }} options selected
-              </span>
-            </template>
-          </multiselect>
-          <pre class="language-json"><code>{{ value }}</code></pre>
-        </div>
 
       </b-col>
     </b-row>
@@ -278,7 +223,7 @@
 
     <b-modal id="new-modal"
     v-bind:title="$t('rolesPermissions.formNew.formTitle')"
-    hide-footer size="sm" centered
+    hide-footer size="md" centered
     :header-bg-variant="'success'"
     :header-text-variant="'light'"
     @hidden="onReset">
@@ -311,6 +256,29 @@
             </span>
           </b-form-invalid-feedback>
 
+        </b-form-group>
+
+        <b-form-group>
+          <multiselect v-model="$v.newRole.permissions.$model" :options="permissions"
+          v-bind:placeholder="$t(
+            'rolesPermissions.formNew.formFields.permissions.placeholder')"
+          :custom-label="namePermission"
+          :multiple="true" :hideSelected="true"
+          :close-on-select="false" :clear-on-select="false"
+          :preserve-search="true" track-by="id"
+          :selectLabel="$t('rolesPermissions.formNew.formFields.permissions.selectLabel')"
+          :selectedLabel="$t('rolesPermissions.formNew.formFields.permissions.selectedLabel')"
+          :deselectLabel="$t('rolesPermissions.formNew.formFields.permissions.deselectLabel')">
+            <template slot="selection" slot-scope="{ values, search, isOpen }">
+              <span class="multiselect__single" v-if="values.length &amp;&amp; !isOpen">
+                {{ $tc(
+                  'rolesPermissions.formNew.formFields.permissions.counter', values.length) }}
+              </span>
+            </template>
+            <span slot="noResult">
+              {{$t('rolesPermissions.formNew.formFields.permissions.errors.search')}}
+            </span>
+          </multiselect>
         </b-form-group>
 
         <b-row>
@@ -353,12 +321,12 @@
     </b-modal>
 
     <b-modal id="edit-modal"
-            @hidden="role={}"
-            @close="role={}"
-            v-bind:title="$t('rolesPermissions.formEdit.formTitle')"
-            hide-footer size="sm" centered
-            :header-bg-variant="'primary'"
-            :header-text-variant="'light'">
+      @hidden="role={}"
+      @close="role={}"
+      v-bind:title="$t('rolesPermissions.formEdit.formTitle')"
+      hide-footer size="md" centered
+      :header-bg-variant="'primary'"
+      :header-text-variant="'light'">
 
       <b-form class="w-100" @submit.prevent="onSubmitUpdateRole">
         <b-row>
@@ -389,41 +357,31 @@
                   {{$t('rolesPermissions.formEdit.formFields.title.errors.alpha')}}
                 </span>
               </b-form-invalid-feedback>
-
             </b-form-group>
 
+            <b-form-group>
+              <multiselect v-model="$v.role.permissions.$model" :options="permissions"
+              v-bind:placeholder="$t(
+                'rolesPermissions.formEdit.formFields.permissions.placeholder')"
+              :custom-label="namePermission"
+              :multiple="true" :hideSelected="true"
+              :close-on-select="false" :clear-on-select="false"
+              :preserve-search="true" track-by="id"
+              :selectLabel="$t('rolesPermissions.formEdit.formFields.permissions.selectLabel')"
+              :selectedLabel="$t('rolesPermissions.formEdit.formFields.permissions.selectedLabel')"
+              :deselectLabel="$t('rolesPermissions.formEdit.formFields.permissions.deselectLabel')">
+                <template slot="selection" slot-scope="{ values, search, isOpen }">
+                  <span class="multiselect__single" v-if="values.length &amp;&amp; !isOpen">
+                    {{ $tc(
+                      'rolesPermissions.formEdit.formFields.permissions.counter', values.length) }}
+                  </span>
+                </template>
+                <span slot="noResult">
+                  {{$t('rolesPermissions.formEdit.formFields.permissions.errors.search')}}
+                </span>
+              </multiselect>
+            </b-form-group>
           </b-col>
-
-<!--
-          <b-col cols="5">
-            <h4 class="text-danger">Опасная зона</h4>
-            <b-card no-body
-            border-variant="danger">
-              <b-list-group flush>
-                <b-list-group-item class="flex-column align-items-start align-middle">
-                  <div class="d-flex w-100 pb-2 justify-content-between align-items-center">
-                    <h6 class="m-0">Сбросить пароль</h6>
-                    <b-button @click=""
-                    size="sm" title="Сбросить пароль" variant="outline-danger"
-                    v-b-tooltip.hover>Сделать сброс</b-button>
-                  </div>
-                  <small class="text-muted">Эта функция сгенерирует одноразовый
-                  пароль и пошлет его на основную почту пользователя</small>
-                </b-list-group-item>
-                <b-list-group-item class="flex-column align-items-start align-middle">
-                  <div class="d-flex w-100 pb-2 justify-content-between align-items-center">
-                    <h6 class="m-0">Блокировать пароль</h6>
-                    <b-button @click=""
-                    size="sm" title="Блокировать пароль" variant="outline-danger"
-                    v-b-tooltip.hover>Заблокировать</b-button>
-                  </div>
-                  <small class="text-muted">Эта функция заблокирует пароль
-                  пользователя и он не сможет войти в систему</small>
-                </b-list-group-item>
-              </b-list-group>
-            </b-card>
-          </b-col>
--->
 
         </b-row>
 
@@ -562,16 +520,8 @@ export default {
       },
       newRole: {
         title: '',
+        permissions: [],
       },
-      value: [],
-      options: [
-        { name: 'Vue.js', language: 'JavaScript' },
-        { name: 'Adonis', language: 'JavaScript' },
-        { name: 'Rails', language: 'Ruby' },
-        { name: 'Sinatra', language: 'Ruby' },
-        { name: 'Laravel', language: 'PHP' },
-        { name: 'Phoenix', language: 'Elixir' },
-      ],
     };
   },
   validations: {
@@ -594,6 +544,7 @@ export default {
         maxLength: maxLength(50),
         alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s]*$/i.test(val),
       },
+      permissions: {},
     },
     role: {
       title: {
@@ -602,11 +553,13 @@ export default {
         maxLength: maxLength(50),
         alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s]*$/i.test(val),
       },
+      permissions: {},
     },
   },
   components: { Breadcumbs, Multiselect },
   computed: mapState({
     roles: state => state.roles,
+    permissions: state => state.permissions,
     uid: state => state.uid,
     orderedList() {
       return _.orderBy(this.roles.results,
@@ -617,8 +570,12 @@ export default {
   }),
   beforeMount() {
     this.$store.dispatch('loadRoles', { start: this.listControl.start, limit: this.listControl.limit });
+    this.$store.dispatch('loadPermissions');
   },
   methods: {
+    namePermission({ actions, objects }) {
+      return `${actions.title} «${objects.title}»`;
+    },
     select() {
       this.selected = [];
       if (!this.selectAll) {

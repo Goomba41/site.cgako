@@ -1,5 +1,4 @@
 <template>
-
     <div class="container-fluid login-theme fill-height">
 
         <div class="row justify-content-center align-items-center h-100">
