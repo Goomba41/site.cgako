@@ -66,7 +66,7 @@
 
     </b-row>
 
-    <b-row class="p-3">
+    <b-row class="p-3 justify-content-center">
       <b-col sm="6">
 
         <table class="table table-hover td-align-middle">
@@ -101,7 +101,7 @@
               <td class="text-center">
                 <b-button size="sm"
                 v-bind:title="$t('rolesPermissions.tooltips.editRoleButton')"
-                v-b-tooltip.hover variant="primary"
+                v-b-tooltip.hover variant="primary" v-if="role.editable"
                 v-b-modal.edit-modal @click="selectRole(role.id)">
                   <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
                 </b-button>

@@ -949,6 +949,11 @@
                 <span slot="noResult">
                   {{$t('usersCMS.formEdit.formFields.roles.errors.search')}}
                 </span>
+                <template slot="tag" slot-scope="props">
+                  <div class="multiselect__tag" v-if="!props.option.reassignable">
+                    <span>{{ props.option.title }}</span>
+                  </div>
+                </template>
               </multiselect>
             </b-form-group>
 

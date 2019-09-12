@@ -449,6 +449,7 @@ const mutations = {
   },
   // Установка списка ролей
   setRoles(state, payload) {
+    _.remove(payload.roles.results, { reassignable: false });
     state.roles = payload.roles;
   },
   // Установка списка ролей

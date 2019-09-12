@@ -234,6 +234,18 @@ class CmsRoles(db.Model):
         nullable=False,
         comment="Удаляемая"
     )
+    editable = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Редактируемая"
+    )
+    reassignable = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Переназначаемая"
+    )
 
     permissions = db.relationship(
         'AssociationPermission',
@@ -315,10 +327,10 @@ class AssociationPermission(db.Model):
 
     id = db.Column(db.Integer, autoincrement=True, primary_key=True) # noqa: ignore=A003
 
-    object_id = db.Column(db.Integer, db.ForeignKey('system_objects.id'))
+    object_id = db.Column(db.Integer, db.ForeignKey('system_objects.id'), comment="Объект")
     action_id = db.Column(db.Integer, db.ForeignKey(
         'system_objects_actions.id'
-    ))
+    ), comment="Действие")
 
     objects = db.relationship(
         SystemObjects,

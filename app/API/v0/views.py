@@ -1044,7 +1044,7 @@ def post_users(current_user):
                         #  иначе добавить пользователю роль
                         role_exist = CmsRoles.query.filter_by(
                             id=role['id']).first()
-                        if role_exist is not None:
+                        if role_exist is not None and role_exist.reassignable:
                             user.roles.append(role_exist)
                     if not user.roles:
                         user.roles.append(
@@ -1204,14 +1204,24 @@ def update_users(current_user, uid):
 
                     if new_roles is not None:
                         old_roles = old_data.first()
-                        old_roles.roles.clear()
+
+                        #  Просмотреть список ролей на наличие
+                        #  непереназначаемых и сохранить только их
+                        to_preserve = []
+                        for role in old_roles.roles:
+                            if not role.reassignable:
+                                to_preserve.append(role)
+                        old_roles.roles = to_preserve
+
                         for role in new_roles:
                             #  Проверить, существует ли роль в базе,
+                            #  и является ли переназначаемой
                             #  если нет, то ничего
                             #  иначе добавить пользователю роль
                             role_exist = CmsRoles.query.filter_by(
                                 id=role['id']).first()
-                            if role_exist is not None:
+                            if (role_exist is not None
+                                    and role_exist.reassignable):
                                 old_roles.roles.append(role_exist)
                         if not old_roles.roles:
                             old_roles.roles.append(
@@ -1615,68 +1625,77 @@ def update_roles(current_user, rid):
 
         update_data = request.get_json()
 
-        for pop_item in ['id', 'deletable']:
+        for pop_item in ['id', 'deletable', 'reassignable']:
             update_data.pop(pop_item, None)
 
-        if not role_update_validator.is_valid(update_data):
-            errors = []
-            for error in sorted(role_update_validator.iter_errors(
-                                update_data), key=str):
-                errors.append(error.message)
+        if update_data.pop('editable', None):
 
-            separator = '; '
-            error_text = separator.join(errors)
-            response = Response(
-                    response=json.dumps({'type': 'danger',
-                                         'text': error_text}),
-                    status=422,
-                    mimetype='application/json'
-                )
+            if not role_update_validator.is_valid(update_data):
+                errors = []
+                for error in sorted(role_update_validator.iter_errors(
+                                    update_data), key=str):
+                    errors.append(error.message)
 
-        else:
-
-            exist = CmsRoles.exist(rid=rid, **{
-                                      'title': update_data['title']
-                                      })
-
-            if exist:
+                separator = '; '
+                error_text = separator.join(errors)
                 response = Response(
-                    response=json.dumps({'type': 'danger',
-                                         'text': 'Роль с таким'
-                                                 ' именем существует!'}),
-                    status=422,
-                    mimetype='application/json'
-                )
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+
             else:
-                old_data = CmsRoles.query.filter_by(id=rid)
-                old_title = old_data.first().title
 
-                new_permissions = update_data.pop('permissions', None)
+                exist = CmsRoles.exist(rid=rid, **{
+                                          'title': update_data['title']
+                                          })
 
-                if new_permissions is not None:
-                    old_permissions = old_data.first()
-                    old_permissions.permissions.clear()
-                    for permission in new_permissions:
-                        permission_exist = \
-                            AssociationPermission.query.filter_by(
-                                id=permission['id']).first()
-                        if permission_exist is not None:
-                            old_permissions.permissions.append(
-                                permission_exist)
+                if exist:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'Роль с таким'
+                                                     ' именем существует!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    old_data = CmsRoles.query.filter_by(id=rid)
+                    old_title = old_data.first().title
 
-                old_data.update(update_data)
-                db.session.commit()
+                    new_permissions = update_data.pop('permissions', None)
 
-                response = Response(
-                    response=json.dumps({'type': 'success',
-                                         'text': 'Изменена роль '
-                                                 '«'+str(old_title)+'»!',
-                                         'link': url_for('.get_role_by_id',
-                                                         rid=rid,
-                                                         _external=True)}),
-                    status=200,
-                    mimetype='application/json'
-                )
+                    if new_permissions is not None:
+                        old_permissions = old_data.first()
+                        old_permissions.permissions.clear()
+                        for permission in new_permissions:
+                            permission_exist = \
+                                AssociationPermission.query.filter_by(
+                                    id=permission['id']).first()
+                            if permission_exist is not None:
+                                old_permissions.permissions.append(
+                                    permission_exist)
+
+                    old_data.update(update_data)
+                    db.session.commit()
+
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Изменена роль '
+                                                     '«'+str(old_title)+'»!',
+                                             'link': url_for('.get_role_by_id',
+                                                             rid=rid,
+                                                             _external=True)}),
+                        status=200,
+                        mimetype='application/json'
+                    )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Роль неизменяема'}),
+                status=200,
+                mimetype='application/json'
+            )
 
     except Exception:
 
