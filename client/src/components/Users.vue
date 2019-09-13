@@ -1,26 +1,46 @@
 <template>
-  <main class="container-fluid">
+  <main class="container-fluid d-flex flex-column">
     <breadcumbs></breadcumbs>
 
-    <b-row class="pb-4 m-0 w-100">
+    <b-row class="pb-4 m-0 w-100 flex-grow-1 blocker"
+    v-if="!can(user_perms, 'get', 'users')">
+      <b-col class="align-self-center text-center">
+        <font-awesome-icon :icon="['fa', 'lock']" fixed-width size="10x"/>
+      </b-col>
+    </b-row>
+
+    <b-row class="pb-4 m-0 w-100" v-if="can(user_perms, 'get', 'users')">
       <b-col align-self="start" class="text-center" sm="8">
         <b-row class="justify-content-start align-middle align-items-center">
           <span class="text-info pr-3">
             {{ $tc('usersCMS.counter', users.count) }}
           </span>
+
           <b-button v-bind:title="$t('usersCMS.tooltips.newButton')"
           v-b-tooltip.hover class="mr-1" size="sm" variant="success"
-          v-b-modal.new-modal>
+          v-b-modal.new-modal v-if="can(user_perms, 'post', 'users')">
             <font-awesome-icon icon="plus" fixed-width />
           </b-button>
+          <b-button v-else class="mr-1"
+          size="sm" v-bind:title="$t('usersCMS.tooltips.newButton')"
+          v-b-tooltip.hover>
+            <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+          </b-button>
+
           <b-dropdown size="sm" class="mr-1"
           v-bind:disabled="!selected.length"
           v-bind:class="!selected.length">
             <template slot="button-content">
               <font-awesome-icon icon="list" fixed-width />
             </template>
-            <b-dropdown-item variant="danger" v-b-modal.delete-group-modal>
+            <b-dropdown-item variant="danger" v-b-modal.delete-group-modal
+            v-if="can(user_perms, 'delete', 'users')">
               <font-awesome-icon icon="trash" fixed-width />
+              {{ $t('usersCMS.titles.groupActions.deleteButton') }}
+            </b-dropdown-item>
+            <b-dropdown-item variant="dark"
+            v-else>
+              <font-awesome-icon icon="lock" fixed-width />
               {{ $t('usersCMS.titles.groupActions.deleteButton') }}
             </b-dropdown-item>
 <!--
@@ -93,7 +113,7 @@
 
     </b-row>
 
-    <div class="row p-3">
+    <div class="row p-3" v-if="can(user_perms, 'get', 'users')">
       <table class="table table-hover td-align-middle">
         <thead>
           <tr class="text-center">
@@ -179,39 +199,39 @@
               <font-awesome-icon v-if="user.last_login && user.last_login.agent"
               :icon="['far', 'window-maximize']" fixed-width
               v-bind:title="user.last_login && user.last_login.browser ?
-                user.last_login.browser : 'Неизвестный браузер'" v-b-tooltip.hover/>
+                user.last_login.browser : 'Неизвестный браузер'"/>
 
               <font-awesome-icon v-if="user.last_login && user.last_login.device
               && user.last_login.device==='pc'"
               v-bind:icon="['fa', 'desktop']" fixed-width
               v-bind:title="user.last_login && user.last_login.device ?
-                'Компьютер': 'Неизвестное устройство'" v-b-tooltip.hover/>
+                'Компьютер': 'Неизвестное устройство'"/>
               <font-awesome-icon v-else-if="user.last_login && user.last_login.device
               && user.last_login.device==='tablet'"
               v-bind:icon="['fa', 'tablet-alt']" fixed-width
               v-bind:title="user.last_login && user.last_login.device ?
-                'Планшет' : 'Неизвестное устройство'" v-b-tooltip.hover/>
+                'Планшет' : 'Неизвестное устройство'"/>
               <font-awesome-icon v-else-if="user.last_login && user.last_login.device
               && user.last_login.device==='mobile'"
               v-bind:icon="['fa', 'mobile-alt']" fixed-width
               v-bind:title="user.last_login && user.last_login.device ?
-                'Телефон' : 'Неизвестное устройство'" v-b-tooltip.hover/>
+                'Телефон' : 'Неизвестное устройство'"/>
 
               <font-awesome-icon v-if="user.last_login && user.last_login.os
               && user.last_login.os.includes('Windows')"
               v-bind:icon="['fab', 'windows']" fixed-width
               class="text-primary"
               v-bind:title="user.last_login && user.last_login.os ?
-                user.last_login.os: 'Неизвестное устройство'" v-b-tooltip.hover/>
+                user.last_login.os: 'Неизвестное устройство'"/>
               <font-awesome-icon v-else-if="user.last_login && user.last_login.os
               && user.last_login.os.includes('Mac')"
               v-bind:icon="['fab', 'apple']" fixed-width
               v-bind:title="user.last_login && user.last_login.os ?
-                user.last_login.os : 'Неизвестное устройство'" v-b-tooltip.hover/>
+                user.last_login.os : 'Неизвестное устройство'"/>
               <font-awesome-icon v-else-if="user.last_login && user.last_login.os"
               v-bind:icon="['fab', 'linux']" fixed-width
               v-bind:title="user.last_login && user.last_login.os ?
-                user.last_login.os : 'Неизвестное устройство'" v-b-tooltip.hover/>
+                user.last_login.os : 'Неизвестное устройство'"/>
 
             </td>
             <td>
@@ -223,26 +243,41 @@
                   </router-link>
                 </i18n>
               </span>
-              <b-button size="sm" v-bind:title="$t('usersCMS.tooltips.editButton')"
-              v-b-tooltip.hover variant="primary"
-              v-b-modal.edit-modal @click="selectUser(user.id)" v-if="uid!=user.id">
-                <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
-              </b-button>
+              <span v-else>
+                <b-button size="sm" v-bind:title="$t('usersCMS.tooltips.editButton')"
+                v-if="can(user_perms, 'put', 'users')"
+                v-b-tooltip.hover variant="primary"
+                v-b-modal.edit-modal @click="selectUser(user.id)"
+                :disabled="!(can(user_perms, 'put', 'users'))">
+                  <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
+                </b-button>
+                <b-button v-else
+                size="sm" v-bind:title="$t('usersCMS.tooltips.editButton')"
+                v-b-tooltip.hover>
+                  <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+                </b-button>
 
-              <b-button size="sm" v-bind:title="$t('usersCMS.tooltips.contactsButton')"
-              v-b-tooltip.hover variant="info"
-              v-b-modal.contacts-modal
-              @click="selectUser(user.id)" v-if="uid!=user.id">
-                <font-awesome-icon :icon="['fa', 'info']" fixed-width />
-              </b-button>
+                <b-button size="sm" v-bind:title="$t('usersCMS.tooltips.contactsButton')"
+                v-b-tooltip.hover variant="info"
+                v-b-modal.contacts-modal
+                @click="selectUser(user.id)" v-if="uid!=user.id">
+                  <font-awesome-icon :icon="['fa', 'info']" fixed-width />
+                </b-button>
 
-              <b-button v-if="uid != user.id"
-              size="sm" v-bind:title="$t('usersCMS.tooltips.deleteButton')"
-              variant="danger" v-b-tooltip.hover
-              @click="selectUser(user.id)"
-              v-b-modal.delete-modal>
-                <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
-              </b-button>
+                <b-button v-if="can(user_perms, 'delete', 'users')"
+                size="sm" v-bind:title="$t('usersCMS.tooltips.deleteButton')"
+                variant="danger" v-b-tooltip.hover
+                @click="selectUser(user.id)"
+                v-b-modal.delete-modal>
+                  <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
+                </b-button>
+                <b-button v-else
+                size="sm" v-bind:title="$t('usersCMS.tooltips.deleteButton')"
+                v-b-tooltip.hover>
+                  <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+                </b-button>
+
+              </span>
 
             </td>
           </tr>
@@ -257,7 +292,8 @@
             v-b-tooltip.hover
             hide-footer size="sm" centered
             header-bg-variant="info"
-            header-text-variant="light">
+            header-text-variant="light"
+            v-if="can(user_perms, 'get', 'users')">
       <p v-for="mail in this.user.email" v-bind:key="mail.value">
         <a v-if="mail.value" :href="`mailto:${mail.value}`"
         v-bind:title="$t('usersCMS.contactsModal.tooltips.sendMail')"
@@ -297,7 +333,8 @@
              v-b-tooltip.hover
              hide-footer size="sm" centered
             :header-bg-variant="'danger'"
-            :header-text-variant="'light'">
+            :header-text-variant="'light'"
+            v-if="can(user_perms, 'delete', 'users')">
 
       <b-form class="w-100" @submit.prevent="deleteUser(user.id)">
 
@@ -342,7 +379,8 @@
              v-b-tooltip.hover
              hide-footer size="sm" centered
             :header-bg-variant="'danger'"
-            :header-text-variant="'light'">
+            :header-text-variant="'light'"
+            v-if="can(user_perms, 'delete', 'users')">
 
       <b-form class="w-100" @submit.prevent="deleteUser(selected)">
         <b-form-group
@@ -384,7 +422,8 @@
             @show="newUser.password=passwordGenerator(size=8)"
             :header-bg-variant="'success'"
             :header-text-variant="'light'"
-            @hidden="onReset">
+            @hidden="onReset"
+            v-if="can(user_perms, 'post', 'users')">
 
       <b-form class="w-100" @submit.prevent="onSubmitNewUser" @reset="onReset">
 
@@ -490,7 +529,7 @@
             <span v-if="!$v.newUser.surname.maxLength">
               {{$t('usersCMS.formNew.formFields.surname.errors.maxLength')}}
             </span>
-            <span v-if="!$v.newUser.surname.alpha">
+            <span v-if="!$v.newUser.surname.alphaNum">
               {{$t('usersCMS.formNew.formFields.surname.errors.alpha')}}
             </span>
             <span v-if="!$v.newUser.name.required">
@@ -502,7 +541,7 @@
             <span v-if="!$v.newUser.name.maxLength">
               {{$t('usersCMS.formNew.formFields.name.errors.maxLength')}}
             </span>
-            <span v-if="!$v.newUser.name.alpha">
+            <span v-if="!$v.newUser.name.alphaNum">
               {{$t('usersCMS.formNew.formFields.name.errors.alpha')}}
             </span>
             <span v-if="!$v.newUser.patronymic.required">
@@ -514,7 +553,7 @@
             <span v-if="!$v.newUser.patronymic.maxLength">
               {{$t('usersCMS.formNew.formFields.patronymic.errors.maxLength')}}
             </span>
-            <span v-if="!$v.newUser.patronymic.alpha">
+            <span v-if="!$v.newUser.patronymic.alphaNum">
               {{$t('usersCMS.formNew.formFields.patronymic.errors.alpha')}}
             </span>
           </b-form-invalid-feedback>
@@ -685,7 +724,8 @@
             v-bind:title="$t('usersCMS.formEdit.formTitle')"
             hide-footer size="xl" centered
             :header-bg-variant="'primary'"
-            :header-text-variant="'light'">
+            :header-text-variant="'light'"
+            v-if="can(user_perms, 'put', 'users')">
 
       <b-form class="w-100" @submit.prevent="onSubmitUpdateUser">
         <b-row>
@@ -1033,7 +1073,8 @@
             v-bind:title="$t('usersCMS.formAvatar.formTitle')"
             hide-footer size="md" centered
             :header-bg-variant="'primary'"
-            :header-text-variant="'light'">
+            :header-text-variant="'light'"
+            v-if="can(user_perms, 'put', 'users')">
 
       <div class=" row w-100 mx-auto pb-3 justify-content-center align-items-center">
         <img v-bind:src="imageUpdate.imageData ?
@@ -1111,7 +1152,7 @@ import {
 import Multiselect from 'vue-multiselect';
 import Breadcumbs from './Breadcumbs';
 import {
-  EventBus, passwordGenerator, dateDiffNow, formatBytes,
+  EventBus, passwordGenerator, dateDiffNow, formatBytes, can,
 } from '@/utils';
 import { imageType } from '@/validators';
 
@@ -1142,6 +1183,7 @@ export default {
       },
       russian: ru,
       passwordGenerator,
+      can,
       isActivePassword: false,
       newUser: {
         login: '',
@@ -1314,6 +1356,7 @@ export default {
   },
   computed: mapState({
     users: state => state.users,
+    user_perms: state => state.user_perms,
     roles: state => state.roles,
     uid: state => state.uid,
     reactivationPeriod: state => state.reactivationPeriod,
@@ -1327,8 +1370,10 @@ export default {
     formPending: state => state.formPending,
   }),
   beforeMount() {
-    this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
-    this.$store.dispatch('loadRoles', {});
+    if (can(this.user_perms, 'get', 'users')) {
+      this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
+      this.$store.dispatch('loadRoles', {});
+    }
   },
   methods: {
     dateFormatter(date) {

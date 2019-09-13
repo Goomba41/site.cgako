@@ -919,7 +919,6 @@ def verify_mail_send(current_user, uid):
 @token_required
 def get_users(current_user):
     """ Получение полного списка пользователей в json"""
-
     try:
 
         user_schema = CmsUsersSchema(many=True, exclude=['password'])
@@ -956,7 +955,6 @@ def get_user_by_id(current_user, uid):
     """ Получение одного пользователя по id в json"""
 
     try:
-
         user_schema = CmsUsersSchema(exclude=['password'])
         user = CmsUsers.query.get(uid)
         udata = user_schema.dump(user)
@@ -980,117 +978,128 @@ def post_users(current_user):
     """ Добавление записи пользователя в БД"""
 
     try:
+        if CmsUsers.can(current_user.id, "post", "users"):
 
-        post_data = request.get_json()
+            post_data = request.get_json()
 
-        if not user_validator.is_valid(post_data):
-            errors = []
-            for error in sorted(user_validator.iter_errors(
-                                post_data), key=str):
-                errors.append(error.message)
+            if not user_validator.is_valid(post_data):
+                errors = []
+                for error in sorted(user_validator.iter_errors(
+                                    post_data), key=str):
+                    errors.append(error.message)
 
-            separator = '; '
-            error_text = separator.join(errors)
+                separator = '; '
+                error_text = separator.join(errors)
 
-            response = Response(
-                    response=json.dumps({'type': 'danger',
-                                         'text': error_text}),
-                    status=422,
-                    mimetype='application/json'
-                )
-        else:
-
-            primary_mail = list(
-                filter(
-                    lambda mail: mail['type'] == "primary",
-                    post_data['email'])
-                    )[0]["value"]
-
-            exist = CmsUsers.exist(**{
-                                      'login': post_data['login'],
-                                      'email': primary_mail,
-                                      'phone': post_data['phone']
-                                      })
-
-            if exist:
                 response = Response(
-                    response=json.dumps({'type': 'danger',
-                                         'text': 'Уже есть пользователь '
-                                                 'с такими логином, '
-                                                 'телефоном или основной '
-                                                 'почтой!'}),
-                    status=422,
-                    mimetype='application/json'
-                )
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
             else:
-                user = CmsUsers(
-                    login=post_data['login'],
-                    password=post_data['password'],
-                    name=post_data['name'],
-                    surname=post_data['surname'],
-                    patronymic=post_data['patronymic'],
-                    birth_date=post_data['birth_date'],
-                    email=post_data['email'],
-                    phone=post_data['phone'],
-                    about_me=post_data.get('about_me', None)
-                )
 
-                new_roles = post_data.pop('roles', None)
+                primary_mail = list(
+                    filter(
+                        lambda mail: mail['type'] == "primary",
+                        post_data['email'])
+                        )[0]["value"]
 
-                if new_roles is not None:
-                    for role in new_roles:
-                        #  Проверить, существует ли роль в базе,
-                        #  если нет, то ничего
-                        #  иначе добавить пользователю роль
-                        role_exist = CmsRoles.query.filter_by(
-                            id=role['id']).first()
-                        if role_exist is not None and role_exist.reassignable:
-                            user.roles.append(role_exist)
-                    if not user.roles:
+                exist = CmsUsers.exist(**{
+                                          'login': post_data['login'],
+                                          'email': primary_mail,
+                                          'phone': post_data['phone']
+                                          })
+
+                if exist:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'Уже есть пользователь '
+                                                     'с такими логином, '
+                                                     'телефоном или основной '
+                                                     'почтой!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    user = CmsUsers(
+                        login=post_data['login'],
+                        password=post_data['password'],
+                        name=post_data['name'],
+                        surname=post_data['surname'],
+                        patronymic=post_data['patronymic'],
+                        birth_date=post_data['birth_date'],
+                        email=post_data['email'],
+                        phone=post_data['phone'],
+                        about_me=post_data.get('about_me', None)
+                    )
+
+                    new_roles = post_data.pop('roles', None)
+
+                    if new_roles is not None:
+                        for role in new_roles:
+                            #  Проверить, существует ли роль в базе,
+                            #  если нет, то ничего
+                            #  иначе добавить пользователю роль
+                            role_exist = CmsRoles.query.filter_by(
+                                id=role['id']).first()
+                            if (role_exist is not None and
+                                    role_exist.reassignable):
+                                user.roles.append(role_exist)
+                        if not user.roles:
+                            user.roles.append(
+                                CmsRoles.query.filter_by(id=4).first())
+                    else:
                         user.roles.append(
                             CmsRoles.query.filter_by(id=4).first())
-                else:
-                    user.roles.append(CmsRoles.query.filter_by(id=4).first())
 
-                db.session.add(user)
-                db.session.commit()
+                    db.session.add(user)
+                    db.session.commit()
 
-                password = post_data['password']
-                login = post_data['login']
-                additional_mails = []
-                for mail_item in post_data['email']:
-                    if mail_item['value'] and mail_item['type'] != "primary":
-                        additional_mails.append(mail_item['value'])
+                    password = post_data['password']
+                    login = post_data['login']
+                    additional_mails = []
+                    for mail_item in post_data['email']:
+                        if (mail_item['value'] and
+                                mail_item['type'] != "primary"):
+                            additional_mails.append(mail_item['value'])
 
-                token = generate_confirmation_token(
-                    {
-                     "uid": user.id,
-                     "value": primary_mail,
-                     "type": "primary"
-                    }, expiration=3600)
-                confirm_url = 'http://192.168.0.91:8080/verify' \
-                              '/mail/' + token.decode("utf-8")
-                html = render_template(
-                    'user_created.html',
-                    confirm_url=confirm_url,
-                    password=password,
-                    login=login,
-                    emails=additional_mails,
-                    active_time="1 час")
-                subject = 'Для Вас создан пользователь ' \
-                          'в CMS сайта ЦГАКО'
-                send_email(primary_mail, subject, html)
+                    token = generate_confirmation_token(
+                        {
+                         "uid": user.id,
+                         "value": primary_mail,
+                         "type": "primary"
+                        }, expiration=3600)
+                    confirm_url = 'http://192.168.0.91:8080/verify' \
+                                  '/mail/' + token.decode("utf-8")
+                    html = render_template(
+                        'user_created.html',
+                        confirm_url=confirm_url,
+                        password=password,
+                        login=login,
+                        emails=additional_mails,
+                        active_time="1 час")
+                    subject = 'Для Вас создан пользователь ' \
+                              'в CMS сайта ЦГАКО'
+                    send_email(primary_mail, subject, html)
 
-                response = Response(
-                    response=json.dumps({'type': 'success',
-                                         'text': 'Добавлен пользователь '
-                                                 '@'+str(user.login)+'!',
-                                         'link': url_for('.get_user_by_id',
-                                                         uid=user.id,
-                                                         _external=True)}),
-                    status=200,
-                    mimetype='application/json'
-                )
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Добавлен пользователь '
+                                                     '@'+str(user.login)+'!',
+                                             'link': url_for('.get_user_by_id',
+                                                             uid=user.id,
+                                                             _external=True)}),
+                        status=200,
+                        mimetype='application/json'
+                    )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
 
     except Exception:
 
@@ -1105,141 +1114,158 @@ def update_users(current_user, uid):
     """ Изменение записи пользователя в БД"""
 
     try:
+        if CmsUsers.can(current_user.id, "put", "users"):
 
-        update_data = request.get_json()
+            update_data = request.get_json()
 
-        if current_user.id == uid:
+            if current_user.id == uid:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Воспользуйтесь профилем'
+                                                 ' для изменения собственных'
+                                                 ' данных!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+            else:
+                #  Удаление лишних полей для валидации json
+                for pop_item in [
+                        'id', 'socials', 'photo', 'last_login', 'status']:
+                    update_data.pop(pop_item, None)
+
+                if not user_update_validator.is_valid(update_data):
+
+                    errors = []
+                    for error in sorted(user_update_validator.iter_errors(
+                                        update_data), key=str):
+                        errors.append(error.message)
+
+                    separator = '; '
+                    error_text = separator.join(errors)
+                    response = Response(
+                            response=json.dumps({'type': 'danger',
+                                                 'text': error_text}),
+                            status=422,
+                            mimetype='application/json'
+                        )
+
+                else:
+                    #  Получить основную почту из полученных данных
+                    #  и проверить пользователя на существование
+                    #  с такой почтой, логином, паролем
+                    primary_mail = list(
+                        filter(
+                            lambda mail: mail['type'] == "primary",
+                            update_data['email'])
+                            )[0]["value"]
+                    exist = CmsUsers.exist(sid=uid, **{
+                                              'login': update_data['login'],
+                                              'email': primary_mail,
+                                              'phone': update_data['phone']
+                                              })
+
+                    if exist:
+                        response = Response(
+                            response=json.dumps(
+                                {'type': 'danger',
+                                 'text': 'Пользователь с такими'
+                                         ' данными существует!'}),
+                            status=422,
+                            mimetype='application/json'
+                        )
+                    else:
+                        #  Составить попарный список
+                        #  предыдущих и полученных почт
+                        previous = CmsUsers.query.filter_by(
+                            id=uid).first().email
+                        current = update_data['email']
+                        pairs = zip(current, previous)
+
+                        #  И проверить, если почта изменилась,
+                        #  сбросить активацию и отправить письмо с токеном
+                        changed = [x for x, y in pairs if x != y]
+                        if changed:
+                            for mail_item in changed:
+                                sended_date = dateutil.parser.parse(
+                                    mail_item['activeUntil'])
+                                if sended_date <= datetime.now():
+                                    mail_item[
+                                        'activeUntil'] = date_manipulation(
+                                            datetime.now(), action="plus")
+                                mail_item['verified'] = False
+                                if mail_item['value']:
+                                    token = generate_confirmation_token(
+                                        {
+                                         "uid": uid,
+                                         "value": mail_item['value'],
+                                         "type": mail_item['type']
+                                        }, expiration=3600)
+                                    confirm_url = 'http://192.168.0.91:8080/' \
+                                                  'verify/mail/' + \
+                                                  token.decode(
+                                                    "utf-8")
+                                    html = render_template(
+                                        'confirmation_mail.html',
+                                        confirm_url=confirm_url,
+                                        active_time="1 час")
+                                    subject = 'Подтверждение адреса ' \
+                                              'электронной почты в ' \
+                                              'CMS сайта ЦГАКО'
+                                    send_email(
+                                        mail_item['value'], subject, html)
+
+                        old_data = CmsUsers.query.filter_by(id=uid)
+                        old_login = old_data.first().login
+
+                        #  Обработка списка ролей
+                        new_roles = update_data.pop('roles', None)
+
+                        if new_roles is not None:
+                            old_roles = old_data.first()
+
+                            #  Просмотреть список ролей на наличие
+                            #  непереназначаемых и сохранить только их
+                            to_preserve = []
+                            for role in old_roles.roles:
+                                if not role.reassignable:
+                                    to_preserve.append(role)
+                            old_roles.roles = to_preserve
+
+                            for role in new_roles:
+                                #  Проверить, существует ли роль в базе,
+                                #  и является ли переназначаемой
+                                #  если нет, то ничего
+                                #  иначе добавить пользователю роль
+                                role_exist = CmsRoles.query.filter_by(
+                                    id=role['id']).first()
+                                if (role_exist is not None
+                                        and role_exist.reassignable):
+                                    old_roles.roles.append(role_exist)
+                            if not old_roles.roles:
+                                old_roles.roles.append(
+                                    CmsRoles.query.filter_by(id=4).first())
+
+                        old_data.update(update_data)
+                        db.session.commit()
+
+                        response = Response(
+                            response=json.dumps(
+                                {'type': 'success',
+                                 'text': 'Изменен пользователь '
+                                         '@'+str(old_login)+'!',
+                                 'link': url_for('.get_user_by_id',
+                                                 uid=uid,
+                                                 _external=True)}),
+                            status=200,
+                            mimetype='application/json'
+                        )
+        else:
             response = Response(
                 response=json.dumps({'type': 'danger',
-                                     'text': 'Воспользуйтесь профилем'
-                                             ' для изменения собственных'
-                                             ' данных!'}),
-                status=422,
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
                 mimetype='application/json'
             )
-        else:
-            #  Удаление лишних полей для валидации json
-            for pop_item in ['id', 'socials', 'photo', 'last_login', 'status']:
-                update_data.pop(pop_item, None)
-
-            if not user_update_validator.is_valid(update_data):
-
-                errors = []
-                for error in sorted(user_update_validator.iter_errors(
-                                    update_data), key=str):
-                    errors.append(error.message)
-
-                separator = '; '
-                error_text = separator.join(errors)
-                response = Response(
-                        response=json.dumps({'type': 'danger',
-                                             'text': error_text}),
-                        status=422,
-                        mimetype='application/json'
-                    )
-
-            else:
-                #  Получить основную почту из полученных данных
-                #  и проверить пользователя на существование
-                #  с такой почтой, логином, паролем
-                primary_mail = list(
-                    filter(
-                        lambda mail: mail['type'] == "primary",
-                        update_data['email'])
-                        )[0]["value"]
-                exist = CmsUsers.exist(sid=uid, **{
-                                          'login': update_data['login'],
-                                          'email': primary_mail,
-                                          'phone': update_data['phone']
-                                          })
-
-                if exist:
-                    response = Response(
-                        response=json.dumps({'type': 'danger',
-                                             'text': 'Пользователь с такими'
-                                                     ' данными существует!'}),
-                        status=422,
-                        mimetype='application/json'
-                    )
-                else:
-                    #  Составить попарный список предыдущих и полученных почт
-                    previous = CmsUsers.query.filter_by(id=uid).first().email
-                    current = update_data['email']
-                    pairs = zip(current, previous)
-
-                    #  И проверить, если почта изменилась,
-                    #  сбросить активацию и отправить письмо с токеном
-                    changed = [x for x, y in pairs if x != y]
-                    if changed:
-                        for mail_item in changed:
-                            sended_date = dateutil.parser.parse(
-                                mail_item['activeUntil'])
-                            if sended_date <= datetime.now():
-                                mail_item['activeUntil'] = date_manipulation(
-                                    datetime.now(), action="plus")
-                            mail_item['verified'] = False
-                            if mail_item['value']:
-                                token = generate_confirmation_token(
-                                    {
-                                     "uid": uid,
-                                     "value": mail_item['value'],
-                                     "type": mail_item['type']
-                                    }, expiration=3600)
-                                confirm_url = 'http://192.168.0.91:8080/' \
-                                              'verify/mail/' + token.decode(
-                                                "utf-8")
-                                html = render_template(
-                                    'confirmation_mail.html',
-                                    confirm_url=confirm_url,
-                                    active_time="1 час")
-                                subject = 'Подтверждение адреса электронной ' \
-                                          'почты в CMS сайта ЦГАКО'
-                                send_email(mail_item['value'], subject, html)
-
-                    old_data = CmsUsers.query.filter_by(id=uid)
-                    old_login = old_data.first().login
-
-                    #  Обработка списка ролей
-                    new_roles = update_data.pop('roles', None)
-
-                    if new_roles is not None:
-                        old_roles = old_data.first()
-
-                        #  Просмотреть список ролей на наличие
-                        #  непереназначаемых и сохранить только их
-                        to_preserve = []
-                        for role in old_roles.roles:
-                            if not role.reassignable:
-                                to_preserve.append(role)
-                        old_roles.roles = to_preserve
-
-                        for role in new_roles:
-                            #  Проверить, существует ли роль в базе,
-                            #  и является ли переназначаемой
-                            #  если нет, то ничего
-                            #  иначе добавить пользователю роль
-                            role_exist = CmsRoles.query.filter_by(
-                                id=role['id']).first()
-                            if (role_exist is not None
-                                    and role_exist.reassignable):
-                                old_roles.roles.append(role_exist)
-                        if not old_roles.roles:
-                            old_roles.roles.append(
-                                CmsRoles.query.filter_by(id=4).first())
-
-                    old_data.update(update_data)
-                    db.session.commit()
-
-                    response = Response(
-                        response=json.dumps({'type': 'success',
-                                             'text': 'Изменен пользователь '
-                                                     '@'+str(old_login)+'!',
-                                             'link': url_for('.get_user_by_id',
-                                                             uid=uid,
-                                                             _external=True)}),
-                        status=200,
-                        mimetype='application/json'
-                    )
 
     except Exception:
 
@@ -1254,23 +1280,31 @@ def delete_users(current_user, uid):
     """ Удаление записи пользователя из БД"""
 
     try:
+        if CmsUsers.can(current_user.id, "delete", "users"):
 
-        user = CmsUsers.query.get(uid)
+            user = CmsUsers.query.get(uid)
 
-        if user.photo:
-            os.remove(os.path.join(
-                current_app.config['CMS_USERS_AVATARS'],
-                user.photo))
+            if user.photo:
+                os.remove(os.path.join(
+                    current_app.config['CMS_USERS_AVATARS'],
+                    user.photo))
 
-        db.session.delete(user)
-        db.session.commit()
+            db.session.delete(user)
+            db.session.commit()
 
-        response = Response(
-            response=json.dumps({'type': 'success',
-                                 'text': 'Успешно удалено!'}),
-            status=200,
-            mimetype='application/json'
-        )
+            response = Response(
+                response=json.dumps({'type': 'success',
+                                     'text': 'Успешно удалено!'}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
 
     except Exception:
 
@@ -1340,27 +1374,35 @@ def users_password_block(current_user, uid):
     """Блокирование пароля пользователя"""
 
     try:
+        if CmsUsers.can(current_user.id, "put", "users"):
 
-        user = CmsUsers.query.filter(CmsUsers.id == uid).first()
+            user = CmsUsers.query.filter(CmsUsers.id == uid).first()
 
-        if user:
-            user.password['blocked'] = True
-            CmsUsers.query.filter_by(id=uid).update(
-                {"password": user.password})
-            db.session.commit()
+            if user:
+                user.password['blocked'] = True
+                CmsUsers.query.filter_by(id=uid).update(
+                    {"password": user.password})
+                db.session.commit()
 
-            response = Response(
-                response=json.dumps({'type': 'success',
-                                     'text': 'Пароль пользователя успешно'
-                                             ' заблокирован!'}),
-                status=200,
-                mimetype='application/json'
-            )
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Пароль пользователя успешно'
+                                                 ' заблокирован!'}),
+                    status=200,
+                    mimetype='application/json'
+                )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Пользователь не найден!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
-                                     'text': 'Пользователь не найден!'}),
-                status=422,
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
                 mimetype='application/json'
             )
 
@@ -1377,50 +1419,59 @@ def users_password_reset(current_user, uid):
     """Блокирование пароля пользователя"""
 
     try:
+        if CmsUsers.can(current_user.id, "put", "users"):
 
-        user = CmsUsers.query.filter(CmsUsers.id == uid).first()
+            user = CmsUsers.query.filter(CmsUsers.id == uid).first()
 
-        if user:
+            if user:
 
-            password = pass_generation(8)
-            user.password['value'] = bcrypt.generate_password_hash(
-                password).decode('utf-8')
-            user.password['activeUntil'] = (
-                datetime.now() + relativedelta(months=1)).isoformat()
-            user.password['blocked'] = False
-            user.password['first_auth'] = True
+                password = pass_generation(8)
+                user.password['value'] = bcrypt.generate_password_hash(
+                    password).decode('utf-8')
+                user.password['activeUntil'] = (
+                    datetime.now() + relativedelta(months=1)).isoformat()
+                user.password['blocked'] = False
+                user.password['first_auth'] = True
 
-            CmsUsers.query.filter_by(id=uid).update(
-                {"password": user.password})
-            db.session.commit()
+                CmsUsers.query.filter_by(id=uid).update(
+                    {"password": user.password})
+                db.session.commit()
 
-            primary_mail = list(
-                filter(
-                    lambda mail: mail['type'] == "primary",
-                    user.email)
-                    )[0]["value"]
-            html = render_template(
-                'password_change.html',
-                password=password,
-                login=user.login,
-                email=primary_mail,)
-            subject = 'Вам выдан новый пароль ' \
-                      'в CMS сайта ЦГАКО'
-            send_email(primary_mail, subject, html)
+                primary_mail = list(
+                    filter(
+                        lambda mail: mail['type'] == "primary",
+                        user.email)
+                        )[0]["value"]
+                html = render_template(
+                    'password_change.html',
+                    password=password,
+                    login=user.login,
+                    email=primary_mail,)
+                subject = 'Вам выдан новый пароль ' \
+                          'в CMS сайта ЦГАКО'
+                send_email(primary_mail, subject, html)
 
-            response = Response(
-                response=json.dumps({'type': 'success',
-                                     'text': 'Пароль пользователя успешно'
-                                             ' сброшен! Авторизацонные данные'
-                                             ' высланы на почту!'}),
-                status=200,
-                mimetype='application/json'
-            )
+                response = Response(
+                    response=json.dumps(
+                        {'type': 'success',
+                         'text': 'Пароль пользователя успешно'
+                                 ' сброшен! Авторизацонные данные'
+                                 ' высланы на почту!'}),
+                    status=200,
+                    mimetype='application/json'
+                )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Пользователь не найден!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
-                                     'text': 'Пользователь не найден!'}),
-                status=422,
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
                 mimetype='application/json'
             )
 
@@ -1441,13 +1492,7 @@ def get_roles(current_user):
     """ Получение полного списка ролей в json"""
 
     try:
-
         role_schema = CmsRolesSchema(many=True, exclude=['users'])
-
-        #  test_schema = AssociationPermissionSchema(exclude=['roles'])
-        #  test = AssociationPermission.query.first()
-        #  testdata = test_schema.dump(test)
-        #  print(testdata.data)
 
         roles = CmsRoles.query.all()
         rdata = role_schema.dump(roles)
@@ -1505,34 +1550,42 @@ def delete_roles(current_user, rid):
     """ Удаление записи роли из БД"""
 
     try:
+        if CmsUsers.can(current_user.id, "delete", "roles"):
 
-        role = CmsRoles.query.get(rid)
+            role = CmsRoles.query.get(rid)
 
-        if role.deletable:
-            db.session.delete(role)
+            if role.deletable:
+                db.session.delete(role)
 
-            #  После удаления роли запросить пользователей без ролей
-            #  если есть, добавить обозначенную роль
-            uwr = CmsUsers.query.filter(CmsUsers.roles == None).all() # noqa: ignore=E711
-            if uwr:
-                # Пользователь (придумать 'по умолчанию")
-                base_role = CmsRoles.query.get(4)
-                for u in uwr:
-                    u.roles.append(base_role)
+                #  После удаления роли запросить пользователей без ролей
+                #  если есть, добавить обозначенную роль
+                uwr = CmsUsers.query.filter(CmsUsers.roles == None).all() # noqa: ignore=E711
+                if uwr:
+                    # Пользователь (придумать 'по умолчанию")
+                    base_role = CmsRoles.query.get(4)
+                    for u in uwr:
+                        u.roles.append(base_role)
 
-            db.session.commit()
+                db.session.commit()
 
-            response = Response(
-                response=json.dumps({'type': 'success',
-                                     'text': 'Успешно удалено!'}),
-                status=200,
-                mimetype='application/json'
-            )
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Успешно удалено!'}),
+                    status=200,
+                    mimetype='application/json'
+                )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Эту роль нельзя удалить!'}),
+                    status=401,
+                    mimetype='application/json'
+                )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
-                                     'text': 'Эту роль нельзя удалить!'}),
-                status=401,
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
                 mimetype='application/json'
             )
 
@@ -1549,65 +1602,73 @@ def post_role(current_user):
     """ Добавление записи пользователя в БД"""
 
     try:
+        if CmsUsers.can(current_user.id, "post", "roles"):
 
-        post_data = request.get_json()
+            post_data = request.get_json()
 
-        if not role_validator.is_valid(post_data):
-            errors = []
-            for error in sorted(role_validator.iter_errors(
-                                post_data), key=str):
-                errors.append(error.message)
+            if not role_validator.is_valid(post_data):
+                errors = []
+                for error in sorted(role_validator.iter_errors(
+                                    post_data), key=str):
+                    errors.append(error.message)
 
-            separator = '; '
-            error_text = separator.join(errors)
+                separator = '; '
+                error_text = separator.join(errors)
 
-            response = Response(
-                    response=json.dumps({'type': 'danger',
-                                         'text': error_text}),
-                    status=422,
-                    mimetype='application/json'
-                )
-        else:
-
-            exist = CmsRoles.exist(**{
-                                      'title': post_data['title']
-                                      })
-
-            if exist:
                 response = Response(
-                    response=json.dumps({'type': 'danger',
-                                         'text': 'Уже есть такая роль!'}),
-                    status=422,
-                    mimetype='application/json'
-                )
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
             else:
-                role = CmsRoles(
-                    title=post_data['title'],
-                )
 
-                new_permissions = post_data.pop('permissions', None)
+                exist = CmsRoles.exist(**{
+                                          'title': post_data['title']
+                                          })
 
-                if new_permissions is not None:
-                    for permission in new_permissions:
-                        permission_exist = \
-                            AssociationPermission.query.filter_by(
-                                id=permission['id']).first()
-                        if permission_exist is not None:
-                            role.permissions.append(permission_exist)
+                if exist:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'Уже есть такая роль!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    role = CmsRoles(
+                        title=post_data['title'],
+                    )
 
-                db.session.add(role)
-                db.session.commit()
+                    new_permissions = post_data.pop('permissions', None)
 
-                response = Response(
-                    response=json.dumps({'type': 'success',
-                                         'text': 'Добавлена роль '
-                                                 '«'+str(role.title)+'»!',
-                                         'link': url_for('.get_role_by_id',
-                                                         rid=role.id,
-                                                         _external=True)}),
-                    status=200,
-                    mimetype='application/json'
-                )
+                    if new_permissions is not None:
+                        for permission in new_permissions:
+                            permission_exist = \
+                                AssociationPermission.query.filter_by(
+                                    id=permission['id']).first()
+                            if permission_exist is not None:
+                                role.permissions.append(permission_exist)
+
+                    db.session.add(role)
+                    db.session.commit()
+
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Добавлена роль '
+                                                     '«'+str(role.title)+'»!',
+                                             'link': url_for('.get_role_by_id',
+                                                             rid=role.id,
+                                                             _external=True)}),
+                        status=200,
+                        mimetype='application/json'
+                    )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
 
     except Exception:
 
@@ -1622,78 +1683,88 @@ def update_roles(current_user, rid):
     """ Изменение записи системной роли в БД"""
 
     try:
+        if CmsUsers.can(current_user.id, "put", "roles"):
 
-        update_data = request.get_json()
+            update_data = request.get_json()
 
-        for pop_item in ['id', 'deletable', 'reassignable']:
-            update_data.pop(pop_item, None)
+            for pop_item in ['id', 'deletable', 'reassignable']:
+                update_data.pop(pop_item, None)
 
-        if update_data.pop('editable', None):
+            if update_data.pop('editable', None):
 
-            if not role_update_validator.is_valid(update_data):
-                errors = []
-                for error in sorted(role_update_validator.iter_errors(
-                                    update_data), key=str):
-                    errors.append(error.message)
+                if not role_update_validator.is_valid(update_data):
+                    errors = []
+                    for error in sorted(role_update_validator.iter_errors(
+                                        update_data), key=str):
+                        errors.append(error.message)
 
-                separator = '; '
-                error_text = separator.join(errors)
-                response = Response(
-                        response=json.dumps({'type': 'danger',
-                                             'text': error_text}),
-                        status=422,
-                        mimetype='application/json'
-                    )
-
-            else:
-
-                exist = CmsRoles.exist(rid=rid, **{
-                                          'title': update_data['title']
-                                          })
-
-                if exist:
+                    separator = '; '
+                    error_text = separator.join(errors)
                     response = Response(
-                        response=json.dumps({'type': 'danger',
-                                             'text': 'Роль с таким'
-                                                     ' именем существует!'}),
-                        status=422,
-                        mimetype='application/json'
-                    )
+                            response=json.dumps({'type': 'danger',
+                                                 'text': error_text}),
+                            status=422,
+                            mimetype='application/json'
+                        )
+
                 else:
-                    old_data = CmsRoles.query.filter_by(id=rid)
-                    old_title = old_data.first().title
 
-                    new_permissions = update_data.pop('permissions', None)
+                    exist = CmsRoles.exist(rid=rid, **{
+                                              'title': update_data['title']
+                                              })
 
-                    if new_permissions is not None:
-                        old_permissions = old_data.first()
-                        old_permissions.permissions.clear()
-                        for permission in new_permissions:
-                            permission_exist = \
-                                AssociationPermission.query.filter_by(
-                                    id=permission['id']).first()
-                            if permission_exist is not None:
-                                old_permissions.permissions.append(
-                                    permission_exist)
+                    if exist:
+                        response = Response(
+                            response=json.dumps(
+                                {'type': 'danger',
+                                 'text': 'Роль с таким'
+                                         ' именем существует!'}),
+                            status=422,
+                            mimetype='application/json'
+                        )
+                    else:
+                        old_data = CmsRoles.query.filter_by(id=rid)
+                        old_title = old_data.first().title
 
-                    old_data.update(update_data)
-                    db.session.commit()
+                        new_permissions = update_data.pop('permissions', None)
 
-                    response = Response(
-                        response=json.dumps({'type': 'success',
-                                             'text': 'Изменена роль '
-                                                     '«'+str(old_title)+'»!',
-                                             'link': url_for('.get_role_by_id',
-                                                             rid=rid,
-                                                             _external=True)}),
-                        status=200,
-                        mimetype='application/json'
-                    )
+                        if new_permissions is not None:
+                            old_permissions = old_data.first()
+                            old_permissions.permissions.clear()
+                            for permission in new_permissions:
+                                permission_exist = \
+                                    AssociationPermission.query.filter_by(
+                                        id=permission['id']).first()
+                                if permission_exist is not None:
+                                    old_permissions.permissions.append(
+                                        permission_exist)
+
+                        old_data.update(update_data)
+                        db.session.commit()
+
+                        response = Response(
+                            response=json.dumps(
+                                {'type': 'success',
+                                 'text': 'Изменена роль '
+                                         '«'+str(old_title)+'»!',
+                                 'link': url_for('.get_role_by_id',
+                                                 rid=rid,
+                                                 _external=True)}),
+                            status=200,
+                            mimetype='application/json'
+                        )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Роль неизменяема'}),
+                    status=200,
+                    mimetype='application/json'
+                )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
-                                     'text': 'Роль неизменяема'}),
-                status=200,
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
                 mimetype='application/json'
             )
 

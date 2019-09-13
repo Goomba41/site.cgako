@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import moment from 'moment';
 import VueI18n from 'vue-i18n';
+import _ from 'lodash';
 import ru from '../langs/ru.json';
 
 Vue.use(VueI18n);
@@ -54,7 +55,15 @@ export function currentUserLogin(jwt) {
   return data.uid;
 }
 
-// Фукнция генерации пароля (необходимо модифицировать
+// Ответ true/false на запрос прав пользователя
+export function can(permissions, action, object) {
+  if (_.find(permissions, { action, object })) {
+    return true;
+  }
+  return false;
+}
+
+// Функция генерации пароля (необходимо модифицировать
 // для указаний параметров генераций, выбора алфавитов)
 export function passwordGenerator(size = 8) {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz';

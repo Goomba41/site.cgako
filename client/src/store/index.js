@@ -17,6 +17,7 @@ const state = {
   users: [], // список пользователей CMS
   uid: '', // id текущего пользователя
   profile: {}, // профиль текущего пользователя
+  user_perms: [], // разрешения текущего пользователя
   uploadProgress: 0,
   uploadProgressMax: 100,
   formPending: false,
@@ -459,6 +460,7 @@ const mutations = {
   // Установка профиля пользователя
   setProfile(state, payload) {
     state.profile = payload.profile;
+    state.user_perms = _.map(_.uniqBy(_.flatten(_.map(payload.profile.roles, 'permissions')), 'id'), item => ({ action: item.actions.uri, object: item.objects.uri }));
   },
 };
 

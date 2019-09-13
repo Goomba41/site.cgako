@@ -136,9 +136,11 @@ router.beforeEach((to, from, next) => {
       });
     } else {
       store.state.uid = store.getters.currentUser;
+      store.dispatch('loadProfile');
       next();
     }
   } else {
+    store.dispatch('loadProfile');
     next();
   }
   import(`../langs/${store.state.locale}.json`).then((msgs) => {

@@ -222,6 +222,22 @@ class CmsUsers(db.Model):
             return True
         return False
 
+    @classmethod
+    def can(cls, uid=None, action=None, object=None):
+        """Проверка разрешений пользователя"""
+        if cls.query.join(
+            user_role).join(
+                CmsRoles).join(
+                    role_permission).join(
+                        AssociationPermission).join(
+                            SystemObjects).join(
+                                SystemObjectsActions).filter(
+                                    (CmsUsers.id == uid) &
+                                    (SystemObjectsActions.uri == action) &
+                                    (SystemObjects.uri == object)).first():
+            return True
+        return False
+
 
 class CmsRoles(db.Model):
     """Модель системных ролей."""

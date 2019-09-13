@@ -35,6 +35,9 @@
 
       <sidebar v-bind:class="{ 'open': sidebarActive }"></sidebar>
       <navbar></navbar>
+<!--
+      {{profile}}
+-->
       <router-view v-bind:class="{ 'shifted': sidebarActive }" :key="componentKey"/>
       <footerline v-bind:class="{ 'shifted': sidebarActive }"></footerline>
 
@@ -148,6 +151,7 @@ export default {
       this.sidebarActive = false;
     });
     EventBus.$on('forceRerender', () => {
+      this.$store.dispatch('loadProfile');
       this.componentKey += 1;
       this.$forceUpdate();
     });

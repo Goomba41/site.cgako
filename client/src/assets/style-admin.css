@@ -121,22 +121,15 @@ background-color: #FED540;
 ---------------------------- Блокиратор -----------------------------
 */
 .blocker {
-  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4) 10px, rgba(0, 0, 0, 0.4) 10px, rgba(0, 0, 0, 0.4) 20px);
+/*
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4) 40px, rgba(0, 0, 0, 0.4) 40px, rgba(0, 0, 0, 0.4) 100px);
+*/
+  background-color: #0000006b;
   color: black;
   font-size: 1.5rem;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  left: 0;
-  position: absolute;
-  right: 0;
   z-index: 2;
+  border-radius: 5px;
+  color: #fafafa;
 }
 /*
 ---------------------------- Скроллбар -----------------------------

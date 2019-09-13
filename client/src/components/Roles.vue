@@ -1,26 +1,47 @@
 <template>
-  <main class="container-fluid">
+  <main class="container-fluid d-flex flex-column">
     <breadcumbs></breadcumbs>
 
-    <b-row class="pb-4 m-0 w-100">
+    <b-row class="pb-4 m-0 w-100 flex-grow-1 blocker"
+    v-if="!can(user_perms, 'get', 'roles')">
+      <b-col class="align-self-center text-center">
+        <font-awesome-icon :icon="['fa', 'lock']" fixed-width size="10x"/>
+      </b-col>
+    </b-row>
+
+    <b-row class="pb-4 m-0 w-100" v-if="can(user_perms, 'get', 'roles')">
       <b-col align-self="start" class="text-center" sm="8">
         <b-row class="justify-content-start align-middle align-items-center">
           <span class="text-info pr-3">
             {{ $tc('rolesPermissions.counter', roles.count) }}
           </span>
+
           <b-button v-bind:title="$t('rolesPermissions.tooltips.newRoleButton')"
+          v-if="can(user_perms, 'post', 'roles')"
           v-b-tooltip.hover class="mr-1" size="sm" variant="success"
           v-b-modal.new-modal>
             <font-awesome-icon icon="plus" fixed-width />
           </b-button>
+          <b-button v-else class="mr-1"
+          size="sm" v-bind:title="$t('rolesPermissions.tooltips.newRoleButton')"
+          v-b-tooltip.hover>
+            <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+          </b-button>
+
           <b-dropdown size="sm" class="mr-1"
           v-bind:disabled="!selected.length"
           v-bind:class="!selected.length">
             <template slot="button-content">
               <font-awesome-icon icon="list" fixed-width />
             </template>
-            <b-dropdown-item variant="danger" v-b-modal.delete-group-modal>
+            <b-dropdown-item variant="danger" v-b-modal.delete-group-modal
+            v-if="can(user_perms, 'delete', 'roles')">
               <font-awesome-icon icon="trash" fixed-width />
+              {{ $t('rolesPermissions.titles.groupActions.deleteButton') }}
+            </b-dropdown-item>
+            <b-dropdown-item variant="dark"
+            v-else>
+              <font-awesome-icon icon="lock" fixed-width />
               {{ $t('rolesPermissions.titles.groupActions.deleteButton') }}
             </b-dropdown-item>
           </b-dropdown>
@@ -66,7 +87,7 @@
 
     </b-row>
 
-    <b-row class="p-3 justify-content-center">
+    <b-row class="p-3 justify-content-center" v-if="can(user_perms, 'get', 'roles')">
       <b-col sm="6">
 
         <table class="table table-hover td-align-middle">
@@ -101,19 +122,31 @@
               <td class="text-center">
                 <b-button size="sm"
                 v-bind:title="$t('rolesPermissions.tooltips.editRoleButton')"
-                v-b-tooltip.hover variant="primary" v-if="role.editable"
+                v-b-tooltip.hover variant="primary"
+                v-if="can(user_perms, 'put', 'roles') && role.editable"
                 v-b-modal.edit-modal @click="selectRole(role.id)">
                   <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
+                </b-button>
+                <b-button v-else
+                size="sm" v-bind:title="$t('usersCMS.tooltips.editButton')"
+                v-b-tooltip.hover>
+                  <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                 </b-button>
 
                 <b-button
                 size="sm" variant="danger"
                 v-bind:title="$t('rolesPermissions.tooltips.deleteRoleButton')"
+                v-if="can(user_perms, 'delete', 'roles') && role.deletable"
                 v-b-tooltip.hover
-                v-if="role.deletable"
                 @click="selectRole(role.id)"
                 v-b-modal.delete-modal>
                   <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
+                </b-button>
+                </b-button>
+                <b-button v-else
+                size="sm" v-bind:title="$t('rolesPermissions.tooltips.deleteRoleButton')"
+                v-b-tooltip.hover>
+                  <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                 </b-button>
 
               </td>
@@ -125,6 +158,7 @@
     </b-row>
 
     <b-modal id="delete-modal"
+    v-if="can(user_perms, 'get', 'roles')"
     @show="deletePassphrase=''"
     @hidden="deletePassphrase=''"
     @close="deletePassphrase=''"
@@ -173,6 +207,7 @@
 
 
     <b-modal id="delete-group-modal"
+    v-if="can(user_perms, 'get', 'roles')"
     @show="deleteGroupPassphrase=''"
     @hidden="deleteGroupPassphrase=''"
     @close="deleteGroupPassphrase=''"
@@ -222,6 +257,7 @@
 
 
     <b-modal id="new-modal"
+    v-if="can(user_perms, 'get', 'roles')"
     v-bind:title="$t('rolesPermissions.formNew.formTitle')"
     hide-footer size="md" centered
     :header-bg-variant="'success'"
@@ -321,12 +357,13 @@
     </b-modal>
 
     <b-modal id="edit-modal"
-      @hidden="role={}"
-      @close="role={}"
-      v-bind:title="$t('rolesPermissions.formEdit.formTitle')"
-      hide-footer size="md" centered
-      :header-bg-variant="'primary'"
-      :header-text-variant="'light'">
+    v-if="can(user_perms, 'get', 'roles')"
+    @hidden="role={}"
+    @close="role={}"
+    v-bind:title="$t('rolesPermissions.formEdit.formTitle')"
+    hide-footer size="md" centered
+    :header-bg-variant="'primary'"
+    :header-text-variant="'light'">
 
       <b-form class="w-100" @submit.prevent="onSubmitUpdateRole">
         <b-row>
@@ -413,79 +450,6 @@
 
     </b-modal>
 
-<!--
-    <b-modal id="avatar-modal"
-            @hidden="onResetImage"
-            @close="onResetImage"
-            title="Вклеить фотокарточку"
-            hide-footer size="md" centered
-            :header-bg-variant="'primary'"
-            :header-text-variant="'light'">
-
-      <div class=" row w-100 mx-auto pb-3 justify-content-center align-items-center">
-        <img v-bind:src="imageUpdate.imageData ?
-        imageUpdate.imageData : '/static/profile_avatars/default.png'"
-        alt="Предпросмотр средний квадрат"
-        class="profile-image-preview preview-md preview-square mr-4">
-
-        <img v-bind:src="imageUpdate.imageData ?
-        imageUpdate.imageData : '/static/profile_avatars/default.png'"
-        alt="Предпросмотр средний"
-        class="profile-image-preview preview-md mr-4">
-
-        <img v-bind:src="imageUpdate.imageData ?
-        imageUpdate.imageData : '/static/profile_avatars/default.png'"
-        alt="Предпросмотр маленький"
-        class="profile-image-preview preview-sm mr-4">
-
-      </div>
-
-      <b-form class="w-100" @submit.prevent="onSubmitAvatar(user.id)">
-        <b-form-group
-        description="Товарищам будет проще узнать Вас, если Вы вклеите свою настоящую фотокарточку.
-Она должна соответствовать ГОСТам ДЖиПег, ГиФ или ПэНГэ. Размер ГОСТ 3МБ">
-
-          <b-form-file
-            ref="imageInput"
-            @input="onSelectImage"
-            lang="ru"
-            placeholder="Выберите фотокарточку..."
-            drop-placeholder="Бросьте сюда..."
-            accept="image/jpeg, image/png, image/gif"
-            :state="$v.imageUpdate.$dirty ? !$v.imageUpdate.$anyError : null"
-          ></b-form-file>
-          <b-form-invalid-feedback
-          :state="$v.imageUpdate.$dirty ? !$v.imageUpdate.$anyError : null">
-            <span v-if="!$v.imageUpdate.size.maxValue">
-              Превышен лимит в 3 МБ для фотокарточки!
-            </span>
-            <span v-if="!$v.imageUpdate.type.isImage">
-              Фотокарточка не соответствует ГОСТам ДЖиПег, ГиФ или ПэНГэ!
-            </span>
-          </b-form-invalid-feedback>
-
-        </b-form-group>
-
-        <b-button class="mb-3" type="submit" block variant="primary"
-        title="Установить новую фотокарточку" v-b-tooltip.hover
-        :disabled="!$v.imageUpdate.$anyDirty || $v.imageUpdate.$invalid || this.file == null">
-          <font-awesome-icon :icon="['fa', 'save']" fixed-width />
-        </b-button>
-
-        <div class="row mx-auto pt-3 border-top">
-          <b-progress v-if="isActiveProgress" :max="100" show-progress animated class="w-100">
-            <b-progress-bar :value="progressValue" variant="success"
-            :label="`${((progressValue / progressMax) * 100).toFixed(2)}%`">
-            </b-progress-bar>
-            <b-progress-bar :value="preloadValue" variant="primary"
-            :label="`${preloadValue.toFixed(2)}%`">
-            </b-progress-bar>
-          </b-progress>
-        </div>
-      </b-form>
-    </b-modal>
--->
-
   </main>
 </template>
 
@@ -497,7 +461,7 @@ import {
 } from 'vuelidate/lib/validators';
 import Multiselect from 'vue-multiselect';
 import Breadcumbs from './Breadcumbs';
-import { EventBus } from '@/utils';
+import { EventBus, can } from '@/utils';
 
 
 export default {
@@ -522,6 +486,7 @@ export default {
         title: '',
         permissions: [],
       },
+      can,
     };
   },
   validations: {
@@ -558,6 +523,7 @@ export default {
   },
   components: { Breadcumbs, Multiselect },
   computed: mapState({
+    user_perms: state => state.user_perms,
     roles: state => state.roles,
     permissions: state => state.permissions,
     uid: state => state.uid,
@@ -569,8 +535,10 @@ export default {
     formPending: state => state.formPending,
   }),
   beforeMount() {
-    this.$store.dispatch('loadRoles', { start: this.listControl.start, limit: this.listControl.limit });
-    this.$store.dispatch('loadPermissions');
+    if (can(this.user_perms, 'get', 'roles')) {
+      this.$store.dispatch('loadRoles', { start: this.listControl.start, limit: this.listControl.limit });
+      this.$store.dispatch('loadPermissions');
+    }
   },
   methods: {
     namePermission({ actions, objects }) {
