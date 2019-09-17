@@ -142,7 +142,6 @@
                 v-b-modal.delete-modal>
                   <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
                 </b-button>
-                </b-button>
                 <b-button v-else
                 size="sm" v-bind:title="$t('rolesPermissions.tooltips.deleteRoleButton')"
                 v-b-tooltip.hover>

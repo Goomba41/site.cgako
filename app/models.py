@@ -12,6 +12,9 @@ from flask import current_app, json
 
 from sqlalchemy import func
 
+from marshmallow import fields, pre_load, post_dump
+
+from sqlalchemy_mptt.mixins import BaseNestedSets
 
 # ------------------------------------------------------------
 # Функции
@@ -357,6 +360,23 @@ class AssociationPermission(db.Model):
         backref=db.backref("permission")
     )
 
+
+class CmsStructure(db.Model, BaseNestedSets):
+    """Модель системных разделов. Иерархическая структура Nested Set."""
+
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
+    title = db.Column(db.String(50), comment="Название раздела меню и структуры")
+    deletable = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Удаляемая"
+    )
+
+    def __repr__(self):
+        """Форматирование представления экземпляра класса."""
+        return "Раздел «%s»" % (self.title)
+
 # ------------------------------------------------------------
 # Схемы
 # ------------------------------------------------------------
@@ -406,6 +426,30 @@ class CmsRolesSchema(ma.ModelSchema):
         #  fields = ("id", "title",)
 
     permissions = ma.Nested(AssociationPermissionSchema, many=True)
+
+
+class CmsStructureSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = CmsStructure
+
+    #  since_craeated = fields.Method("get_days_since_created")
+
+    #  def get_days_since_created(self, obj):
+        #  new_list = obj[:]
+        #  for item in range(obj.lft+1, obj.rgt):
+            #  print(item)
+        #  return datetime.now()
+
+    #  @post_dump(pass_many=True)
+    #  def test(self, data, many, **kwargs):
+        #  print(data)
+        #  key = self.get_days_since_created(many)
+        #  print(key)
+        #  return [key]
 
 
 class CmsUsersSchema(ma.ModelSchema):

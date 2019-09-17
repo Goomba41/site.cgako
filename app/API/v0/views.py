@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from itsdangerous import TimedJSONWebSignatureSerializer
 from sqlalchemy import func
+from sqlalchemy.orm import aliased
 from urllib.parse import urljoin
 from user_agents import parse
 from flask import current_app, json, Blueprint, \
@@ -29,7 +30,8 @@ from functools import wraps
 from app import bcrypt, db, mail
 from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     CmsRoles, CmsRolesSchema, SystemObjects, SystemObjectsActions, \
-    AssociationPermission, AssociationPermissionSchema, user_role
+    AssociationPermission, AssociationPermissionSchema, user_role, \
+    CmsStructure, CmsStructureSchema
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator, role_validator, \
     role_update_validator
@@ -238,6 +240,15 @@ def date_manipulation(value, action, period='month', number=3):
             return (value - relativedelta(years=number)).isoformat()
     else:
         return value
+
+
+#  Функция для преобразования
+#  структуры сайта в json
+def cat_to_json(item):
+    return {
+        'id': item.id,
+        'name': item.title
+    }
 
 
 #  Генерация пароля с определенной длиной
@@ -1783,7 +1794,7 @@ def update_roles(current_user, rid):
 @API0.route('/permissions/', methods=['GET'])
 @token_required
 def get_permissions(current_user):
-    """ Получение списка разрешений для объекта в json"""
+    """ Получение списка разрешений в json"""
 
     try:
         permission_schema = AssociationPermissionSchema(many=True)
@@ -1793,6 +1804,40 @@ def get_permissions(current_user):
 
         response = Response(
             response=json.dumps(pdata),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+# ------------------------------------------------------------
+# Структура
+# ------------------------------------------------------------
+
+
+@API0.route('/structure/', methods=['GET'])
+@token_required
+def get_structure(current_user):
+    """ Получение структуры сайта в json"""
+
+    try:
+
+        structure = CmsStructure.query.filter(CmsStructure.id == 1)
+
+        for item in structure:
+            print(item)
+            print(item.drilldown_tree(json=True, json_fields=cat_to_json))
+            print()
+
+        response = Response(
+            response=json.dumps(
+                item.drilldown_tree(
+                    json=True, json_fields=cat_to_json)),
             status=200,
             mimetype='application/json'
         )

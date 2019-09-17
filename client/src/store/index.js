@@ -12,6 +12,7 @@ Vue.use(Vuex);
 
 // Источник данных
 const state = {
+  structure: [], // структура сайта
   permissions: [], // список разрешений CMS
   roles: [], // список ролей CMS
   users: [], // список пользователей CMS
@@ -420,6 +421,25 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  // Загрузить структуру
+  loadStructure(context) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/structure?dbg',
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+      })
+      .then((response) => {
+        context.commit('setStructure', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+        EventBus.$emit('message', error.response.data);
+      });
+  },
 };
 
 // Мутации данных
@@ -461,6 +481,10 @@ const mutations = {
   setProfile(state, payload) {
     state.profile = payload.profile;
     state.user_perms = _.map(_.uniqBy(_.flatten(_.map(payload.profile.roles, 'permissions')), 'id'), item => ({ action: item.actions.uri, object: item.objects.uri }));
+  },
+  // Установка структуры
+  setStructure(state, payload) {
+    state.structure = payload;
   },
 };
 

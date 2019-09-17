@@ -4,6 +4,7 @@ import NProgress from 'nprogress';
 import Activation from '@/components/Activation';
 import Users from '@/components/Users';
 import Roles from '@/components/Roles';
+import Structure from '@/components/Structure';
 import Login from '@/components/Login';
 import Dashboard from '@/components/Dashboard';
 import AdminPanel from '@/components/AdminPanel';
@@ -66,6 +67,16 @@ const router = new Router({
             requiresAuth: true,
             breadCrumb: 'permissions',
             title: 'CMS - Полномочия',
+          },
+        },
+        {
+          path: 'structure',
+          name: 'Structure',
+          component: Structure,
+          meta: {
+            requiresAuth: true,
+            breadCrumb: 'structure',
+            title: 'CMS - Структура сайта',
           },
         },
         {
