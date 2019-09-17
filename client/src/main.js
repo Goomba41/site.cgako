@@ -6,6 +6,7 @@ import 'vue-tel-input/dist/vue-tel-input.css';
 import 'vue-multiselect/dist/vue-multiselect.min.css';
 
 import BootstrapVue from 'bootstrap-vue';
+import BootstrapVueTreeview from 'bootstrap-vue-treeview';
 import Vuelidate from 'vuelidate';
 import VueLodash from 'vue-lodash';
 import FlagIcon from 'vue-flag-icon';
@@ -56,6 +57,7 @@ Vue.component('font-awesome-layers-text', FontAwesomeLayersText);
 Vue.config.productionTip = false;
 
 Vue.use(BootstrapVue);
+Vue.use(BootstrapVueTreeview);
 Vue.use(VueLodash);
 Vue.use(Vuelidate);
 Vue.use(FlagIcon);

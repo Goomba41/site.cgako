@@ -1369,11 +1369,13 @@ export default {
     progressMax: state => state.uploadProgressMax,
     formPending: state => state.formPending,
   }),
-  beforeMount() {
-    if (can(this.user_perms, 'get', 'users')) {
-      this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
-      this.$store.dispatch('loadRoles', {});
-    }
+  watch: {
+    user_perms() {
+      if (can(this.user_perms, 'get', 'users')) {
+        this.$store.dispatch('loadUsers', { start: this.listControl.start, limit: this.listControl.limit });
+        this.$store.dispatch('loadRoles', {});
+      }
+    },
   },
   methods: {
     dateFormatter(date) {

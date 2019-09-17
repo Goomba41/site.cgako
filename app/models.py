@@ -370,7 +370,19 @@ class CmsStructure(db.Model, BaseNestedSets):
         db.Boolean,
         default=True,
         nullable=False,
-        comment="Удаляемая"
+        comment="Удаляемый"
+    )
+    enabled = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Включен"
+    )
+    editable = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Редактируемый"
     )
 
     def __repr__(self):

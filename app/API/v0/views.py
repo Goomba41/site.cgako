@@ -247,7 +247,12 @@ def date_manipulation(value, action, period='month', number=3):
 def cat_to_json(item):
     return {
         'id': item.id,
-        'name': item.title
+        'name': item.title,
+        'deletable': item.deletable,
+        'editable': item.editable,
+        'addLeafNodeDisabled': True,
+        'editNodeDisabled': not item.editable,
+        'delNodeDisabled': not item.deletable
     }
 
 
@@ -1791,7 +1796,7 @@ def update_roles(current_user, rid):
 # ------------------------------------------------------------
 
 
-@API0.route('/permissions/', methods=['GET'])
+@API0.route('/permissions', methods=['GET'])
 @token_required
 def get_permissions(current_user):
     """ Получение списка разрешений в json"""
@@ -1820,27 +1825,91 @@ def get_permissions(current_user):
 # ------------------------------------------------------------
 
 
-@API0.route('/structure/', methods=['GET'])
+@API0.route('/structure', methods=['GET'])
 @token_required
 def get_structure(current_user):
     """ Получение структуры сайта в json"""
 
     try:
 
-        structure = CmsStructure.query.filter(CmsStructure.id == 1)
-
-        for item in structure:
-            print(item)
-            print(item.drilldown_tree(json=True, json_fields=cat_to_json))
-            print()
+        structure = CmsStructure.query.filter(CmsStructure.id == 1).first()
 
         response = Response(
             response=json.dumps(
-                item.drilldown_tree(
+                structure.drilldown_tree(
                     json=True, json_fields=cat_to_json)),
             status=200,
             mimetype='application/json'
         )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/structure/<int:sid>', methods=['DELETE'])
+@token_required
+def delete_structure(current_user, sid):
+    """ Удаление раздела из структуры сайта"""
+
+    try:
+        if CmsUsers.can(current_user.id, "delete", "structure"):
+            section = CmsStructure.query.filter(CmsStructure.id == sid).first()
+            if section:
+                db.session.delete(section)
+                db.session.commit()
+
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Успешно удалено!'}),
+                    status=200,
+                    mimetype='application/json'
+                )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Запись не найдена! (404)'}),
+                    status=404,
+                    mimetype='application/json'
+                )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/structure', methods=['POST'])
+@token_required
+def post_structure(current_user):
+    """ Добавление раздела в структуру сайта"""
+
+    try:
+        if CmsUsers.can(current_user.id, "post", "structure"):
+
+            response = Response(
+                response=json.dumps({'type': 'success',
+                                     'text': 'Добавлен подраздел'}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
 
     except Exception:
 

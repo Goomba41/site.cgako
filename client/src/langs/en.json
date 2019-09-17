@@ -622,5 +622,27 @@
                 }
             }
         }
+    },
+    "structure":{
+        "counter":"no sections | Total 1 section | Total {n} sections | Total {n} sections",
+        "tooltips": {
+            "saveButton":"Save structure",
+            "defaultTreeNodeName":"New sections",
+            "defaultLeafNodeName":"New document",
+            "addSection":"New section",
+            "deleteSection":"Delete section",
+            "editSection":"Edit section"
+        },
+        "deleteModal": {
+            "title":"Section delete",
+            "description": "After deleting a section, all subsections will be deleted! Make sure that you keep all the necessary subsections in other sections before deleting!",
+            "tooltips": {
+                "deleteButton": "Delete section"
+            },
+            "confirmationField": {
+                "placeholder": "Confirmating phrase",
+                "description": "Enter section name for confirm deletion"
+            }
+        }
     }
 }

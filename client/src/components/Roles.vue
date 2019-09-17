@@ -533,11 +533,13 @@ export default {
     },
     formPending: state => state.formPending,
   }),
-  beforeMount() {
-    if (can(this.user_perms, 'get', 'roles')) {
-      this.$store.dispatch('loadRoles', { start: this.listControl.start, limit: this.listControl.limit });
-      this.$store.dispatch('loadPermissions');
-    }
+  watch: {
+    user_perms() {
+      if (can(this.user_perms, 'get', 'roles')) {
+        this.$store.dispatch('loadRoles', { start: this.listControl.start, limit: this.listControl.limit });
+        this.$store.dispatch('loadPermissions');
+      }
+    },
   },
   methods: {
     namePermission({ actions, objects }) {
