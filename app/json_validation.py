@@ -374,6 +374,30 @@ schema_role_update_data = {
     "additionalProperties": False
 }
 
+#  Разделы сайта
+
+schema_section_data = {
+    "type": "object",
+    "properties": {
+        "name": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я \W]{4,50}$",
+                    "minLength": 4,
+                    "maxLength": 50,
+                 },
+        "pid": {
+                    "type": "number",
+                    "minLength": 1
+                 },
+        "enabled": {
+                    "type": "boolean"
+                 }
+    },
+    "required": ["name", "pid", "enabled"],
+    "additionalProperties": False
+}
+
+
 # ------------------------------------------------------------
 # Кастомные валидаторы
 # ------------------------------------------------------------
@@ -460,3 +484,4 @@ user_validator = MyValidator(schema_user_data)
 user_update_validator = MyValidator(schema_user_update_data)
 role_validator = MyValidator(schema_role_data)
 role_update_validator = MyValidator(schema_role_update_data)
+section_validator = MyValidator(schema_section_data)

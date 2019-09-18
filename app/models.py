@@ -389,6 +389,23 @@ class CmsStructure(db.Model, BaseNestedSets):
         """Форматирование представления экземпляра класса."""
         return "Раздел «%s»" % (self.title)
 
+    @classmethod
+    def parent_exist(cls, sid=None, **kwargs):
+        """Проверка существования пользователя с данными в базе."""
+        if sid is None:
+            exist = cls.query.filter(
+                        cls.id == kwargs.get('pid')
+                    ).first()
+        else:
+            exist = cls.query.filter(
+                    (
+                        cls.id == kwargs.get('title')
+                    ) &
+                    (cls.id != sid)).first()
+        if exist:
+            return True
+        return False
+
 # ------------------------------------------------------------
 # Схемы
 # ------------------------------------------------------------

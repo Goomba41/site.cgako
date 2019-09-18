@@ -172,7 +172,14 @@
                   </ul>
 
               </nav>
+<!--
+              {{menu}}
+-->
+              <div v-for="item in menu" v-bind:key="item.id">
+                <span>{{item.name}}</span>
+              </div>
 
+<!--
 
               <div id="main">
 
@@ -258,22 +265,6 @@
                                   </section>
                                 </a>
                               </div>
-
-                          <!-- The Arrows
-                          <i class="left" class="arrows"
-                          style="z-index:2; position:absolute;">
-                          <svg viewBox="0 0 100 100">
-                          <path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z">
-                          </path></svg></i>
-                          <i class="right" class="arrows" style="z-index:2;
-                          position:absolute;"><svg viewBox="0 0 100 100">
-                          <path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z"
-                          transform="translate(100, 100) rotate(180) ">
-                          </path></svg></i>-->
-                          <!-- Title Bar
-                          <span class="titleBar">
-                          <h3>This Slider has all default settings.</h3>
-                          </span>-->
 
                           </div>
 
@@ -608,7 +599,9 @@
                   </section>
 
               </div>
+-->
 
+<!--
 
               <footer id="footer">
                   <section>
@@ -672,10 +665,13 @@
                           </ul>
                   </section>
               </footer>
+-->
 
+<!--
               <div id="copyright">
                   <ul><li>&copy; 2019-2020 ЦГАКО</li><li>Дизайн: <a href="https://vk.com/goomba41">Бородавкин А.В.</a></li><li>Использование материалов сайта без согласования с КОГБУ ЦГАКО запрещено</li></ul>
               </div>
+-->
 
           </div>
 
@@ -707,6 +703,7 @@
 </style>
 
 <script>
+import { mapState } from 'vuex';
 
 export default {
   name: 'Index',
@@ -714,5 +711,11 @@ export default {
     return {
     };
   },
+  beforeMount() {
+    this.$store.dispatch('loadStructure');
+  },
+  computed: mapState({
+    menu: state => state.structure,
+  }),
 };
 </script>

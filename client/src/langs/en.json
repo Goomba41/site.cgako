@@ -627,7 +627,7 @@
         "counter":"no sections | Total 1 section | Total {n} sections | Total {n} sections",
         "tooltips": {
             "saveButton":"Save structure",
-            "defaultTreeNodeName":"New sections",
+            "defaultTreeNodeName":"New section",
             "defaultLeafNodeName":"New document",
             "addSection":"New section",
             "deleteSection":"Delete section",
@@ -635,13 +635,35 @@
         },
         "deleteModal": {
             "title":"Section delete",
-            "description": "After deleting a section, all subsections will be deleted! Make sure that you keep all the necessary subsections in other sections before deleting!",
+            "description": "After deleting a section, all subsections and pages will be deleted! Make sure that you keep all the necessary subsections in other sections before deleting!",
             "tooltips": {
                 "deleteButton": "Delete section"
             },
             "confirmationField": {
                 "placeholder": "Confirmating phrase",
                 "description": "Enter section name for confirm deletion"
+            }
+        },
+        "formNew":{
+            "formTitle":"New site section form",
+            "tooltips":{
+                "submitButton":"Send form",
+                "clearButton":"Clear form"
+            },
+            "formFields":{
+                "name":{
+                    "placeholder":"Section name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 20 charachers.",
+                        "alpha":"This field must contain only latin, cyrillic and numeric charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "enabled":{
+                    "placeholder":"Available"
+                }
             }
         }
     }

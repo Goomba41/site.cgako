@@ -18,6 +18,7 @@
             :model="data"
             @click="onClick"
             @delete-node="onDel"
+            @add-node="onAddNode"
             :default-tree-node-name="$t('structure.tooltips.defaultTreeNodeName')"
             :default-leaf-node-name="$t('structure.tooltips.defaultLeafNodeName')"
             v-bind:default-expanded="true">
@@ -102,18 +103,85 @@
       </b-form>
     </b-modal>
 
+    <b-modal id="new-modal"
+            v-bind:title="$t('structure.formNew.formTitle')"
+            hide-footer size="xl" centered
+            :header-bg-variant="'success'"
+            :header-text-variant="'light'"
+            @hidden="onReset"
+            v-if="can(user_perms, 'post', 'structure')">
+<!--
+{{$v.newSection.name.$invalid}}
+{{$v.newSection.enabled.$invalid}}
+-->
+      <b-form class="w-100" @submit.prevent="newSectionSubmit" @reset="onReset">
+
+        <b-form-group>
+          <b-form-input name="name"
+            type="text"
+            autofocus
+            v-bind:placeholder="$t('structure.formNew.formFields.name.placeholder')"
+            trim
+            v-model="$v.newSection.name.$model"
+            :state="$v.newSection.name.$dirty ? !$v.newSection.name.$error : null"
+          ></b-form-input>
+
+          <b-form-invalid-feedback
+          >
+            <span v-if="!$v.newSection.name.required">
+              {{$t('structure.formNew.formFields.name.errors.required')}}
+            </span>
+            <span v-if="!$v.newSection.name.minLength">
+              {{$t('structure.formNew.formFields.name.errors.minLength')}}
+            </span>
+            <span v-if="!$v.newSection.name.maxLength">
+              {{$t('structure.formNew.formFields.name.errors.maxLength')}}
+            </span>
+            <span v-if="!$v.newSection.name.alpha">
+              {{$t('structure.formNew.formFields.name.errors.alpha')}}
+            </span>
+          </b-form-invalid-feedback>
+
+        </b-form-group>
+
+        <b-form-group>
+          <b-form-checkbox
+          v-model="$v.newSection.enabled.$model"
+          name="available"
+          switch size="md"
+        >
+            {{$t('structure.formNew.formFields.enabled.placeholder')}}
+          </b-form-checkbox>
+        </b-form-group>
+
+        <b-row>
+          <b-col>
+            <b-button type="submit" variant="success" block
+            v-bind:title="$t('structure.formNew.tooltips.submitButton')" v-b-tooltip.hover
+            :disabled="!$v.newSection.$anyDirty || $v.newSection.$invalid"
+            >
+              <font-awesome-icon v-if="!formPending"
+              :icon="['fa', 'save']" fixed-width />
+              <b-spinner small v-if="formPending"></b-spinner>
+            </b-button>
+          </b-col>
+        </b-row>
+
+      </b-form>
+
+    </b-modal>
+
   </main>
 </template>
 
 <script>
 import { mapState } from 'vuex';
-import { VueTreeList, Tree, TreeNode } from 'vue-tree-list';
+import { VueTreeList, Tree } from 'vue-tree-list';
 import {
-  required, sameAs,
+  required, sameAs, minLength, maxLength,
 } from 'vuelidate/lib/validators';
 import Breadcumbs from './Breadcumbs';
-import { can } from '@/utils';
-// TreeNode
+import { EventBus, can } from '@/utils';
 
 export default {
   name: 'Structure',
@@ -121,8 +189,10 @@ export default {
     return {
       can,
       section: {},
+      newSection: {},
       data: {},
       deletePassphrase: '',
+      availableDefault: true,
     };
   },
   validations: {
@@ -132,12 +202,24 @@ export default {
         return this.section.name;
       }),
     },
+    newSection: {
+      name: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(50),
+        alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s\W]*$/i.test(val),
+      },
+      enabled: {
+        required,
+      },
+    },
   },
   components: { Breadcumbs, VueTreeList },
   computed: mapState({
     user_perms: state => state.user_perms,
     structure: state => state.structure,
     uid: state => state.uid,
+    formPending: state => state.formPending,
   }),
   watch: {
     user_perms() {
@@ -159,7 +241,34 @@ export default {
     },
     deleteSection(id) {
       this.$store.dispatch('deleteSection', { id });
-      // this.section.remove();
+    },
+    onAddNode(params) {
+      /* eslint no-param-reassign:
+      ["error", { "props": true, "ignorePropertyModificationsFor": ["params"] }] */
+      params.enabled = this.availableDefault;
+      this.newSection = params;
+      this.$bvModal.show('new-modal');
+    },
+    onReset(evt) {
+      evt.preventDefault();
+      this.newSection.remove();
+      this.newSection = {};
+      this.$v.newSection.$reset();
+
+      // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+      EventBus.$emit('forceRerender');
+    },
+    newSectionSubmit() {
+      this.$v.$touch();
+
+      if (!this.$v.newSection.$invalid) {
+        delete this.newSection.parent;
+        this.$store.dispatch('newSection', this.newSection);
+      }
     },
   },
 };

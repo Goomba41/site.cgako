@@ -34,7 +34,7 @@ from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     CmsStructure, CmsStructureSchema
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator, role_validator, \
-    role_update_validator
+    role_update_validator, section_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -1858,15 +1858,24 @@ def delete_structure(current_user, sid):
         if CmsUsers.can(current_user.id, "delete", "structure"):
             section = CmsStructure.query.filter(CmsStructure.id == sid).first()
             if section:
-                db.session.delete(section)
-                db.session.commit()
-
-                response = Response(
-                    response=json.dumps({'type': 'success',
-                                         'text': 'Успешно удалено!'}),
-                    status=200,
-                    mimetype='application/json'
-                )
+                print(section.deletable)
+                if not section.deletable:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'Этот раздел '
+                                             'нельзя удалять!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    db.session.delete(section)
+                    db.session.commit()
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Успешно удалено!'}),
+                        status=200,
+                        mimetype='application/json'
+                    )
             else:
                 response = Response(
                     response=json.dumps({'type': 'danger',
@@ -1896,13 +1905,60 @@ def post_structure(current_user):
 
     try:
         if CmsUsers.can(current_user.id, "post", "structure"):
+            post_data = request.get_json()
 
-            response = Response(
-                response=json.dumps({'type': 'success',
-                                     'text': 'Добавлен подраздел'}),
-                status=200,
-                mimetype='application/json'
-            )
+            for key in list(post_data.keys()):
+                if key not in ['pid', 'name', 'enabled']:
+                    del post_data[key]
+
+            if not section_validator.is_valid(post_data):
+                errors = []
+                for error in sorted(section_validator.iter_errors(
+                                    post_data), key=str):
+                    errors.append(error.message)
+
+                separator = '; '
+                error_text = separator.join(errors)
+
+                response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+            else:
+
+                exist = CmsStructure.parent_exist(**{
+                                          'pid': post_data['pid']
+                                          })
+                if not exist:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'Такой родительский '
+                                                     'раздел не существует!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    new_section = CmsStructure(
+                        parent_id=post_data['pid'],
+                        enabled=post_data['enabled'],
+                        title=post_data['name'],
+                    )
+
+                    db.session.add(new_section)
+                    #  db.session.commit()
+
+                    response = Response(
+                        response=json.dumps(
+                            {'type': 'success',
+                             'text': 'Добавлен раздел '
+                                     '«'+str(new_section.title)+'»!',
+                             'link': url_for('.get_structure',
+                                             _external=True)}),
+                        status=200,
+                        mimetype='application/json'
+                    )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
@@ -1919,5 +1975,5 @@ def post_structure(current_user):
 
 
 # ------------------------------------------------------------
-# Новости
+# Страницы
 # ------------------------------------------------------------

@@ -440,7 +440,7 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
-  // Удалить роль
+  // Удалить раздел
   deleteSection(context, payload) {
     return axios.delete(`/api/structure/${payload.id}?dbg`,
       {
@@ -453,6 +453,21 @@ const actions = {
       .catch((error) => {
         // eslint-disable-next-line
         EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Создать новый раздел
+  newSection(context, dataNew) {
+    context.commit('setFormPending');
+    return axios.post('/api/structure?dbg', dataNew,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        context.commit('setFormPending');
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
       });
   },
 };
