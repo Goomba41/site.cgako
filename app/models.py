@@ -390,11 +390,11 @@ class CmsStructure(db.Model, BaseNestedSets):
         return "Раздел «%s»" % (self.title)
 
     @classmethod
-    def parent_exist(cls, sid=None, **kwargs):
+    def exist(cls, sid=None, **kwargs):
         """Проверка существования пользователя с данными в базе."""
         if sid is None:
             exist = cls.query.filter(
-                        cls.id == kwargs.get('pid')
+                        cls.id == kwargs.get('id')
                     ).first()
         else:
             exist = cls.query.filter(

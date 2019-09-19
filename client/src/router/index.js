@@ -151,7 +151,6 @@ router.beforeEach((to, from, next) => {
       next();
     }
   } else {
-    store.dispatch('loadProfile');
     next();
   }
   import(`../langs/${store.state.locale}.json`).then((msgs) => {

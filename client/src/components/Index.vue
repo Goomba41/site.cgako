@@ -51,6 +51,7 @@
                     </div>
                   </a>
               </header>
+<!--
 
               <nav id="nav">
 
@@ -172,12 +173,12 @@
                   </ul>
 
               </nav>
-<!--
-              {{menu}}
 -->
-              <div v-for="item in menu" v-bind:key="item.id">
-                <span>{{item.name}}</span>
-              </div>
+
+              <nav id="nav">
+                <NodeTree :node="menu"></NodeTree>
+              </nav>
+
 
 <!--
 
@@ -704,6 +705,7 @@
 
 <script>
 import { mapState } from 'vuex';
+import NodeTree from './NodeTree';
 
 export default {
   name: 'Index',
@@ -717,5 +719,8 @@ export default {
   computed: mapState({
     menu: state => state.structure,
   }),
+  components: {
+    NodeTree
+  },
 };
 </script>

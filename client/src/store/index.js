@@ -12,7 +12,7 @@ Vue.use(Vuex);
 
 // Источник данных
 const state = {
-  structure: [], // структура сайта
+  structure: {}, // структура сайта
   permissions: [], // список разрешений CMS
   roles: [], // список ролей CMS
   users: [], // список пользователей CMS
@@ -464,6 +464,21 @@ const actions = {
         context.commit('setFormPending');
         EventBus.$emit('forceRerender');
         EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Изменение родителя раздела
+  updateSectionParent(context, dataUpdate) {
+    context.commit('setFormPending');
+
+    return axios.put(`/api/structure/${dataUpdate.sid}/parent/${dataUpdate.pid}?dbg`, '',
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        context.commit('setFormPending');
       })
       .catch((error) => {
         EventBus.$emit('message', error.response.data);

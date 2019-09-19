@@ -656,7 +656,28 @@
                     "errors":{
                         "required":"This field is required.",
                         "minLength":"This field must contain minimum 4 charachers.",
-                        "maxLength":"This field must contain maximum 20 charachers.",
+                        "maxLength":"This field must contain maximum 50 charachers.",
+                        "alpha":"This field must contain only latin, cyrillic and numeric charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "enabled":{
+                    "placeholder":"Available"
+                }
+            }
+        },
+        "formEdit":{
+            "formTitle":"Edit site section form",
+            "tooltips":{
+                "submitButton":"Send form"
+            },
+            "formFields":{
+                "name":{
+                    "placeholder":"Section name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 50 charachers.",
                         "alpha":"This field must contain only latin, cyrillic and numeric charachers."
                     },
                     "successText":"Okay!"

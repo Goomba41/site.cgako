@@ -252,7 +252,9 @@ def cat_to_json(item):
         'editable': item.editable,
         'addLeafNodeDisabled': True,
         'editNodeDisabled': not item.editable,
-        'delNodeDisabled': not item.deletable
+        'delNodeDisabled': not item.deletable,
+        'level': item.level,
+        'dragDisabled': True if item.level <= 1 else False
     }
 
 
@@ -1837,7 +1839,7 @@ def get_structure(current_user):
         response = Response(
             response=json.dumps(
                 structure.drilldown_tree(
-                    json=True, json_fields=cat_to_json)),
+                    json=True, json_fields=cat_to_json)[0]),
             status=200,
             mimetype='application/json'
         )
@@ -1928,8 +1930,8 @@ def post_structure(current_user):
                     )
             else:
 
-                exist = CmsStructure.parent_exist(**{
-                                          'pid': post_data['pid']
+                exist = CmsStructure.exist(**{
+                                          'id': post_data['pid']
                                           })
                 if not exist:
                     response = Response(
@@ -1947,7 +1949,7 @@ def post_structure(current_user):
                     )
 
                     db.session.add(new_section)
-                    #  db.session.commit()
+                    db.session.commit()
 
                     response = Response(
                         response=json.dumps(
@@ -1959,6 +1961,98 @@ def post_structure(current_user):
                         status=200,
                         mimetype='application/json'
                     )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/structure/<int:sid>', methods=['PUT'])
+@token_required
+def update_structure(current_user):
+    """ Добавление раздела в структуру сайта"""
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "structure"):
+            #  post_data = request.get_json()
+
+            response = Response(
+                response=json.dumps(
+                    {'type': 'success',
+                     'text': 'Отредактирован раздел '
+                             '«'+'»!',
+                     'link': url_for('.get_structure',
+                                     _external=True)}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/structure/<int:sid>/parent/<int:pid>', methods=['PUT'])
+@token_required
+def update_parent_structure(current_user, sid, pid):
+    """ Добавление раздела в структуру сайта"""
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "structure"):
+
+            parent_exist = CmsStructure.exist(**{
+                                      'id': pid
+                                      })
+            section_exist = CmsStructure.exist(**{
+                                      'id': sid
+                                      })
+
+            if not (parent_exist and section_exist):
+                if not parent_exist:
+                    text = 'Такой родительский раздел не существует!'
+                else:
+                    text = 'Такой раздел не существует!'
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': text}),
+                    status=422,
+                    mimetype='application/json'
+                )
+            else:
+                section = CmsStructure.query.filter(
+                    CmsStructure.id == sid).one()
+                section.parent_id = pid
+                db.session.add(section)
+                db.session.commit()
+
+                response = Response(
+                    response=json.dumps(
+                        {'type': 'success',
+                         'text': 'Перенесён раздел '
+                                 '«'+str(section.title)+'»!',
+                         'link': url_for('.get_structure',
+                                         _external=True)}),
+                    status=200,
+                    mimetype='application/json'
+                )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',

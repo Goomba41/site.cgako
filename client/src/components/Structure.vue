@@ -12,13 +12,14 @@
     <b-row class="p-3 justify-content-center" v-if="can(user_perms, 'get', 'structure')">
       <b-col sm="12">
 
-        <b-card no-body class="text-center" v-if="structure && structure.length">
+        <b-card no-body class="text-center">
 
           <vue-tree-list class="p-3"
             :model="data"
             @click="onClick"
             @delete-node="onDel"
             @add-node="onAddNode"
+            @drop="onDrop"
             :default-tree-node-name="$t('structure.tooltips.defaultTreeNodeName')"
             :default-leaf-node-name="$t('structure.tooltips.defaultLeafNodeName')"
             v-bind:default-expanded="true">
@@ -110,10 +111,7 @@
             :header-text-variant="'light'"
             @hidden="onReset"
             v-if="can(user_perms, 'post', 'structure')">
-<!--
-{{$v.newSection.name.$invalid}}
-{{$v.newSection.enabled.$invalid}}
--->
+
       <b-form class="w-100" @submit.prevent="newSectionSubmit" @reset="onReset">
 
         <b-form-group>
@@ -158,6 +156,70 @@
           <b-col>
             <b-button type="submit" variant="success" block
             v-bind:title="$t('structure.formNew.tooltips.submitButton')" v-b-tooltip.hover
+            :disabled="!$v.newSection.$anyDirty || $v.newSection.$invalid"
+            >
+              <font-awesome-icon v-if="!formPending"
+              :icon="['fa', 'save']" fixed-width />
+              <b-spinner small v-if="formPending"></b-spinner>
+            </b-button>
+          </b-col>
+        </b-row>
+
+      </b-form>
+
+    </b-modal>
+
+    <b-modal id="edit-modal"
+            v-bind:title="$t('structure.formEdit.formTitle')"
+            hide-footer size="xl" centered
+            :header-bg-variant="'primary'"
+            :header-text-variant="'light'"
+            v-if="can(user_perms, 'put', 'structure')">
+
+      <b-form class="w-100" >
+
+        <b-form-group>
+          <b-form-input name="name"
+            type="text"
+            autofocus
+            v-bind:placeholder="$t('structure.formEdit.formFields.name.placeholder')"
+            trim
+            v-model="$v.newSection.name.$model"
+            :state="$v.newSection.name.$dirty ? !$v.newSection.name.$error : null"
+          ></b-form-input>
+
+          <b-form-invalid-feedback
+          >
+            <span v-if="!$v.newSection.name.required">
+              {{$t('structure.formEdit.formFields.name.errors.required')}}
+            </span>
+            <span v-if="!$v.newSection.name.minLength">
+              {{$t('structure.formEdit.formFields.name.errors.minLength')}}
+            </span>
+            <span v-if="!$v.newSection.name.maxLength">
+              {{$t('structure.formEdit.formFields.name.errors.maxLength')}}
+            </span>
+            <span v-if="!$v.newSection.name.alpha">
+              {{$t('structure.formEdit.formFields.name.errors.alpha')}}
+            </span>
+          </b-form-invalid-feedback>
+
+        </b-form-group>
+
+        <b-form-group>
+          <b-form-checkbox
+          v-model="$v.newSection.enabled.$model"
+          name="available"
+          switch size="md"
+        >
+            {{$t('structure.formEdit.formFields.enabled.placeholder')}}
+          </b-form-checkbox>
+        </b-form-group>
+
+        <b-row>
+          <b-col>
+            <b-button type="submit" variant="primary" block
+            v-bind:title="$t('structure.formEdit.tooltips.submitButton')" v-b-tooltip.hover
             :disabled="!$v.newSection.$anyDirty || $v.newSection.$invalid"
             >
               <font-awesome-icon v-if="!formPending"
@@ -228,7 +290,7 @@ export default {
       }
     },
     structure(structure) {
-      this.data = new Tree(structure);
+      this.data = new Tree([structure]);
     },
   },
   methods: {
@@ -269,6 +331,14 @@ export default {
         delete this.newSection.parent;
         this.$store.dispatch('newSection', this.newSection);
       }
+    },
+    onDrop(params) {
+      /* eslint no-param-reassign:
+      ["error", { "props": true, "ignorePropertyModificationsFor": ["params"] }] */
+      // this.section = params;
+      // console.log(params.node)
+      // console.log(params.target)
+      this.$store.dispatch('updateSectionParent', { sid: params.node.id, pid: params.target.id });
     },
   },
 };
