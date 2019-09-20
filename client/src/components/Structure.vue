@@ -16,10 +16,10 @@
 
           <vue-tree-list class="p-3"
             :model="data"
-            @click="onClick"
             @delete-node="onDel"
             @add-node="onAddNode"
             @drop="onDrop"
+            @edit="onEdit"
             :default-tree-node-name="$t('structure.tooltips.defaultTreeNodeName')"
             :default-leaf-node-name="$t('structure.tooltips.defaultLeafNodeName')"
             v-bind:default-expanded="true">
@@ -27,16 +27,27 @@
               v-bind:title="$t('structure.tooltips.addSection')"
               v-b-tooltip.hover
             >
-              <b-button class="mr-1" size="sm" variant="success">
+              <b-button class="mr-1" size="sm" variant="success"
+                v-if="can(user_perms, 'post', 'structure')"
+              >
                 <font-awesome-icon :icon="['fa', 'plus']" fixed-width />
               </b-button>
+              <b-button class="mr-1" size="sm" v-else>
+                <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+              </b-button>
+
             </span>
             <span class="icon" slot="editNode"
               v-bind:title="$t('structure.tooltips.editSection')"
               v-b-tooltip.hover
             >
-              <b-button class="mr-1" size="sm" variant="primary">
+              <b-button class="mr-1" size="sm" variant="primary"
+                v-if="can(user_perms, 'put', 'structure')"
+              >
                 <font-awesome-icon :icon="['fa', 'pencil-alt']" fixed-width />
+              </b-button>
+              <b-button class="mr-1" size="sm" v-else>
+                <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
               </b-button>
             </span>
             <span class="icon" slot="addLeafNode"></span>
@@ -44,8 +55,13 @@
               v-bind:title="$t('structure.tooltips.deleteSection')"
               v-b-tooltip.hover
             >
-              <b-button class="mr-1" size="sm" variant="danger">
+              <b-button class="mr-1" size="sm" variant="danger"
+                v-if="can(user_perms, 'delete', 'structure')"
+              >
                 <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
+              </b-button>
+              <b-button class="mr-1" size="sm" v-else>
+                <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
               </b-button>
             </span>
           </vue-tree-list>
@@ -56,15 +72,16 @@
     </b-row>
 
     <b-modal id="delete-modal"
-            @show="deletePassphrase=''"
-            @hidden="deletePassphrase=''"
-            @close="deletePassphrase=''"
-             v-bind:title="$t('structure.deleteModal.title')"
-             v-b-tooltip.hover
-             hide-footer size="sm" centered
-            :header-bg-variant="'danger'"
-            :header-text-variant="'light'"
-            v-if="can(user_perms, 'delete', 'structure')">
+      @show="deletePassphrase=''"
+      @hidden="deletePassphrase=''"
+      @close="deletePassphrase=''"
+       v-bind:title="$t('structure.deleteModal.title')"
+       v-b-tooltip.hover
+       hide-footer size="sm" centered
+      :header-bg-variant="'danger'"
+      :header-text-variant="'light'"
+      v-if="can(user_perms, 'delete', 'structure')"
+    >
 
       <b-form class="w-100" @submit.prevent="deleteSection(section.id)">
 
@@ -105,12 +122,13 @@
     </b-modal>
 
     <b-modal id="new-modal"
-            v-bind:title="$t('structure.formNew.formTitle')"
-            hide-footer size="xl" centered
-            :header-bg-variant="'success'"
-            :header-text-variant="'light'"
-            @hidden="onReset"
-            v-if="can(user_perms, 'post', 'structure')">
+      v-bind:title="$t('structure.formNew.formTitle')"
+      hide-footer size="xl" centered
+      :header-bg-variant="'success'"
+      :header-text-variant="'light'"
+      @hidden="onReset"
+      v-if="can(user_perms, 'post', 'structure')"
+    >
 
       <b-form class="w-100" @submit.prevent="newSectionSubmit" @reset="onReset">
 
@@ -170,13 +188,15 @@
     </b-modal>
 
     <b-modal id="edit-modal"
-            v-bind:title="$t('structure.formEdit.formTitle')"
-            hide-footer size="xl" centered
-            :header-bg-variant="'primary'"
-            :header-text-variant="'light'"
-            v-if="can(user_perms, 'put', 'structure')">
+      v-bind:title="$t('structure.formEdit.formTitle')"
+      hide-footer size="xl" centered
+      :header-bg-variant="'primary'"
+      :header-text-variant="'light'"
+      @hidden="onResetEdit"
+      v-if="can(user_perms, 'put', 'structure')"
+    >
 
-      <b-form class="w-100" >
+      <b-form class="w-100" @submit.prevent="updateSectionSubmit">
 
         <b-form-group>
           <b-form-input name="name"
@@ -184,22 +204,22 @@
             autofocus
             v-bind:placeholder="$t('structure.formEdit.formFields.name.placeholder')"
             trim
-            v-model="$v.newSection.name.$model"
-            :state="$v.newSection.name.$dirty ? !$v.newSection.name.$error : null"
+            v-model="$v.section.name.$model"
+            :state="$v.section.name.$dirty ? !$v.section.name.$error : null"
           ></b-form-input>
 
           <b-form-invalid-feedback
           >
-            <span v-if="!$v.newSection.name.required">
+            <span v-if="!$v.section.name.required">
               {{$t('structure.formEdit.formFields.name.errors.required')}}
             </span>
-            <span v-if="!$v.newSection.name.minLength">
+            <span v-if="!$v.section.name.minLength">
               {{$t('structure.formEdit.formFields.name.errors.minLength')}}
             </span>
-            <span v-if="!$v.newSection.name.maxLength">
+            <span v-if="!$v.section.name.maxLength">
               {{$t('structure.formEdit.formFields.name.errors.maxLength')}}
             </span>
-            <span v-if="!$v.newSection.name.alpha">
+            <span v-if="!$v.section.name.alpha">
               {{$t('structure.formEdit.formFields.name.errors.alpha')}}
             </span>
           </b-form-invalid-feedback>
@@ -208,7 +228,7 @@
 
         <b-form-group>
           <b-form-checkbox
-          v-model="$v.newSection.enabled.$model"
+          v-model="$v.section.enabled.$model"
           name="available"
           switch size="md"
         >
@@ -220,7 +240,7 @@
           <b-col>
             <b-button type="submit" variant="primary" block
             v-bind:title="$t('structure.formEdit.tooltips.submitButton')" v-b-tooltip.hover
-            :disabled="!$v.newSection.$anyDirty || $v.newSection.$invalid"
+            :disabled="!$v.section.$anyDirty || $v.section.$invalid"
             >
               <font-awesome-icon v-if="!formPending"
               :icon="['fa', 'save']" fixed-width />
@@ -275,6 +295,17 @@ export default {
         required,
       },
     },
+    section: {
+      name: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(50),
+        alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s\W]*$/i.test(val),
+      },
+      enabled: {
+        required,
+      },
+    },
   },
   components: { Breadcumbs, VueTreeList },
   computed: mapState({
@@ -296,6 +327,10 @@ export default {
   methods: {
     onClick(params) {
       this.section = params;
+    },
+    onEdit(params) {
+      this.section = params;
+      this.$bvModal.show('edit-modal');
     },
     onDel(node) {
       this.section = node;
@@ -324,6 +359,18 @@ export default {
       });
       EventBus.$emit('forceRerender');
     },
+    onResetEdit(evt) {
+      evt.preventDefault();
+      this.section = {};
+      this.$v.section.$reset();
+
+      // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+      EventBus.$emit('forceRerender');
+    },
     newSectionSubmit() {
       this.$v.$touch();
 
@@ -332,12 +379,15 @@ export default {
         this.$store.dispatch('newSection', this.newSection);
       }
     },
+    updateSectionSubmit() {
+      this.$v.$touch();
+
+      if (!this.$v.section.$invalid) {
+        delete this.section.parent;
+        this.$store.dispatch('updateSection', this.section);
+      }
+    },
     onDrop(params) {
-      /* eslint no-param-reassign:
-      ["error", { "props": true, "ignorePropertyModificationsFor": ["params"] }] */
-      // this.section = params;
-      // console.log(params.node)
-      // console.log(params.target)
       this.$store.dispatch('updateSectionParent', { sid: params.node.id, pid: params.target.id });
     },
   },

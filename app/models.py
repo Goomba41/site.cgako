@@ -384,6 +384,12 @@ class CmsStructure(db.Model, BaseNestedSets):
         nullable=False,
         comment="Редактируемый"
     )
+    movable = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Перемещаемый"
+    )
 
     def __repr__(self):
         """Форматирование представления экземпляра класса."""

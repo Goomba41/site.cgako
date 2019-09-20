@@ -470,6 +470,21 @@ const actions = {
         context.commit('setFormPending');
       });
   },
+  // Изменение раздела
+  updateSection(context, dataUpdate) {
+    context.commit('setFormPending');
+    return axios.put(`/api/structure/${dataUpdate.id}?dbg`, dataUpdate,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        context.commit('setFormPending');
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
   // Изменение родителя раздела
   updateSectionParent(context, dataUpdate) {
     context.commit('setFormPending');

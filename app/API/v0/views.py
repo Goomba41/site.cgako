@@ -34,7 +34,7 @@ from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     CmsStructure, CmsStructureSchema
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator, role_validator, \
-    role_update_validator, section_validator
+    role_update_validator, section_validator, section_update_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -250,11 +250,12 @@ def cat_to_json(item):
         'name': item.title,
         'deletable': item.deletable,
         'editable': item.editable,
+        'enabled': item.enabled,
         'addLeafNodeDisabled': True,
         'editNodeDisabled': not item.editable,
         'delNodeDisabled': not item.deletable,
         'level': item.level,
-        'dragDisabled': True if item.level <= 1 else False
+        'dragDisabled': True if not item.movable else False
     }
 
 
@@ -1702,82 +1703,106 @@ def update_roles(current_user, rid):
 
     try:
         if CmsUsers.can(current_user.id, "put", "roles"):
+            exist_req = CmsRoles.exist(**{
+                                      'title': update_data['title']
+                                    })
 
-            update_data = request.get_json()
-
-            for pop_item in ['id', 'deletable', 'reassignable']:
-                update_data.pop(pop_item, None)
-
-            if update_data.pop('editable', None):
-
-                if not role_update_validator.is_valid(update_data):
-                    errors = []
-                    for error in sorted(role_update_validator.iter_errors(
-                                        update_data), key=str):
-                        errors.append(error.message)
-
-                    separator = '; '
-                    error_text = separator.join(errors)
-                    response = Response(
-                            response=json.dumps({'type': 'danger',
-                                                 'text': error_text}),
-                            status=422,
-                            mimetype='application/json'
-                        )
-
-                else:
-
-                    exist = CmsRoles.exist(rid=rid, **{
-                                              'title': update_data['title']
-                                              })
-
-                    if exist:
-                        response = Response(
-                            response=json.dumps(
-                                {'type': 'danger',
-                                 'text': 'Роль с таким'
-                                         ' именем существует!'}),
-                            status=422,
-                            mimetype='application/json'
-                        )
-                    else:
-                        old_data = CmsRoles.query.filter_by(id=rid)
-                        old_title = old_data.first().title
-
-                        new_permissions = update_data.pop('permissions', None)
-
-                        if new_permissions is not None:
-                            old_permissions = old_data.first()
-                            old_permissions.permissions.clear()
-                            for permission in new_permissions:
-                                permission_exist = \
-                                    AssociationPermission.query.filter_by(
-                                        id=permission['id']).first()
-                                if permission_exist is not None:
-                                    old_permissions.permissions.append(
-                                        permission_exist)
-
-                        old_data.update(update_data)
-                        db.session.commit()
-
-                        response = Response(
-                            response=json.dumps(
-                                {'type': 'success',
-                                 'text': 'Изменена роль '
-                                         '«'+str(old_title)+'»!',
-                                 'link': url_for('.get_role_by_id',
-                                                 rid=rid,
-                                                 _external=True)}),
-                            status=200,
-                            mimetype='application/json'
-                        )
-            else:
+            if not exist_req:
                 response = Response(
-                    response=json.dumps({'type': 'danger',
-                                         'text': 'Роль неизменяема'}),
-                    status=200,
+                    response=json.dumps(
+                        {'type': 'danger',
+                         'text': 'Такой роли'
+                                 ' не существует!'}),
+                    status=422,
                     mimetype='application/json'
                 )
+            else:
+                role = CmsRoles.query.filter_by(id=rid)
+
+                if not role.editable:
+                    response = Response(
+                        response=json.dumps(
+                            {'type': 'danger',
+                             'text': 'Роль нельзя'
+                                     ' изменять!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+
+                    update_data = request.get_json()
+                    print(update_data)
+                    for pop_item in ['id', 'deletable', 'reassignable',
+                                     'editable']:
+                        update_data.pop(pop_item, None)
+                    print(update_data)
+                    #  for key in list(update_data.keys()):
+                    #  if key not in ['name', 'enabled']:
+                    #  del update_data[key]
+
+                    if not role_update_validator.is_valid(update_data):
+                        errors = []
+                        for error in sorted(role_update_validator.iter_errors(
+                                            update_data), key=str):
+                            errors.append(error.message)
+
+                        separator = '; '
+                        error_text = separator.join(errors)
+                        response = Response(
+                                response=json.dumps({'type': 'danger',
+                                                     'text': error_text}),
+                                status=422,
+                                mimetype='application/json'
+                            )
+
+                    else:
+
+                        exist = CmsRoles.exist(rid=rid, **{
+                                                  'title': update_data['title']
+                                                  })
+
+                        if exist:
+                            response = Response(
+                                response=json.dumps(
+                                    {'type': 'danger',
+                                     'text': 'Роль с таким'
+                                             ' именем существует!'}),
+                                status=422,
+                                mimetype='application/json'
+                            )
+                        else:
+                            old_data = CmsRoles.query.filter_by(id=rid)
+                            old_title = old_data.first().title
+
+                            new_permissions = update_data.pop(
+                                'permissions', None)
+
+                            if new_permissions is not None:
+                                old_permissions = old_data.first()
+                                old_permissions.permissions.clear()
+                                for permission in new_permissions:
+                                    permission_exist = \
+                                        AssociationPermission.query.filter_by(
+                                            id=permission['id']).first()
+                                    if permission_exist is not None:
+                                        old_permissions.permissions.append(
+                                            permission_exist)
+
+                            old_data.update(update_data)
+                            db.session.commit()
+
+                            response = Response(
+                                response=json.dumps(
+                                    {'type': 'success',
+                                     'text': 'Изменена роль '
+                                             '«'+str(old_title)+'»!',
+                                     'link': url_for('.get_role_by_id',
+                                                     rid=rid,
+                                                     _external=True)}),
+                                status=200,
+                                mimetype='application/json'
+                            )
+
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
@@ -1978,23 +2003,84 @@ def post_structure(current_user):
 
 @API0.route('/structure/<int:sid>', methods=['PUT'])
 @token_required
-def update_structure(current_user):
+def update_structure(current_user, sid):
     """ Добавление раздела в структуру сайта"""
 
     try:
         if CmsUsers.can(current_user.id, "put", "structure"):
-            #  post_data = request.get_json()
 
-            response = Response(
-                response=json.dumps(
-                    {'type': 'success',
-                     'text': 'Отредактирован раздел '
-                             '«'+'»!',
-                     'link': url_for('.get_structure',
-                                     _external=True)}),
-                status=200,
-                mimetype='application/json'
-            )
+            exist = CmsStructure.exist(**{
+                                      'id': sid
+                                      })
+
+            if not exist:
+
+                response = Response(
+                    response=json.dumps(
+                        {'type': 'danger',
+                         'text': 'Такого раздела'
+                                 ' не существует!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+
+            else:
+
+                structure = CmsStructure.query.filter(
+                    CmsStructure.id == sid).first()
+
+                if not structure.editable:
+                    response = Response(
+                        response=json.dumps(
+                            {'type': 'danger',
+                             'text': 'Раздел нельзя'
+                                     ' изменять!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+
+                    update_data = request.get_json()
+
+                    for key in list(update_data.keys()):
+                        if key not in ['name', 'enabled']:
+                            del update_data[key]
+
+                    if not section_update_validator.is_valid(update_data):
+                        errors = []
+                        for error in sorted(
+                            section_update_validator.iter_errors(
+                                update_data), key=str):
+                            errors.append(error.message)
+
+                        separator = '; '
+                        error_text = separator.join(errors)
+                        response = Response(
+                                response=json.dumps({'type': 'danger',
+                                                     'text': error_text}),
+                                status=422,
+                                mimetype='application/json'
+                            )
+                    else:
+                        structure_name_old = structure.title
+
+                        structure.title = update_data['name']
+                        structure.enabled = update_data['enabled']
+
+                        db.session.add(structure)
+                        db.session.commit()
+
+                        response = Response(
+                            response=json.dumps(
+                                {'type': 'success',
+                                 'text': 'Отредактирован раздел '
+                                         '«'+str(structure_name_old)+'»!',
+                                 'link': url_for('.get_structure',
+                                                 _external=True)}),
+                            status=200,
+                            mimetype='application/json'
+                        )
+
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',
@@ -2017,42 +2103,50 @@ def update_parent_structure(current_user, sid, pid):
 
     try:
         if CmsUsers.can(current_user.id, "put", "structure"):
-
-            parent_exist = CmsStructure.exist(**{
-                                      'id': pid
-                                      })
-            section_exist = CmsStructure.exist(**{
-                                      'id': sid
-                                      })
-
-            if not (parent_exist and section_exist):
-                if not parent_exist:
-                    text = 'Такой родительский раздел не существует!'
-                else:
-                    text = 'Такой раздел не существует!'
+            if pid == sid:
                 response = Response(
                     response=json.dumps({'type': 'danger',
-                                         'text': text}),
+                                         'text': 'Нельзя переносить '
+                                                 'раздел сам в себя!'}),
                     status=422,
                     mimetype='application/json'
                 )
             else:
-                section = CmsStructure.query.filter(
-                    CmsStructure.id == sid).one()
-                section.parent_id = pid
-                db.session.add(section)
-                db.session.commit()
+                parent_exist = CmsStructure.exist(**{
+                                          'id': pid
+                                          })
+                section_exist = CmsStructure.exist(**{
+                                          'id': sid
+                                          })
 
-                response = Response(
-                    response=json.dumps(
-                        {'type': 'success',
-                         'text': 'Перенесён раздел '
-                                 '«'+str(section.title)+'»!',
-                         'link': url_for('.get_structure',
-                                         _external=True)}),
-                    status=200,
-                    mimetype='application/json'
-                )
+                if not (parent_exist and section_exist):
+                    if not parent_exist:
+                        text = 'Такой родительский раздел не существует!'
+                    else:
+                        text = 'Такой раздел не существует!'
+                        response = Response(
+                            response=json.dumps({'type': 'danger',
+                                                 'text': text}),
+                            status=422,
+                            mimetype='application/json'
+                        )
+                else:
+                    section = CmsStructure.query.filter(
+                        CmsStructure.id == sid).one()
+                    section.parent_id = pid
+                    db.session.add(section)
+                    db.session.commit()
+
+                    response = Response(
+                        response=json.dumps(
+                            {'type': 'success',
+                             'text': 'Перенесён раздел '
+                                     '«'+str(section.title)+'»!',
+                             'link': url_for('.get_structure',
+                                             _external=True)}),
+                        status=200,
+                        mimetype='application/json'
+                    )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',

@@ -397,6 +397,23 @@ schema_section_data = {
     "additionalProperties": False
 }
 
+schema_section_update_data = {
+    "type": "object",
+    "properties": {
+        "name": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я \W]{4,50}$",
+                    "minLength": 4,
+                    "maxLength": 50,
+                 },
+        "enabled": {
+                    "type": "boolean"
+                 }
+    },
+    "required": ["name", "enabled"],
+    "additionalProperties": False
+}
+
 
 # ------------------------------------------------------------
 # Кастомные валидаторы
@@ -485,3 +502,4 @@ user_update_validator = MyValidator(schema_user_update_data)
 role_validator = MyValidator(schema_role_data)
 role_update_validator = MyValidator(schema_role_update_data)
 section_validator = MyValidator(schema_section_data)
+section_update_validator = MyValidator(schema_section_update_data)
