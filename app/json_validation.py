@@ -414,6 +414,50 @@ schema_section_update_data = {
     "additionalProperties": False
 }
 
+#  Контакты
+
+schema_organization_update_data = {
+    "type": "object",
+    "properties": {
+        "company_name": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я \W]{4,50}$",
+                    "minLength": 1,
+                    "maxLength": 50,
+                 },
+        "full_company_name": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я \W]{4,200}$",
+                    "minLength": 1,
+                    "maxLength": 200,
+                 },
+        "requisites": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        'properties': {
+                            "title": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,50}$",
+                                "minLength": 1,
+                                "maxLength": 50,
+                            },
+                            "value": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,200}$",
+                                "minLength": 1,
+                                "maxLength": 200,
+                            },
+                        },
+                        "required": ["title", "value"],
+                    },
+                 },
+    },
+    "required": ["company_name", "full_company_name"],
+    "additionalProperties": False
+}
+
 
 # ------------------------------------------------------------
 # Кастомные валидаторы
@@ -503,3 +547,4 @@ role_validator = MyValidator(schema_role_data)
 role_update_validator = MyValidator(schema_role_update_data)
 section_validator = MyValidator(schema_section_data)
 section_update_validator = MyValidator(schema_section_update_data)
+organization_update_validator = MyValidator(schema_organization_update_data)

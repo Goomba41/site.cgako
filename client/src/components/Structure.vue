@@ -208,8 +208,7 @@
             :state="$v.section.name.$dirty ? !$v.section.name.$error : null"
           ></b-form-input>
 
-          <b-form-invalid-feedback
-          >
+          <b-form-invalid-feedback>
             <span v-if="!$v.section.name.required">
               {{$t('structure.formEdit.formFields.name.errors.required')}}
             </span>

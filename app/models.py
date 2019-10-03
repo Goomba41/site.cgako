@@ -286,7 +286,7 @@ class CmsRoles(db.Model):
         """Проверка существования пользователя с данными в базе."""
         if rid is None:
             exist = cls.query.filter(
-                        cls.title == kwargs.get('title')
+                        cls.id == kwargs.get('id')
                     ).first()
         else:
             exist = cls.query.filter(
@@ -390,6 +390,12 @@ class CmsStructure(db.Model, BaseNestedSets):
         nullable=False,
         comment="Перемещаемый"
     )
+    appendable = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Потомки"
+    )
 
     def __repr__(self):
         """Форматирование представления экземпляра класса."""
@@ -411,6 +417,23 @@ class CmsStructure(db.Model, BaseNestedSets):
         if exist:
             return True
         return False
+
+
+class CmsOrganization(db.Model):
+    """Модель общей информации об архиве."""
+
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
+    full_company_name = db.Column(db.String(200), comment="Полное наименование организации")
+    company_name = db.Column(db.String(50), comment="Наименование организации")
+    requisites = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Реквизиты организации"
+    )
+
+    def __repr__(self):
+        """Форматирование представления экземпляра класса."""
+        return "Организация: «%s»" % (self.company_name)
+
 
 # ------------------------------------------------------------
 # Схемы
@@ -471,20 +494,13 @@ class CmsStructureSchema(ma.ModelSchema):
 
         model = CmsStructure
 
-    #  since_craeated = fields.Method("get_days_since_created")
+class CmsOrganizationSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
 
-    #  def get_days_since_created(self, obj):
-        #  new_list = obj[:]
-        #  for item in range(obj.lft+1, obj.rgt):
-            #  print(item)
-        #  return datetime.now()
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
 
-    #  @post_dump(pass_many=True)
-    #  def test(self, data, many, **kwargs):
-        #  print(data)
-        #  key = self.get_days_since_created(many)
-        #  print(key)
-        #  return [key]
+        model = CmsOrganization
 
 
 class CmsUsersSchema(ma.ModelSchema):

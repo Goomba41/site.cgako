@@ -12,6 +12,7 @@
             "permissions":"Roles and Permissions",
             "news":"News",
             "materials":"Materials",
+            "contacts":"Contacts",
             "structure":"Site structure"
         }
     },
@@ -58,6 +59,7 @@
             "users":"CMS Users",
             "userProfile":"User profile",
             "permissions":"Roles and Permissions",
+            "contacts":"Contacts",
             "structure":"Site structure"
         }
     },
@@ -684,6 +686,60 @@
                 },
                 "enabled":{
                     "placeholder":"Available"
+                }
+            }
+        }
+    },
+    "contacts":{
+        "formEditCompanyInfo":{
+            "tooltips":{
+                "submitCompanyNamesButton":"Send form"
+            },
+            "formFields":{
+                "fullCompanyName":{
+                    "placeholder":"Full company name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 1 charachers.",
+                        "maxLength":"This field must contain maximum 200 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "companyName":{
+                    "placeholder":"Abbreviated company name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 1 charachers.",
+                        "maxLength":"This field must contain maximum 50 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "requisites":{
+                    "buttonTitle": "Requisites",
+                    "buttonAdd": "Add requisite",
+                    "buttonDelete": "Delete requisite",
+                    "title": {
+                        "placeholder":"Requisite title",
+                        "errors":{
+                            "required":"This field is required.",
+                            "minLength":"This field must contain minimum 1 charachers.",
+                            "maxLength":"This field must contain maximum 50 charachers.",
+                            "alpha":"This field must contain only text charachers."
+                        },
+                        "successText":"Okay!"
+                    },
+                    "value": {
+                        "placeholder":"Requisite value",
+                        "errors":{
+                            "required":"This field is required.",
+                            "minLength":"This field must contain minimum 1 charachers.",
+                            "maxLength":"This field must contain maximum 200 charachers.",
+                            "alpha":"This field must contain only text charachers."
+                        },
+                        "successText":"Okay!"
+                    }
                 }
             }
         }

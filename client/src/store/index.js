@@ -12,6 +12,7 @@ Vue.use(Vuex);
 
 // Источник данных
 const state = {
+  organization: [], // информация об организации
   structure: {}, // структура сайта
   permissions: [], // список разрешений CMS
   roles: [], // список ролей CMS
@@ -500,6 +501,39 @@ const actions = {
         context.commit('setFormPending');
       });
   },
+  // Загрузить организацию
+  loadOrganization(context) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/organization',
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+      })
+      .then((response) => {
+        context.commit('setOrganization', { organization: response.data });
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+      });
+  },
+  // Изменение имен организации
+  updateCompanyNames(context, dataUpdate) {
+    context.commit('setFormPending');
+    return axios.put('/api/organization?dbg', dataUpdate,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        EventBus.$emit('forceRerender');
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
 };
 
 // Мутации данных
@@ -527,6 +561,10 @@ const mutations = {
   // Установка списка пользователей
   setUsers(state, payload) {
     state.users = payload.users;
+  },
+  // Установка организации
+  setOrganization(state, payload) {
+    state.organization = payload.organization;
   },
   // Установка списка ролей
   setRoles(state, payload) {

@@ -31,10 +31,12 @@ from app import bcrypt, db, mail
 from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     CmsRoles, CmsRolesSchema, SystemObjects, SystemObjectsActions, \
     AssociationPermission, AssociationPermissionSchema, user_role, \
-    CmsStructure, CmsStructureSchema
+    CmsStructure, CmsStructureSchema, CmsOrganization, \
+    CmsOrganizationSchema
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator, role_validator, \
-    role_update_validator, section_validator, section_update_validator
+    role_update_validator, section_validator, section_update_validator, \
+    organization_update_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -255,6 +257,8 @@ def cat_to_json(item):
         'editNodeDisabled': not item.editable,
         'delNodeDisabled': not item.deletable,
         'level': item.level,
+        'addLeafNodeDisabled': True if not item.appendable else False,
+        'addTreeNodeDisabled': True if not item.appendable else False,
         'dragDisabled': True if not item.movable else False
     }
 
@@ -1703,8 +1707,16 @@ def update_roles(current_user, rid):
 
     try:
         if CmsUsers.can(current_user.id, "put", "roles"):
+
+            update_data = request.get_json()
+            print(update_data)
+            for key in list(update_data.keys()):
+                if key not in ['title', 'permissions']:
+                    del update_data[key]
+            print(update_data)
+
             exist_req = CmsRoles.exist(**{
-                                      'title': update_data['title']
+                                      'id': rid
                                     })
 
             if not exist_req:
@@ -1719,7 +1731,7 @@ def update_roles(current_user, rid):
             else:
                 role = CmsRoles.query.filter_by(id=rid)
 
-                if not role.editable:
+                if not role.first().editable:
                     response = Response(
                         response=json.dumps(
                             {'type': 'danger',
@@ -1729,16 +1741,6 @@ def update_roles(current_user, rid):
                         mimetype='application/json'
                     )
                 else:
-
-                    update_data = request.get_json()
-                    print(update_data)
-                    for pop_item in ['id', 'deletable', 'reassignable',
-                                     'editable']:
-                        update_data.pop(pop_item, None)
-                    print(update_data)
-                    #  for key in list(update_data.keys()):
-                    #  if key not in ['name', 'enabled']:
-                    #  del update_data[key]
 
                     if not role_update_validator.is_valid(update_data):
                         errors = []
@@ -1765,20 +1767,19 @@ def update_roles(current_user, rid):
                             response = Response(
                                 response=json.dumps(
                                     {'type': 'danger',
-                                     'text': 'Роль с таким'
+                                     'text': 'Другая роль с таким'
                                              ' именем существует!'}),
                                 status=422,
                                 mimetype='application/json'
                             )
                         else:
-                            old_data = CmsRoles.query.filter_by(id=rid)
-                            old_title = old_data.first().title
+                            old_title = role.first().title
 
                             new_permissions = update_data.pop(
                                 'permissions', None)
 
                             if new_permissions is not None:
-                                old_permissions = old_data.first()
+                                old_permissions = role.first()
                                 old_permissions.permissions.clear()
                                 for permission in new_permissions:
                                     permission_exist = \
@@ -1788,7 +1789,7 @@ def update_roles(current_user, rid):
                                         old_permissions.permissions.append(
                                             permission_exist)
 
-                            old_data.update(update_data)
+                            role.update(update_data)
                             db.session.commit()
 
                             response = Response(
@@ -2147,6 +2148,108 @@ def update_parent_structure(current_user, sid, pid):
                         status=200,
                         mimetype='application/json'
                     )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+# ------------------------------------------------------------
+# Контакты и информация об организации
+# ------------------------------------------------------------
+
+
+@API0.route('/organization', methods=['GET'])
+@token_required
+def get_organization(current_user):
+    """ Получение структуры сайта в json"""
+
+    try:
+
+        organization = CmsOrganization.query.first()
+        organization_schema = CmsOrganizationSchema()
+
+        odata = organization_schema.dump(organization)
+        odata = odata.data
+
+        response = Response(
+            response=json.dumps(odata),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/organization', methods=['PUT'])
+@token_required
+def update_organization(current_user):
+    """ Получение структуры сайта в json"""
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "contacts"):
+
+            organization = CmsOrganization.query.first()
+
+            update_data = request.get_json()
+            print(update_data)
+
+            for key in list(update_data.keys()):
+                if key not in ['company_name', 'full_company_name',
+                               'requisites']:
+                    del update_data[key]
+            print(update_data)
+            if not organization_update_validator.is_valid(update_data):
+                errors = []
+                for error in sorted(
+                    organization_update_validator.iter_errors(
+                        update_data), key=str):
+                    errors.append(error.message)
+
+                separator = '; '
+                error_text = separator.join(errors)
+                response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+            else:
+                organization_name_old = organization.company_name
+
+                organization.company_name = update_data['company_name']
+                organization.full_company_name = update_data[
+                    'full_company_name']
+                if 'requisites' in update_data:
+                    organization.requisites = update_data['requisites']
+
+                db.session.add(organization)
+                db.session.commit()
+
+                response = Response(
+                    response=json.dumps(
+                        {'type': 'success',
+                         'text': 'Отредактирована основная '
+                                 'информация организации '
+                                 + str(organization_name_old) + '!',
+                         'link': url_for('.get_organization',
+                                         _external=True)}),
+                    status=200,
+                    mimetype='application/json'
+                )
         else:
             response = Response(
                 response=json.dumps({'type': 'danger',

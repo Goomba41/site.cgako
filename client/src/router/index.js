@@ -5,6 +5,7 @@ import Activation from '@/components/Activation';
 import Users from '@/components/Users';
 import Roles from '@/components/Roles';
 import Structure from '@/components/Structure';
+import Contacts from '@/components/Contacts';
 import Login from '@/components/Login';
 import Dashboard from '@/components/Dashboard';
 import AdminPanel from '@/components/AdminPanel';
@@ -80,6 +81,16 @@ const router = new Router({
           },
         },
         {
+          path: 'contacts',
+          name: 'Contacts',
+          component: Contacts,
+          meta: {
+            requiresAuth: true,
+            breadCrumb: 'contacts',
+            title: 'CMS - Контакты архива',
+          },
+        },
+        {
           path: '',
           component: Dashboard,
         },
@@ -114,7 +125,7 @@ const router = new Router({
       },
     },
     {
-      path: '/index',
+      path: '/',
       name: 'Index',
       component: Index,
       meta: {
@@ -125,7 +136,7 @@ const router = new Router({
       path: '*',
       component: Index,
       beforeEnter(to, from, next) {
-        next('/index');
+        next('/');
       },
     },
   ],
