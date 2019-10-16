@@ -458,6 +458,120 @@ schema_organization_update_data = {
     "additionalProperties": False
 }
 
+schema_organization_buildings_data = {
+    "type": "object",
+    "properties": {
+        "name": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я \W]{4,50}$",
+                    "minLength": 1,
+                    "maxLength": 50,
+                 },
+        "road_map": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я \W]{4,500}$",
+                    "minLength": 1,
+                    "maxLength": 200,
+                 },
+        "work_time": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        'properties': {
+                            "title": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,50}$",
+                                "minLength": 1,
+                                "maxLength": 50,
+                            },
+                            "regime": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "to": {
+                                            "type": "string",
+                                            "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]{1,5}$",
+                                            "minLength": 1,
+                                            "maxLength": 5,
+                                        },
+                                        "from": {
+                                            "type": "string",
+                                            "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]{1,5}$",
+                                            "minLength": 1,
+                                            "maxLength": 5,
+                                        },
+                                        "title": {
+                                            "type": "string",
+                                            "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,50}$",
+                                            "minLength": 1,
+                                            "maxLength": 50,
+                                        }
+                                    },
+                                    "required": ["title"],
+                                }
+                            }
+                        },
+                        "required": ["title", "regime"],
+                    },
+                 },
+        "employee_contacts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        'properties': {
+                            "cid": {
+                                "type": "string",
+                                "pattern": '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+                            },
+                            "post": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,100}$",
+                                "minLength": 1,
+                                "maxLength": 100,
+                            },
+                            "name": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,50}$",
+                                "minLength": 1,
+                                "maxLength": 50,
+                            },
+                            "surname": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,50}$",
+                                "minLength": 1,
+                                "maxLength": 50,
+                            },
+                            "patronymic": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,50}$",
+                                "minLength": 1,
+                                "maxLength": 50,
+                            },
+                            "email": {
+                                "type": "string",
+                                "email": True
+                            },
+                            "phone": {
+                                "type": "string",
+                                "pattern": r'(^\+7\s\d{3,3}\s\d{3,3}\s\d{2,2}\s\d{2,2}$)',
+                                "minLength": 1
+                            },
+                            "photo": {
+                                "type": "string"
+                            }
+                        },
+                        "required": ["post", "name", "surname", "patronymic", "email", "phone"],
+                    },
+                 },
+    },
+    "required": ["name", "road_map"],
+    "additionalProperties": False
+}
+
 
 # ------------------------------------------------------------
 # Кастомные валидаторы
@@ -478,6 +592,7 @@ def is_email_primary(validator, value, instance, schema):
 
 
 def is_email(validator, value, instance, schema):
+    print(instance)
     if not isinstance(instance['value'], str):
         yield ValidationError("%r not string" % instance['value'])
     if len(instance['value']) > 0:
@@ -548,3 +663,4 @@ role_update_validator = MyValidator(schema_role_update_data)
 section_validator = MyValidator(schema_section_data)
 section_update_validator = MyValidator(schema_section_update_data)
 organization_update_validator = MyValidator(schema_organization_update_data)
+organization_buildings_validator = MyValidator(schema_organization_buildings_data)

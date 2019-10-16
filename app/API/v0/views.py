@@ -32,11 +32,12 @@ from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     CmsRoles, CmsRolesSchema, SystemObjects, SystemObjectsActions, \
     AssociationPermission, AssociationPermissionSchema, user_role, \
     CmsStructure, CmsStructureSchema, CmsOrganization, \
-    CmsOrganizationSchema
+    CmsOrganizationSchema, CmsOrganizationBuildings, \
+    CmsOrganizationBuildingsSchema
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator, role_validator, \
     role_update_validator, section_validator, section_update_validator, \
-    organization_update_validator
+    organization_update_validator, organization_buildings_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -2171,7 +2172,7 @@ def update_parent_structure(current_user, sid, pid):
 @API0.route('/organization', methods=['GET'])
 @token_required
 def get_organization(current_user):
-    """ Получение структуры сайта в json"""
+    """ Информация об организации в json. """
 
     try:
 
@@ -2197,7 +2198,7 @@ def get_organization(current_user):
 @API0.route('/organization', methods=['PUT'])
 @token_required
 def update_organization(current_user):
-    """ Получение структуры сайта в json"""
+    """ Обновление информации об организации. """
 
     try:
         if CmsUsers.can(current_user.id, "put", "contacts"):
@@ -2264,6 +2265,349 @@ def update_organization(current_user):
 
     return response
 
+
+@API0.route('/organization/buildings', methods=['GET'])
+@token_required
+def get_organization_buildings(current_user):
+    """ Получение информации о зданиях организации в json."""
+
+    try:
+
+        organization_buildings = CmsOrganization.query.first().buildings.all()
+        organization_buildings_schema = CmsOrganizationBuildingsSchema(
+            many=True)
+
+        obdata = organization_buildings_schema.dump(organization_buildings)
+        obdata = obdata.data
+
+        response = Response(
+            response=json.dumps(obdata),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/organization/buildings', methods=['POST'])
+@token_required
+def post_organization_buildings(current_user):
+    """ Добавление раздела в структуру сайта"""
+
+    try:
+        if CmsUsers.can(current_user.id, "post", "contacts"):
+            post_data = request.get_json()
+
+            for key in list(post_data.keys()):
+                if key not in ['name', 'road_map']:
+                    del post_data[key]
+
+            if not organization_buildings_validator.is_valid(post_data):
+                errors = []
+                for error in sorted(
+                        organization_buildings_validator.iter_errors(
+                            post_data), key=str):
+                    errors.append(error.message)
+
+                separator = '; '
+                error_text = separator.join(errors)
+
+                response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+            else:
+                new_building = CmsOrganizationBuildings(
+                    name=post_data['name'],
+                    road_map=post_data['road_map']
+                )
+                db.session.add(new_building)
+                db.session.commit()
+
+                response = Response(
+                    response=json.dumps(
+                        {'type': 'success',
+                         'text': 'Добавлено здание '
+                                 '«'+str(new_building.name)+'»!',
+                         'link': url_for('.get_structure',
+                                         _external=True)}),
+                    status=200,
+                    mimetype='application/json'
+                )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/organization/buildings/<int:bid>', methods=['PUT'])
+@token_required
+def update_organization_building(current_user, bid):
+    """ Обновление информации о здании организации. """
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "contacts"):
+
+            building = CmsOrganizationBuildings.query.get(bid)
+
+            if not building:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Такое здание '
+                                                 'не существует!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+            else:
+
+                update_data = request.get_json()
+                print(update_data)
+
+                for key in list(update_data.keys()):
+                    if key not in [
+                            'name', 'road_map', 'work_time',
+                            'employee_contacts']:
+                        del update_data[key]
+
+                if not organization_buildings_validator.is_valid(update_data):
+                    errors = []
+                    for error in sorted(
+                        organization_buildings_validator.iter_errors(
+                            update_data), key=str):
+                        errors.append(error.message)
+
+                    separator = '; '
+                    error_text = separator.join(errors)
+                    response = Response(
+                            response=json.dumps({'type': 'danger',
+                                                 'text': error_text}),
+                            status=422,
+                            mimetype='application/json'
+                        )
+                else:
+                    building_name_old = building.name
+
+                    building.name = update_data['name']
+                    building.road_map = update_data['road_map']
+                    if 'work_time' in update_data:
+                        building.work_time = update_data['work_time']
+                    if 'employee_contacts' in update_data:
+                        building.employee_contacts = update_data[
+                            'employee_contacts']
+
+                    db.session.add(building)
+                    db.session.commit()
+
+                    response = Response(
+                        response=json.dumps(
+                            {'type': 'success',
+                             'text': 'Отредактирована информация '
+                                     'о здании «'
+                                     + str(building_name_old) + '»!',
+                             'link': url_for('.get_organization_buildings',
+                                             _external=True)}),
+                        status=200,
+                        mimetype='application/json'
+                    )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route(
+    '/organization/buildings/<int:bid>/contacts/<string:cid>/photo',
+    methods=['PUT'])
+@token_required
+def update_organization_building_conph(current_user, bid, cid):
+    """ Обновление фото контакта здания """
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "contacts"):
+
+            building = CmsOrganizationBuildings.query.get(bid)
+
+            if not building:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Такое здание '
+                                                 'не существует!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+            else:
+                if not any(
+                        (
+                        contact.get(
+                            'cid', None) == cid
+                        ) for contact in building.employee_contacts):
+                    response = Response(
+                        response=json.dumps(
+                            {'type': 'danger',
+                             'text': 'Такой контакт сотрудника '
+                             'не существует!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+
+                    if request.files.getlist('employee_photo'):
+
+                        if not len(
+                                request.files.getlist(
+                                        'employee_photo')) > 1:
+
+                            image = request.files['employee_photo']
+
+                            if image.content_type not in [
+                                    'image/jpeg', 'image/png', 'image/gif']:
+                                response = Response(
+                                    response=json.dumps(
+                                        {'type': 'danger',
+                                         'text': 'Вы отправили'
+                                                 'файл без расширения'
+                                                 ' или это не изображение'
+                                                 ' (jpeg, png, gif)!'}),
+                                    status=422,
+                                    mimetype='application/json'
+                                )
+                            else:
+                                c_data = [contact for contact in building.employee_contacts if contact.get('cid', None) == cid][0] # noqa: ignore=E501
+                                c_data.update({'photo': "test"})
+                                print(building)
+                                print(building.employee_contacts)
+#  if bool(c_data.get("photo")):
+
+#  else:
+#  img_extension = image.content_type.split('/')[1]
+#  img_file_name = uuid.uuid1().hex + '.' + img_extension
+#  if usr_query.first().photo:
+#  img_extension = avatar_image.content_type.split('/')[1]
+#  img_file_name = usr_query.first().photo.split(
+#  '.')[0] + \
+#  '.' + img_extension
+#  avatar_filepath = os.path.join(
+#  current_app.config['CMS_USERS_AVATARS'],
+#  usr_query.first().photo)
+#  if os.path.isfile(avatar_filepath):
+#  os.remove(avatar_filepath)
+#  else:
+#  img_extension = avatar_image.content_type.split('/')[1]
+#  img_file_name = uuid.uuid1().hex + '.' + img_extension
+
+#  usr_query.update(
+#  {'photo': img_file_name})
+                                db.session.commit()
+
+#  avatar_image.save(
+#  os.path.join(
+#  current_app.config['CMS_USERS_AVATARS'],
+#  img_file_name))
+
+                                response = Response(
+                                    response=json.dumps(
+                                        {'type': 'success',
+                                         'text': 'Фото изменено!'}),
+                                    status=200,
+                                    mimetype='application/json'
+                                )
+                        else:
+                            response = Response(
+                                response=json.dumps(
+                                    {'type': 'danger',
+                                     'text': 'Вы отправили'
+                                     'более 1 файла!'}),
+                                status=422,
+                                mimetype='application/json'
+                            )
+                    else:
+                        response = Response(
+                            response=json.dumps({'type': 'danger',
+                                                 'text': 'Вы не отправили'
+                                                         ' файла!'}),
+                            status=422,
+                            mimetype='application/json'
+                        )
+
+                    return response
+
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/organization/buildings/<int:bid>', methods=['DELETE'])
+@token_required
+def delete_organization_buildings(current_user, bid):
+    """ Удаление здания организации. """
+
+    try:
+        if CmsUsers.can(current_user.id, "delete", "contacts"):
+            organization_buildings = CmsOrganizationBuildings.query.get(bid)
+            if organization_buildings:
+
+                db.session.delete(organization_buildings)
+                db.session.commit()
+                response = Response(
+                    response=json.dumps({'type': 'success',
+                                         'text': 'Успешно удалено!'}),
+                    status=200,
+                    mimetype='application/json'
+                )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Запись не найдена! (404)'}),
+                    status=404,
+                    mimetype='application/json'
+                )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
 
 # ------------------------------------------------------------
 # Страницы

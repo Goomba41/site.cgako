@@ -692,6 +692,7 @@
     },
     "contacts":{
         "formEditCompanyInfo":{
+            "formTitle": "Organization info",
             "tooltips":{
                 "submitCompanyNamesButton":"Send form"
             },
@@ -741,6 +742,181 @@
                         "successText":"Okay!"
                     }
                 }
+            }
+        },
+        "formEditBuildings":{
+            "noBuildings": "No buildings associated with this organization. {break} To add a new building use {plus} button",
+            "tooltips":{
+                "submitBuildingsButton":"Send form",
+                "addBuildingsButton":"New building",
+                "deleteBuildingsButton":"Delete building"
+            },
+            "formFields":{
+                "name":{
+                    "placeholder":"Building name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 1 charachers.",
+                        "maxLength":"This field must contain maximum 50 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "roadmap":{
+                    "placeholder":"Roadmap to the building",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 1 charachers.",
+                        "maxLength":"This field must contain maximum 500 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "worktime":{
+                    "addWorktimeButton": "Add new work time",
+                    "deleteWorktimeButton": "Delete work time",
+                    "errorPeriod": "Work time must contain minimum 1 period of time.",
+                    "title":{
+                        "placeholder":"Work time name",
+                        "errors":{
+                            "required":"This field is required.",
+                            "minLength":"This field must contain minimum 1 charachers.",
+                            "maxLength":"This field must contain maximum 50 charachers.",
+                            "alpha":"This field must contain only text charachers."
+                        },
+                        "successText":"Okay!"
+                    },
+                    "regime":{
+                        "addRegimeButton": "Add new period",
+                        "deleteRegimeButton": "Delete period",
+                        "placeholders":{
+                            "title": "Period name",
+                            "from": "From (HH:MM)",
+                            "to": "To (HH:MM)"
+                        },
+                        "errors":{
+                            "required":"This field is required.",
+                            "minLength":"This field must contain minimum 1 charachers.",
+                            "maxLength":"This field must contain maximum 5 charachers.",
+                            "alpha":"This field must contain only text charachers.",
+                            "alphaTime":"This field must contain only string in HH:MM format."
+                        },
+                        "successText":"Okay!"
+                    }
+                },
+                "employee":{
+                    "addEmployeeButton": "Add new employee",
+                    "deleteEmployeeButton": "Delete employee",
+                    "post":{
+                        "placeholder":"Post name",
+                        "errors":{
+                            "required":"This field is required.",
+                            "minLength":"This field must contain minimum 1 charachers.",
+                            "maxLength":"This field must contain maximum 100 charachers.",
+                            "alpha":"This field must contain only text charachers."
+                        },
+                        "successText":"Okay!"
+                    },
+                    "name":{
+                        "placeholder":"Employee name",
+                        "errors":{
+                            "required":"This field is required.",
+                            "minLength":"This field must contain minimum 1 charachers.",
+                            "maxLength":"This field must contain maximum 50 charachers.",
+                            "alpha":"This field must contain only text charachers."
+                        },
+                        "successText":"Okay!"
+                    },
+                    "surname":{
+                        "placeholder":"Employee surname",
+                        "errors":{
+                            "required":"This field is required.",
+                            "minLength":"This field must contain minimum 1 charachers.",
+                            "maxLength":"This field must contain maximum 50 charachers.",
+                            "alpha":"This field must contain only text charachers."
+                        },
+                        "successText":"Okay!"
+                    },
+                    "patronymic":{
+                        "placeholder":"Employee patronymic",
+                        "errors":{
+                            "required":"This field is required.",
+                            "minLength":"This field must contain minimum 1 charachers.",
+                            "maxLength":"This field must contain maximum 50 charachers.",
+                            "alpha":"This field must contain only text charachers."
+                        },
+                        "successText":"Okay!"
+                    },
+                    "email":{
+                        "placeholder":"Work email",
+                        "errors":{
+                            "required":"This field is required.",
+                            "email":"This field must contain only text string in e-mail format."
+                        },
+                        "successText":"Okay!"
+                    },
+                    "phone":{
+                        "placeholder":"Work phone",
+                        "errors":{
+                            "required":"This field is required.",
+                            "maxLength":"This field must contain maximum 16 charachers."
+                        },
+                        "successText":"Okay!"
+                    },
+                    "photo":{
+                        "formTitle":"Update employee photo",
+                        "placeholder":"Choose employee photo...",
+                        "browseButton":"Browse",
+                        "formDescription":"It will be easier for other users to recognize you, if you add your real photo. Image must be in one of this formats: JPEG, GIF, PNG. Maximum size of file is 1 MB.",
+                        "saveButton":"Set new employee photo",
+                        "updateEmployeePhoto":"Update employee photo",
+                        "deleteEmployeePhoto":"Delete employee photo",
+                        "errors":{
+                            "maxValue":"File size is exceed 1 MB.",
+                            "isImage":"Chosen file is not one of this formats: JPEG, GIF, PNG."
+                        },
+                        "successText":"Okay!"
+                    }
+                }
+            }
+        },
+        "formNewBuildings":{
+            "formTitle": "New building form",
+            "tooltips":{
+                "submitBuildingsButton":"Add new building"
+            },
+            "formFields":{
+                "name":{
+                    "placeholder":"Building name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 1 charachers.",
+                        "maxLength":"This field must contain maximum 50 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Okay!"
+                },
+                "roadmap":{
+                    "placeholder":"Roadmap to the building",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 1 charachers.",
+                        "maxLength":"This field must contain maximum 500 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Okay!"
+                }
+            }
+        },
+        "deleteModal": {
+            "title":"Building delete",
+            "tooltips": {
+                "deleteButton": "Delete building"
+            },
+            "confirmationField": {
+                "placeholder": "Confirmating phrase",
+                "description": "Enter «Delete» for confirm deletion",
+                "passphrase": "Delete"
             }
         }
     }

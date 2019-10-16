@@ -825,13 +825,13 @@ img.profile-image, img.profile-image {
   opacity: 1;
 }
 
-#avatar-modal .modal-content .custom-file-input:lang(ru) ~ .custom-file-label::after {
+.modal-content .custom-file-input:lang(ru) ~ .custom-file-label::after {
 /*
   content: 'Выбор';
 */
 }
 
-#avatar-modal .modal-content img.profile-image-preview {
+.modal-content img.profile-image-preview {
   border: 5px solid #ced4da;
   position: relative;
   border-radius: 50%;

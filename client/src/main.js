@@ -11,6 +11,8 @@ import Vuelidate from 'vuelidate';
 import VueLodash from 'vue-lodash';
 import FlagIcon from 'vue-flag-icon';
 import LoadScript from 'vue-plugin-load-script';
+import UUID from 'vue-uuid';
+
 // import jQuery from 'jquery';
 
 // import '../static/js/jquery.min';
@@ -39,6 +41,7 @@ import {
   faListOl, faListUl, faList, faUsers, faSort, faPhone, faBan, faDesktop, faMobileAlt, faTabletAlt,
   faBriefcase, faClock, faCheckCircle, faEnvelope, faIdCard, faUserCheck, faHome, faFileImage,
   faLanguage, faLongArrowAltRight, faProjectDiagram, faAddressBook, faMoneyCheckAlt,
+  faBusinessTime, faBuilding,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   faCopyright as farCopyright, faEye as farEye, faEyeSlash as farEyeSlash, faEdit as farEdit,
@@ -68,7 +71,7 @@ library.add(faTrash, faPencilAlt, faInfo, faPlus, faPowerOff,
   faBan, farWindowMaximize, faDesktop, faTabletAlt, faMobileAlt, faLinux, faWindows,
   faApple, faBriefcase, faClock, faCheckCircle, faEnvelope, farFile, faIdCard, faUserCheck,
   faHome, faFileImage, faLanguage, faLongArrowAltRight, faProjectDiagram, faAddressBook,
-  faMoneyCheckAlt);
+  faMoneyCheckAlt, faBusinessTime, faBuilding);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('font-awesome-layers', FontAwesomeLayers);
 Vue.component('font-awesome-layers-text', FontAwesomeLayersText);
@@ -81,6 +84,7 @@ Vue.use(VueLodash);
 Vue.use(Vuelidate);
 Vue.use(FlagIcon);
 Vue.use(LoadScript);
+Vue.use(UUID);
 
 // window.jQuery = jQuery;
 // window.$ = jQuery;

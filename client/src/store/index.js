@@ -13,6 +13,7 @@ Vue.use(Vuex);
 // Источник данных
 const state = {
   organization: [], // информация об организации
+  buildings: [], // здания организации
   structure: {}, // структура сайта
   permissions: [], // список разрешений CMS
   roles: [], // список ролей CMS
@@ -534,6 +535,91 @@ const actions = {
         context.commit('setFormPending');
       });
   },
+  // Получение зданий организации
+  loadCompanyBuildings(context) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/organization/buildings?dbg',
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+      })
+      .then((response) => {
+        context.commit('setBuildings', { buildings: response.data });
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+      });
+  },
+  // Изменение здания организации
+  updateBuilding(context, updateInfo) {
+    context.commit('setFormPending');
+    return axios.put(`/api/organization/buildings/${updateInfo.id}?dbg`, updateInfo,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        EventBus.$emit('forceRerender');
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Добавление здания организации
+  newBuilding(context, dataNew) {
+    context.commit('setFormPending');
+    return axios.post('/api/organization/buildings?dbg', dataNew,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        EventBus.$emit('forceRerender');
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Удалить здание организации
+  deleteBuilding(context, payload) {
+    context.commit('setFormPending');
+    return axios.delete(`/api/organization/buildings/${payload.id}?dbg`,
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+      })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        context.commit('setFormPending');
+        EventBus.$emit('forceRerender');
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Обновить аватар пользователя
+  updateEmployeePhoto(context, dataUpdate) {
+    return axios.put(`/api/organization/buildings/${dataUpdate.ids.bid}/contacts/${dataUpdate.ids.cid}/photo?dbg`, dataUpdate.formData,
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+        onUploadProgress: (progressEvent) => {
+          state.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100;
+        },
+      })
+      .then((response) => {
+        state.uploadProgress = 0;
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
 };
 
 // Мутации данных
@@ -583,6 +669,10 @@ const mutations = {
   // Установка структуры
   setStructure(state, payload) {
     state.structure = payload;
+  },
+  // Установка зданий
+  setBuildings(state, payload) {
+    state.buildings = payload.buildings;
   },
 };
 

@@ -429,10 +429,43 @@ class CmsOrganization(db.Model):
         db.JSON(none_as_null=True),
         comment="Реквизиты организации"
     )
+    buildings = db.relationship(
+        'CmsOrganizationBuildings',
+        backref='organization',
+        lazy='dynamic'
+    )
 
     def __repr__(self):
         """Форматирование представления экземпляра класса."""
         return "Организация: «%s»" % (self.company_name)
+
+
+class CmsOrganizationBuildings(db.Model):
+    """Модель общей информации об архиве."""
+
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
+    name = db.Column(db.String(50), comment="Имя здания")
+    road_map = db.Column(db.String(500), comment="Карта проезда")
+    work_time = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Режимы работы"
+    )
+    employee_contacts = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Контакты сотрудников"
+    )
+    organization_id = db.Column(db.Integer, db.ForeignKey('cms_organization.id'), nullable=False)
+
+    def __repr__(self):
+        """Форматирование представления экземпляра класса."""
+        return "Здание: «%s»" % (self.name)
+
+    def __init__(self, name, road_map=None, organization_id=None):
+        """Конструктор класса."""
+        self.name = name
+        self.road_map = None if road_map is None else road_map
+        self.organization_id = CmsOrganization.query.first().id if organization_id is None else organization_id
+
 
 
 # ------------------------------------------------------------
@@ -494,6 +527,16 @@ class CmsStructureSchema(ma.ModelSchema):
 
         model = CmsStructure
 
+
+class CmsOrganizationBuildingsSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = CmsOrganizationBuildings
+
+
 class CmsOrganizationSchema(ma.ModelSchema):
     """Marshmallow-схема для перегона модели в json формат."""
 
@@ -501,6 +544,7 @@ class CmsOrganizationSchema(ma.ModelSchema):
         """Мета модели, вносятся доп. параметры."""
 
         model = CmsOrganization
+    buildings = ma.Nested(CmsOrganizationBuildingsSchema, many=True)
 
 
 class CmsUsersSchema(ma.ModelSchema):
