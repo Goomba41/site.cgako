@@ -600,7 +600,7 @@ const actions = {
         context.commit('setFormPending');
       });
   },
-  // Обновить аватар пользователя
+  // Обновить фото сотрудника
   updateEmployeePhoto(context, dataUpdate) {
     return axios.put(`/api/organization/buildings/${dataUpdate.ids.bid}/contacts/${dataUpdate.ids.cid}/photo?dbg`, dataUpdate.formData,
       {
@@ -613,6 +613,17 @@ const actions = {
       })
       .then((response) => {
         state.uploadProgress = 0;
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Удалить фото сотрудника
+  deleteEmployeePhoto(context, ids) {
+    return axios.delete(`/api/organization/buildings/${ids.bid}/contacts/${ids.cid}/photo?dbg`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
         EventBus.$emit('forceRerender');
         EventBus.$emit('message', response.data);
       })

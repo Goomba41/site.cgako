@@ -19,6 +19,7 @@ from dateutil.relativedelta import relativedelta
 from itsdangerous import TimedJSONWebSignatureSerializer
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
+from sqlalchemy.orm.attributes import flag_modified
 from urllib.parse import urljoin
 from user_agents import parse
 from flask import current_app, json, Blueprint, \
@@ -332,28 +333,31 @@ def login():
         #  (проблема со спамом, необходимо определять
         #  отправлено ли письмо в этот день)
         for mail_item in user[0].email:
-            activation_date = dateutil.parser.parse(
-                            mail_item['activeUntil'])
-            diff = (activation_date - datetime.now()).days
-            if diff == 6 or diff == -1:
-                token = generate_confirmation_token(
-                    {
-                     "uid": user[0].id,
-                     "value": mail_item['value'],
-                     "type": mail_item['type']
-                    }, expiration=3600)
-                confirm_url = 'http://192.168.0.91:8080/verify' \
-                              '/mail/' + token.decode("utf-8")
-                html = render_template(
-                    'confirmation_mail.html',
-                    confirm_url=confirm_url,
-                    active_time="1 час")
-                subject = 'Подтверждение адреса электронной ' \
-                          'почты в CMS сайта ЦГАКО'
-                send_email(mail_item['value'], subject, html)
-            if diff <= 0:
-                mail_item['activeUntil'] = datetime.now().isoformat()
-                mail_item['verified'] = False
+            if mail_item.get("value", None):
+                activation_date = dateutil.parser.parse(
+                                mail_item['activeUntil'])
+                diff = (activation_date - datetime.now()).days
+                if diff == 6 or diff == -1:
+                    token = generate_confirmation_token(
+                        {
+                         "uid": user[0].id,
+                         "value": mail_item['value'],
+                         "type": mail_item['type']
+                        }, expiration=3600)
+                    confirm_url = 'http://192.168.0.91:8080/verify' \
+                                  '/mail/' + token.decode("utf-8")
+                    html = render_template(
+                        'confirmation_mail.html',
+                        confirm_url=confirm_url,
+                        active_time="1 час")
+                    subject = 'Подтверждение адреса электронной ' \
+                              'почты в CMS сайта ЦГАКО'
+                    print(subject)
+                    print(mail_item)
+                    send_email(mail_item['value'], subject, html)
+                if diff <= 0:
+                    mail_item['activeUntil'] = datetime.now().isoformat()
+                    mail_item['verified'] = False
         #  -------------------------------------------------------------
 
         #  Проверка пароля и перегенерация, если время истекло
@@ -2376,13 +2380,16 @@ def update_organization_building(current_user, bid):
             else:
 
                 update_data = request.get_json()
-                print(update_data)
 
                 for key in list(update_data.keys()):
                     if key not in [
                             'name', 'road_map', 'work_time',
                             'employee_contacts']:
                         del update_data[key]
+
+                for item in update_data['employee_contacts']:
+                    if not item.get('cid', None):
+                        item.update({'cid': str(uuid.uuid4())})
 
                 if not organization_buildings_validator.is_valid(update_data):
                     errors = []
@@ -2401,6 +2408,19 @@ def update_organization_building(current_user, bid):
                         )
                 else:
                     building_name_old = building.name
+
+                    previous = building.employee_contacts
+                    current = update_data['employee_contacts']
+                    diff = [item for item in previous if item not in current]
+                    if diff:
+                        for item in diff:
+                            if bool(item.get("photo")):
+                                photo_filepath = os.path.join(
+                                    current_app.config['CMS_EMPLOYEE_PHOTOS'],
+                                    item.get("photo"))
+                                if os.path.isfile(photo_filepath):
+                                    print(photo_filepath)
+                                    os.remove(photo_filepath)
 
                     building.name = update_data['name']
                     building.road_map = update_data['road_map']
@@ -2497,36 +2517,34 @@ def update_organization_building_conph(current_user, bid, cid):
                                 )
                             else:
                                 c_data = [contact for contact in building.employee_contacts if contact.get('cid', None) == cid][0] # noqa: ignore=E501
-                                c_data.update({'photo': "test"})
-                                print(building)
-                                print(building.employee_contacts)
-#  if bool(c_data.get("photo")):
+                                if bool(c_data.get("photo")):
+                                    img_extension = image.content_type.split(
+                                        '/')[1]
+                                    img_file_name = c_data.get("photo").split(
+                                        '.')[0] + '.' + img_extension
+                                    photo_filepath = os.path.join(
+                                        current_app.config[
+                                            'CMS_EMPLOYEE_PHOTOS'],
+                                        c_data.get("photo"))
+                                    if os.path.isfile(photo_filepath):
+                                        os.remove(photo_filepath)
+                                else:
+                                    img_extension = image.content_type.split(
+                                        '/')[1]
+                                    img_file_name = uuid.uuid1(
+                                        ).hex + '.' + img_extension
 
-#  else:
-#  img_extension = image.content_type.split('/')[1]
-#  img_file_name = uuid.uuid1().hex + '.' + img_extension
-#  if usr_query.first().photo:
-#  img_extension = avatar_image.content_type.split('/')[1]
-#  img_file_name = usr_query.first().photo.split(
-#  '.')[0] + \
-#  '.' + img_extension
-#  avatar_filepath = os.path.join(
-#  current_app.config['CMS_USERS_AVATARS'],
-#  usr_query.first().photo)
-#  if os.path.isfile(avatar_filepath):
-#  os.remove(avatar_filepath)
-#  else:
-#  img_extension = avatar_image.content_type.split('/')[1]
-#  img_file_name = uuid.uuid1().hex + '.' + img_extension
-
-#  usr_query.update(
-#  {'photo': img_file_name})
+                                c_data.update(
+                                    {'photo': img_file_name})
+                                flag_modified(building, 'employee_contacts')
                                 db.session.commit()
 
-#  avatar_image.save(
-#  os.path.join(
-#  current_app.config['CMS_USERS_AVATARS'],
-#  img_file_name))
+                                image.save(
+                                    os.path.join(
+                                        current_app.config[
+                                            'CMS_EMPLOYEE_PHOTOS'],
+                                        img_file_name)
+                                )
 
                                 response = Response(
                                     response=json.dumps(
@@ -2570,6 +2588,76 @@ def update_organization_building_conph(current_user, bid, cid):
     return response
 
 
+@API0.route(
+    '/organization/buildings/<int:bid>/contacts/<string:cid>/photo',
+    methods=['DELETE'])
+@token_required
+def delete_organization_building_conph(current_user, bid, cid):
+    """ Удаление фото контакта здания """
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "contacts"):
+            building = CmsOrganizationBuildings.query.get(bid)
+
+            if not building:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Такое здание '
+                                                 'не существует!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+            else:
+                if not any(
+                        (
+                        contact.get(
+                            'cid', None) == cid
+                        ) for contact in building.employee_contacts):
+                    response = Response(
+                        response=json.dumps(
+                            {'type': 'danger',
+                             'text': 'Такой контакт сотрудника '
+                             'не существует!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    c_data = [contact for contact in building.employee_contacts if contact.get('cid', None) == cid][0] # noqa: ignore=E501
+                    if bool(c_data.get("photo")):
+                        photo_filepath = os.path.join(
+                            current_app.config['CMS_EMPLOYEE_PHOTOS'],
+                            c_data.get("photo"))
+                        if os.path.isfile(photo_filepath):
+                            os.remove(photo_filepath)
+
+                    c_data.update(
+                        {'photo': ''})
+                    flag_modified(building, 'employee_contacts')
+                    db.session.commit()
+
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Фото удалено!'}),
+                        status=200,
+                        mimetype='application/json'
+                    )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+        return response
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
 @API0.route('/organization/buildings/<int:bid>', methods=['DELETE'])
 @token_required
 def delete_organization_buildings(current_user, bid):
@@ -2579,6 +2667,14 @@ def delete_organization_buildings(current_user, bid):
         if CmsUsers.can(current_user.id, "delete", "contacts"):
             organization_buildings = CmsOrganizationBuildings.query.get(bid)
             if organization_buildings:
+
+                for item in organization_buildings.employee_contacts:
+                    if bool(item.get("photo", None)):
+                        photo_filepath = os.path.join(
+                            current_app.config['CMS_EMPLOYEE_PHOTOS'],
+                            item.get("photo"))
+                        if os.path.isfile(photo_filepath):
+                            os.remove(photo_filepath)
 
                 db.session.delete(organization_buildings)
                 db.session.commit()

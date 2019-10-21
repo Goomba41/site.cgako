@@ -121,6 +121,14 @@ background-color: #FED540;
     height: 3rem;
 }
 
+.input-group > .input-group-text:not(:last-child),
+.input-group > .time-picker:not(:last-child) > input.display-time
+ {
+    border-radius: 0;
+    border-left: 0;
+    cursor: pointer;
+}
+
 /*
 ---------------------------- Блокиратор -----------------------------
 */
@@ -778,6 +786,7 @@ article.profile-card h2 {
 }
 
 .card-profile-image, .card-profile-image  {
+  background-color: #0B4FA6;
   border-radius: 100%;
   display: flex;
   justify-content: center;
@@ -832,6 +841,7 @@ img.profile-image, img.profile-image {
 }
 
 .modal-content img.profile-image-preview {
+  background-color: #0B4FA6;
   border: 5px solid #ced4da;
   position: relative;
   border-radius: 50%;

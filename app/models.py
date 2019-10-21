@@ -460,11 +460,13 @@ class CmsOrganizationBuildings(db.Model):
         """Форматирование представления экземпляра класса."""
         return "Здание: «%s»" % (self.name)
 
-    def __init__(self, name, road_map=None, organization_id=None):
+    def __init__(self, name, road_map=None, organization_id=None, work_time=None, employee_contacts=None):
         """Конструктор класса."""
         self.name = name
         self.road_map = None if road_map is None else road_map
         self.organization_id = CmsOrganization.query.first().id if organization_id is None else organization_id
+        self.work_time = [] if work_time is None else work_time
+        self.employee_contacts = [] if work_time is None else work_time
 
 
 

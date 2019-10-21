@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'vue-tel-input/dist/vue-tel-input.css';
 import 'vue-multiselect/dist/vue-multiselect.min.css';
+import 'vue2-timepicker/dist/VueTimepicker.css';
 
 import BootstrapVue from 'bootstrap-vue';
 import BootstrapVueTreeview from 'bootstrap-vue-treeview';

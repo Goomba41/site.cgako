@@ -1,9 +1,7 @@
 <template>
   <main class="container-fluid d-flex flex-column">
     <breadcumbs></breadcumbs>
-<!--
-  {{organization}}<br><br>{{$v}}<br><br>{{$v.organization.requisites.$dirty}}
--->
+
     <b-row class="pb-4 m-0 w-100 flex-grow-1 blocker"
     v-if="!can(user_perms, 'get', 'contacts')">
       <b-col class="align-self-center text-center">
@@ -116,6 +114,7 @@
                             <b-input-group-append>
                               <b-button
                                 variant="danger"
+                                v-if="can(user_perms, 'put', 'contacts')"
                                 @click="organization.requisites.splice(rIndex, 1);
                                   $v.organization.requisites.$touch()"
                                 v-bind:title="$t(
@@ -124,6 +123,15 @@
                                 v-b-tooltip.hover
                               >
                                 <font-awesome-icon icon="trash" fixed-width />
+                              </b-button>
+                              <b-button
+                                v-else
+                                v-bind:title="$t(
+                                  'contacts.formEditCompanyInfo.'
+                                  +'formFields.requisites.buttonDelete')"
+                                v-b-tooltip.hover
+                              >
+                                <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                               </b-button>
                             </b-input-group-append>
                             <b-form-invalid-feedback>
@@ -166,6 +174,7 @@
                       <b-list-group-item class="p-0">
                         <b-button
                           block
+                          v-if="can(user_perms, 'put', 'contacts')"
                           variant="success"
                           @click="organization.requisites.push({title: '', value: ''})"
                           v-bind:title="$t(
@@ -175,6 +184,15 @@
                           <font-awesome-icon icon="plus" fixed-width />
                           <font-awesome-icon icon="money-check-alt" fixed-width />
                         </b-button>
+                        <b-button
+                          v-else
+                          block
+                          v-bind:title="$t(
+                            'contacts.formEditCompanyInfo.formFields.requisites.buttonAdd')"
+                          v-b-tooltip.hover
+                        >
+                          <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+                        </b-button>
                       </b-list-group-item>
                     </b-list-group>
                   </b-collapse>
@@ -182,14 +200,26 @@
 
                 <b-button-group class="w-100">
                   <b-button
+                    v-if="can(user_perms, 'put', 'contacts')"
                     type="submit"
                     variant="primary"
                     :disabled="!$v.organization.$anyDirty ||
                       $v.organization.$invalid || formPending"
+                    v-bind:title="$t(
+                      'contacts.formEditCompanyInfo.tooltips.submitCompanyNamesButton')"
                   >
                     <font-awesome-icon v-if="!formPending"
                       :icon="['fa', 'save']" fixed-width />
                     <b-spinner small v-if="formPending"></b-spinner>
+                  </b-button>
+                  <b-button
+                    v-else
+                    block
+                    v-bind:title="$t(
+                      'contacts.formEditCompanyInfo.tooltips.submitCompanyNamesButton')"
+                    v-b-tooltip.hover
+                  >
+                    <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                   </b-button>
                 </b-button-group>
 
@@ -286,6 +316,7 @@
                           {{worktime.title.$model}}
                         </b-button>
                         <b-button
+                        v-if="can(user_perms, 'put', 'contacts')"
                           variant="danger"
                           v-bind:title="$t(
                             'contacts.formEditBuildings.formFields.worktime.deleteWorktimeButton')"
@@ -294,6 +325,14 @@
                             building.$touch()"
                         >
                           <font-awesome-icon icon="trash" fixed-width />
+                        </b-button>
+                        <b-button
+                          v-else
+                          v-bind:title="$t(
+                            'contacts.formEditBuildings.formFields.worktime.deleteWorktimeButton')"
+                          v-b-tooltip.hover
+                        >
+                          <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                         </b-button>
                       </b-button-group>
                     </b-card-header>
@@ -353,31 +392,33 @@
                                   !iRegime.title.$error : null"
                               >
                               </b-form-input>
-                              <b-form-input
-                                :type="'text'"
+
+                              <vue-timepicker
+                                format="HH:mm"
                                 v-model="iRegime.from.$model"
+                                input-class="h-100 form-control"
+                                hide-clear-button
                                 v-bind:placeholder="$t(
                                   'contacts.formEditBuildings.'
                                   +'formFields.worktime.regime.placeholders.from')"
-                                :state="iRegime.from.$dirty ?
-                                  !iRegime.from.$error : null"
                               >
-                              </b-form-input>
+                              </vue-timepicker>
                               <div class="input-group-text">&mdash;</div>
-                              <b-form-input
-                                :type="'text'"
+                              <vue-timepicker
+                                format="HH:mm"
                                 v-model="iRegime.to.$model"
+                                input-class="h-100 form-control"
+                                hide-clear-button
                                 v-bind:placeholder="$t(
                                   'contacts.formEditBuildings.'
                                   +'formFields.worktime.regime.placeholders.to')"
-                                :state="iRegime.to.$dirty ?
-                                  !iRegime.to.$error : null"
                               >
-                              </b-form-input>
+                              </vue-timepicker>
 
                               <b-input-group-append>
                                 <b-button
                                   variant="danger"
+                                  v-if="can(user_perms, 'put', 'contacts')"
                                   v-bind:title="$t(
                                     'contacts.formEditBuildings.'
                                     +'formFields.worktime.regime.deleteRegimeButton')"
@@ -387,6 +428,16 @@
                                     worktime.$touch()"
                                 >
                                   <font-awesome-icon icon="trash" fixed-width />
+                                </b-button>
+                                <b-button
+                                  v-else
+                                  block
+                                  v-bind:title="$t(
+                                    'contacts.formEditBuildings.'
+                                    +'formFields.worktime.regime.deleteRegimeButton')"
+                                  v-b-tooltip.hover
+                                >
+                                  <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                                 </b-button>
                               </b-input-group-append>
                               <b-form-invalid-feedback>
@@ -432,6 +483,7 @@
                         </b-list-group-item>
                         <b-list-group-item class="p-0">
                           <b-button
+                            v-if="can(user_perms, 'put', 'contacts')"
                             block
                             variant="success"
                             v-bind:title="$t('contacts.formEditBuildings.'
@@ -439,10 +491,20 @@
                             v-b-tooltip.hover
                             @click="buildings[bIndex]
                               .work_time[wIndex]
-                              .regime.push({title: '', from: '', to: ''})"
+                              .regime.push({title: '', from: '08:00', to: '17:00'})"
                           >
                             <font-awesome-icon icon="plus" fixed-width />
                             <font-awesome-icon icon="clock" fixed-width />
+                          </b-button>
+                          <b-button
+                            v-else
+                            block
+                            class="mb-3"
+                            v-bind:title="$t('contacts.formEditBuildings.'
+                              +'formFields.worktime.regime.addRegimeButton')"
+                            v-b-tooltip.hover
+                          >
+                            <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                           </b-button>
                         </b-list-group-item>
                       </b-list-group>
@@ -453,6 +515,7 @@
                     block
                     variant="success"
                     class="mb-3"
+                    v-if="can(user_perms, 'put', 'contacts')"
                     v-bind:title="$t(
                       'contacts.formEditBuildings.formFields.worktime.addWorktimeButton')"
                     v-b-tooltip.hover
@@ -461,6 +524,16 @@
                   >
                     <font-awesome-icon icon="plus" fixed-width />
                     <font-awesome-icon icon="business-time" fixed-width />
+                  </b-button>
+                  <b-button
+                    v-else
+                    block
+                    class="mb-3"
+                    v-bind:title="$t(
+                      'contacts.formEditBuildings.formFields.worktime.addWorktimeButton')"
+                    v-b-tooltip.hover
+                  >
+                    <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                   </b-button>
 
                 </b-col>
@@ -489,6 +562,7 @@
                         </b-button>
                         <b-button
                           variant="danger"
+                          v-if="can(user_perms, 'put', 'contacts')"
                           v-bind:title="$t(
                             'contacts.formEditBuildings.formFields.employee.deleteEmployeeButton')"
                           v-b-tooltip.hover
@@ -496,6 +570,14 @@
                             building.$touch()"
                         >
                           <font-awesome-icon icon="trash" fixed-width />
+                        </b-button>
+                        <b-button
+                          v-else
+                          v-bind:title="$t(
+                            'contacts.formEditBuildings.formFields.employee.deleteEmployeeButton')"
+                          v-b-tooltip.hover
+                        >
+                          <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
                         </b-button>
                       </b-button-group>
                     </b-card-header>
@@ -507,7 +589,7 @@
                       <b-list-group flush>
                         <b-list-group-item>
                           <b-row>
-                            <b-col cols="9">
+                            <b-col :cols="contact.$model.cid ? 9 : 12">
                               <b-form-group class="">
                                 <b-form-input
                                   :type="'text'"
@@ -618,32 +700,50 @@
                               </b-form-group>
                             </b-col>
 
-                            <b-col cols="3">
+                            <b-col cols="3" v-if="contact.$model.cid">
                               <div class="card-profile-image mx-auto mb-3">
-                                <div class="profile-image-overlay">
+                                <div
+                                  class="profile-image-overlay"
+                                  v-if="can(user_perms, 'put', 'contacts')"
+                                >
                                   <div
                                     v-b-tooltip.hover
                                     v-b-modal.employee-photo-modal
-                                    @click="selectedContact = { 'cid':contact.$model.cid, 'bid':building.$model.id }"
+                                    v-if="can(user_perms, 'put', 'contacts')"
+                                    @click="selectedContact = {
+                                      'cid':contact.$model.cid, 'bid':building.$model.id }"
                                     v-bind:title="$t('contacts.formEditBuildings'
                                       +'.formFields.employee.photo.updateEmployeePhoto')"
                                   >
                                     <font-awesome-icon :icon="['fa', 'upload']" fixed-width />
                                   </div>
-                                  <div v-if="contact.photo.$model" v-b-tooltip.hover
-                                  v-bind:title="$t('contacts.formEditBuildings'
-                                    +'.formFields.employee.photo.deleteEmployeePhoto')"
-                                  @click="selectedContact = contact.$model.cid">
+                                  <div
+                                    v-b-tooltip.hover
+                                    v-else
+                                    v-bind:title="$t('contacts.formEditBuildings'
+                                      +'.formFields.employee.photo.updateEmployeePhoto')"
+                                  >
+                                    <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+                                  </div>
+                                  <div
+                                    v-if="contact.photo.$model
+                                      && can(user_perms, 'put', 'contacts')"
+                                    v-b-tooltip.hover
+                                    v-bind:title="$t('contacts.formEditBuildings'
+                                      +'.formFields.employee.photo.deleteEmployeePhoto')"
+                                    @click="deleteEmployeePhoto(
+                                      { 'cid':contact.$model.cid, 'bid':building.$model.id })"
+                                  >
                                     <font-awesome-icon :icon="['fa', 'trash']" fixed-width />
                                   </div>
                                 </div>
                                 <img
                                   v-if="contact.photo.$model"
-                                  :src="'/static/profile_avatars/'+contact.photo.$model"
+                                  :src="'/static/contact_photos/'+contact.photo.$model"
                                   alt="Фотокарточка"
                                   class="profile-image"
                                 >
-                                <img v-else :src="'/static/profile_avatars/default.png'"
+                                <img v-else :src="'/static/contact_photos/default.png'"
                                 alt="Фотокарточка" class="profile-image">
                               </div>
                             </b-col>
@@ -707,9 +807,7 @@
 
                       </b-list-group>
                     </b-collapse>
-<!--
-                    {{contact}}
--->
+
                   </b-card>
                   <b-button
                     block
@@ -718,10 +816,10 @@
                     v-bind:title="$t(
                       'contacts.formEditBuildings.formFields.employee.addEmployeeButton')"
                     v-b-tooltip.hover
+                    v-if="can(user_perms, 'put', 'contacts')"
                     @click="buildings[bIndex]
                       .employee_contacts.push(
                         {
-                          cid: $uuid.v4(),
                           post: '',
                           name: '',
                           surname: '',
@@ -734,8 +832,19 @@
                     <font-awesome-icon icon="plus" fixed-width />
                     <font-awesome-icon icon="address-book" fixed-width />
                   </b-button>
+                  <b-button
+                    v-else
+                    block
+                    class="mb-3"
+                    v-bind:title="$t(
+                      'contacts.formEditBuildings.formFields.employee.addEmployeeButton')"
+                    v-b-tooltip.hover
+                  >
+                    <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+                  </b-button>
                 </b-col>
               </b-row>
+
               <b-row>
                 <b-col>
                   <b-button variant="primary"
@@ -808,7 +917,7 @@
             <b-nav-item
               v-else
               href="#"
-              class="bg-secondary border-secondary"
+              class="bg-secondary border-secondary ml-3"
               v-bind:title="$t('contacts.formEditBuildings.tooltips.addBuildingsButton')"
               v-b-tooltip.hover
             >
@@ -947,37 +1056,31 @@
     </b-modal>
 
     <b-modal id="employee-photo-modal"
-            @hidden=""
-            @close=""
-            v-bind:title="$t(
-              'contacts.formEditBuildings.formFields.employee.photo.formTitle')"
-            hide-footer size="md" centered
-            :header-bg-variant="'primary'"
-            :header-text-variant="'light'"
-            v-if="can(user_perms, 'put', 'contacts')">
-<!--
-            @hidden="onResetImage"
-            @close="onResetImage"
--->
+      v-bind:title="$t(
+        'contacts.formEditBuildings.formFields.employee.photo.formTitle')"
+      hide-footer size="md" centered
+      :header-bg-variant="'primary'"
+      :header-text-variant="'light'"
+      v-if="can(user_perms, 'put', 'contacts')"
+      @hidden="onResetImage"
+      @close="onResetImage"
+    >
 
       <div class=" row w-100 mx-auto pb-3 justify-content-center align-items-center">
         <img v-bind:src="imageUpdate.imageData ?
-        imageUpdate.imageData : '/static/profile_avatars/default.png'"
+        imageUpdate.imageData : '/static/contact_photos/default.png'"
         class="profile-image-preview preview-md preview-square mr-4">
 
         <img v-bind:src="imageUpdate.imageData ?
-        imageUpdate.imageData : '/static/profile_avatars/default.png'"
+        imageUpdate.imageData : '/static/contact_photos/default.png'"
         class="profile-image-preview preview-md mr-4">
 
         <img v-bind:src="imageUpdate.imageData ?
-        imageUpdate.imageData : '/static/profile_avatars/default.png'"
+        imageUpdate.imageData : '/static/contact_photos/default.png'"
         class="profile-image-preview preview-sm mr-4">
 
       </div>
 
-<!--
-      @submit.prevent="onSubmitContactImage(user.id)
--->
       <b-form class="w-100" @submit.prevent="onSubmitContactImage(selectedContact)">
         <b-form-group
         :description="$t(
@@ -1038,6 +1141,7 @@
 import moment from 'moment';
 import { mapState } from 'vuex';
 import VueTelInput from 'vue-tel-input';
+import VueTimepicker from 'vue2-timepicker';
 import _ from 'lodash';
 import {
   required, maxLength, minLength, sameAs, email, maxValue,
@@ -1060,7 +1164,7 @@ export default {
       tabCounter: 0,
       deletePassphrase: '',
       selectedBuild: {},
-      selectedContact: '',
+      selectedContact: {},
       file: null,
       newBuilding: {
         name: '',
@@ -1188,6 +1292,7 @@ export default {
             },
             phone: {
               required,
+              minLength: minLength(16),
             },
             photo: {
               maxLength: maxLength(100),
@@ -1211,7 +1316,7 @@ export default {
     },
   },
   components: {
-    Breadcumbs, VueTelInput,
+    Breadcumbs, VueTelInput, VueTimepicker,
   },
   computed: mapState({
     organization: state => state.organization,
@@ -1266,6 +1371,23 @@ export default {
         this.isActiveProgress = true;
         this.$store.dispatch('updateEmployeePhoto', { formData, ids });
       }
+    },
+    onResetImage() {
+      this.selectedContact = {};
+      this.file = null;
+      this.imageUpdate.type = '';
+      this.imageUpdate.size = 0;
+      this.imageUpdate.imageData = '';
+      this.isActiveProgress = false;
+      this.$v.imageUpdate.$reset();
+      // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+    },
+    deleteEmployeePhoto(ids) {
+      this.$store.dispatch('deleteEmployeePhoto', ids);
     },
     dateFormatter(date) {
       return moment(date).format('YYYY-MM-DD');
