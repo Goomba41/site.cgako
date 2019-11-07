@@ -572,6 +572,116 @@ schema_organization_buildings_data = {
     "additionalProperties": False
 }
 
+# Страницы
+
+schema_page_data = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "title": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 100
+                 },
+        "text": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 65000
+                 },
+        "uri": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9-_]{1,100}$",
+                    "minLength": 4,
+                    "maxLength": 100
+                 },
+        "description": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 255
+                 },
+        "available": {
+                    "type": "boolean",
+                },
+        "mainpage": {
+                    "type": "boolean",
+                },
+        "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 4,
+                        "maxLength": 100
+                    },
+                 },
+        "section": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number",
+                            "minLength": 1
+                        },
+                    },
+                    "required": ["id", ],
+                 },
+    },
+    "required": ["title", "text", "uri", "description", "mainpage", "available", "section"],
+    "additionalProperties": False
+}
+
+schema_page_update_data = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "title": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 100
+                 },
+        "text": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 65000
+                 },
+        "uri": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9-_]{1,100}$",
+                    "minLength": 4,
+                    "maxLength": 100
+                 },
+        "seo_description": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 255
+                 },
+        "available": {
+                    "type": "boolean",
+                },
+        "mainpage": {
+                    "type": "boolean",
+                },
+        "seo_keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 4,
+                        "maxLength": 100
+                    },
+                 },
+        "structure": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "number",
+                            "minLength": 1,
+                            "maxLength": 1
+                        },
+                    },
+                    "required": ["id", ],
+                 },
+    },
+    "required": ["title", "text", "uri", "seo_description", "mainpage", "available", "structure"],
+    "additionalProperties": False
+}
 
 # ------------------------------------------------------------
 # Кастомные валидаторы
@@ -664,3 +774,5 @@ section_validator = MyValidator(schema_section_data)
 section_update_validator = MyValidator(schema_section_update_data)
 organization_update_validator = MyValidator(schema_organization_update_data)
 organization_buildings_validator = MyValidator(schema_organization_buildings_data)
+page_validator = MyValidator(schema_page_data)
+page_update_validator = MyValidator(schema_page_update_data)

@@ -396,6 +396,18 @@ class CmsStructure(db.Model, BaseNestedSets):
         nullable=False,
         comment="Потомки"
     )
+    page_adding = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Добавление страниц"
+    )
+    pages = db.relationship(
+        'SitePages',
+        backref='structure',
+        lazy='dynamic',
+        uselist=True
+    )
 
     def __repr__(self):
         """Форматирование представления экземпляра класса."""
@@ -469,6 +481,67 @@ class CmsOrganizationBuildings(db.Model):
         self.employee_contacts = [] if work_time is None else work_time
 
 
+class SitePages(db.Model):
+    """Модель страниц сайта."""
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
+    uri = db.Column(db.String(50), unique=True, comment="URL страницы")
+    title = db.Column(db.String(100), comment="Заголовок страницы")
+    text = db.Column(db.Text(), comment="Основной текст страницы")
+    cover = db.Column(db.String(40), comment="Обложка страницы")
+    gallery = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Галерея"
+    )
+    files = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Файлы"
+    )
+    seo_description = db.Column(db.String(255), comment="Описание страницы")
+    seo_keywords = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Ключевые слова страницы"
+    )
+    creation_date = db.Column(db.DateTime, comment="Дата создания/публикации")
+    available = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="Доступна"
+    )
+    mainpage = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False,
+        comment="На главной"
+    )
+    structure_id = db.Column(
+        db.Integer,
+        db.ForeignKey('cms_structure.id'),
+        nullable=False,
+        comment="ID раздела"
+    )
+
+    def __init__(self, title, uri, text, seo_description, seo_keywords,
+                 available, mainpage,
+                 structure_id=None, creation_date=None,
+                 files=None, gallery=None, cover=None):
+        """Конструктор класса."""
+        self.title = title
+        self.uri = uri
+        self.text = text
+        self.seo_description = seo_description
+        self.seo_keywords = seo_keywords
+        self.available = available
+        self.mainpage = mainpage
+        self.structure_id = 51 if structure_id is None else structure_id
+        self.creation_date = datetime.utcnow() if creation_date is None else creation_date
+        self.files = [] if files is None else files
+        self.gallery = [] if gallery is None else gallery
+        self.cover = None if cover is None else cover
+
+    def __repr__(self):
+        """Форматирование представления экземпляра класса."""
+        return "Страница: «%s»" % (self.title)
 
 # ------------------------------------------------------------
 # Схемы
@@ -557,6 +630,16 @@ class CmsUsersSchema(ma.ModelSchema):
 
         model = CmsUsers
     roles = ma.Nested(CmsRolesSchema, many=True)
+
+
+class SitePagesSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = SitePages
+    structure = ma.Nested(CmsStructureSchema)
 
 
 class CmsProfileSchema(ma.ModelSchema):

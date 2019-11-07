@@ -13,7 +13,8 @@
             "news":"News",
             "materials":"Materials",
             "contacts":"Contacts",
-            "structure":"Site structure"
+            "structure":"Site structure",
+            "pages":"Site pages"
         }
     },
     "navbar":{
@@ -60,7 +61,8 @@
             "userProfile":"User profile",
             "permissions":"Roles and Permissions",
             "contacts":"Contacts",
-            "structure":"Site structure"
+            "structure":"Site structure",
+            "pages":"Site pages"
         }
     },
     "dashboard":{
@@ -917,6 +919,264 @@
                 "placeholder": "Confirmating phrase",
                 "description": "Enter «Delete» for confirm deletion",
                 "passphrase": "Delete"
+            }
+        }
+    },
+    "sitePages":{
+        "counter":"No pages | Total 1 page | Total {n} pages | Total {n} pages",
+        "counterFiles":"No files selected | Selected 1 file | Selected {n} files | Selected {n} files",
+        "counterImages":"No images selected | Selected 1 image | Selected {n} images | Selected {n} images",
+        "tooltips": {
+            "newButton":"New user",
+            "pageNavigation":"Pages navigation",
+            "pageShowCount":"Show records per page",
+            "pageShowCountTitle":"Per:",
+            "pageShowFrom":"Start from record",
+            "pageShowFromTitle":"From:",
+            "coverTitle":"Cover",
+            "coverUpdate":"Update cover",
+            "coverDelete":"Delete cover",
+            "editButton":"Edit page",
+            "deleteButton":"Delete page",
+            "imageButton":"Added images",
+            "filesButton":"Added files",
+            "acessible":"Accessible",
+            "mainpage":"On main page",
+            "filesCount":"Number of files",
+            "imagesCount":"Number of images"
+        },
+        "titles": {
+            "groupActions": {
+                "deleteButton":"Delete"
+            },
+            "cover":"Page cover",
+            "title":"Title",
+            "info":"Info",
+            "creation_date":"Creation date",
+            "section":"Site section",
+            "management":"Management"
+        },
+        "deleteModal": {
+            "title":"Page delete",
+            "description":"After deleting a page, all materials (images, files and etc.) associated with page will be deleted!",
+            "tooltips": {
+                "deleteButton": "Delete page"
+            },
+            "confirmationField": {
+                "placeholder": "Confirmating phrase",
+                "description": "Enter the page URI to confirm deletion"
+            }
+        },
+        "deleteGroupModal": {
+            "title":"Pages delete",
+            "description":"After deleting a pages, all materials (images, files and etc.) associated with pages will be deleted!",
+            "tooltips": {
+                "deleteButton": "Delete pages"
+            },
+            "confirmationField": {
+                "placeholder": "Confirmating phrase",
+                "description": "Enter «Delete» for confirm deletion",
+                "passphrase": "Delete"
+            }
+        },
+        "formNew":{
+            "formTitle":"New page",
+            "description": "",
+            "tooltips":{
+                "newURIGen":"Generate new URI",
+                "submitButton":"Send form",
+                "clearButton":"Clear form"
+            },
+            "formFields":{
+                "title":{
+                    "placeholder":"Page title",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 100 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Ok!"
+                },
+                "uri":{
+                    "placeholder":"Page URI",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 50 charachers.",
+                        "alpha":"This field must contain only latin, numeric charachers and -_ charachers."
+                    },
+                    "successText":"Ok!",
+                    "description":"URI will be generated automatically. Press button with {key} for generating new. URI can be filled by yourself."
+                },
+                "text":{
+                    "placeholder":"Page main text",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
+                },
+                "description":{
+                    "placeholder":"Page short description",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 255 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Ok!"
+                },
+                "section":{
+                    "placeholder":"Page section",
+                    "selectLabel":"Press Enter to add",
+                    "description":"All sections except the News section can only have one page.",
+                    "errors":{
+                        "required":"This field is required.",
+                        "required":"Section not found!"
+                    },
+                    "successText":"Ok!"
+                },
+                "keywords":{
+                    "placeholder":"Keywords",
+                    "tagPlaceholder":"Press Enter to add",
+                    "selectedLabel":"Added",
+                    "deselectLabel":"Press Enter to remove",
+                    "empty":"No keywords",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"ok!"
+                },
+                "available":{
+                    "placeholder":"Available",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
+                },
+                "mainpage":{
+                    "placeholder":"On mainpage",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
+                }
+            }
+        },
+        "formEdit":{
+            "formTitle":"Edit page data",
+            "description": "",
+            "tooltips":{
+                "newURIGen":"Generate new URI",
+                "submitButton":"Send form",
+                "clearButton":"Clear form"
+            },
+            "formFields":{
+                "title":{
+                    "placeholder":"Page title",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 100 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Ok!"
+                },
+                "uri":{
+                    "placeholder":"Page URI",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 50 charachers.",
+                        "alpha":"This field must contain only latin, numeric charachers and -_ charachers."
+                    },
+                    "successText":"Ok!",
+                    "description":"URI will be generated automatically. Press button with {key} for generating new. URI can be filled by yourself."
+                },
+                "text":{
+                    "placeholder":"Page main text",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
+                },
+                "description":{
+                    "placeholder":"Page short description",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 255 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Ok!"
+                },
+                "section":{
+                    "placeholder":"Page section",
+                    "selectLabel":"Press Enter to add",
+                    "description":"All sections except the News section can only have one page.",
+                    "errors":{
+                        "required":"This field is required.",
+                        "required":"Section not found!"
+                    },
+                    "successText":"Ok!"
+                },
+                "keywords":{
+                    "placeholder":"Keywords",
+                    "tagPlaceholder":"Press Enter to add",
+                    "selectedLabel":"Added",
+                    "deselectLabel":"Press Enter to remove",
+                    "empty":"No keywords",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"ok!"
+                },
+                "available":{
+                    "placeholder":"Available",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
+                },
+                "mainpage":{
+                    "placeholder":"On mainpage",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
+                }
+            }
+        },
+        "formCover":{
+            "formTitle":"Update cover",
+            "formDescription":"Image must be in one of this formats: JPEG, GIF, PNG. Maximum size of file is 2 MB.",
+            "saveButton":"Set new cover",
+            "formFields":{
+                "file":{
+                    "placeholder":"Choose image file...",
+                    "browseButton":"Browse",
+                    "errors":{
+                        "maxValue":"File size is exceed 2 MB.",
+                        "isImage":"Chosen file is not one of this formats: JPEG, GIF, PNG."
+                    },
+                    "successText":"Okay!"
+                }
+            }
+        },
+        "formFiles":{
+            "formTitle":"Attach files",
+            "formDescription":"File must be in one of this formats: PDF, ODT, DOC, DOCX, ZIP. Maximum size of file is 10 MB.",
+            "saveButton":"Attach files",
+            "formFields":{
+                "file":{
+                    "placeholder":"Choose file...",
+                    "browseButton":"Browse",
+                    "errors":{
+                        "maxValue":"File size exceeds 10 MB.",
+                        "isFile":"Chosen file is not one of this formats: PDF, ODT, DOC, DOCX, ZIP."
+                    },
+                    "successText":"Okay!"
+                }
             }
         }
     }

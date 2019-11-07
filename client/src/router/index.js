@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import NProgress from 'nprogress';
 import Activation from '@/components/Activation';
 import Users from '@/components/Users';
+import Pages from '@/components/Pages';
 import Roles from '@/components/Roles';
 import Structure from '@/components/Structure';
 import Contacts from '@/components/Contacts';
@@ -88,6 +89,16 @@ const router = new Router({
             requiresAuth: true,
             breadCrumb: 'contacts',
             title: 'CMS - Контакты архива',
+          },
+        },
+        {
+          path: 'pages',
+          name: 'Pages',
+          component: Pages,
+          meta: {
+            requiresAuth: true,
+            breadCrumb: 'pages',
+            title: 'CMS - Страницы',
           },
         },
         {

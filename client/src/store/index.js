@@ -17,7 +17,9 @@ const state = {
   structure: {}, // структура сайта
   permissions: [], // список разрешений CMS
   roles: [], // список ролей CMS
+  sectionsEnd: [], // список конечных разделов сайта
   users: [], // список пользователей CMS
+  pages: [], // список страниц сайта
   uid: '', // id текущего пользователя
   profile: {}, // профиль текущего пользователя
   user_perms: [], // разрешения текущего пользователя
@@ -442,6 +444,28 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  // Загрузить конечные разделы
+  loadSectionsEnd(context) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/structure?dbg',
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+        params: {
+          end: true,
+        },
+      })
+      .then((response) => {
+        context.commit('setSectionsEnd', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+        EventBus.$emit('message', error.response.data);
+      });
+  },
   // Удалить раздел
   deleteSection(context, payload) {
     return axios.delete(`/api/structure/${payload.id}?dbg`,
@@ -631,6 +655,122 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  // Загрузить страницы
+  loadPages(context, payload) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/pages?dbg',
+      {
+        headers: { Authorization: `Bearer: ${context.state.jwt}` },
+        params: {
+          limit: payload.limit || undefined,
+          start: payload.start || 1,
+        },
+      })
+      .then((response) => {
+        context.commit('setPages', { pages: response.data });
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+      });
+  },
+  // Удалить пользователя
+  deletePage(context, payload) {
+    return axios.delete(`/api/pages/${payload.id}`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Создать новую страницу
+  newPage(context, dataNew) {
+    context.commit('setFormPending');
+
+    return axios.post('/api/pages?dbg', dataNew,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        context.commit('setFormPending');
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Изменение страницы
+  updatePage(context, dataUpdate) {
+    context.commit('setFormPending');
+    return axios.put(`/api/pages/${dataUpdate.id}?dbg`, dataUpdate,
+      { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+        context.commit('setFormPending');
+      });
+  },
+  // Удалить обложку страницы
+  deletePageCover(context, id) {
+    return axios.delete(`/api/pages/${id}/cover?dbg`, { headers: { Authorization: `Bearer: ${context.state.jwt}` } })
+      .then((response) => {
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Обновить обложку страницы
+  updatePageCover(context, dataUpdate) {
+    return axios.put(`/api/pages/${dataUpdate.id}/cover?dbg`, dataUpdate.formData,
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+        onUploadProgress: (progressEvent) => {
+          state.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100;
+        },
+      })
+      .then((response) => {
+        state.uploadProgress = 0;
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Добавить файлы страницы
+  updatePageFiles(context, dataUpdate) {
+    console.log(dataUpdate.formData)
+    return axios.put(`/api/pages/${dataUpdate.id}/files?dbg`, dataUpdate.formData,
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+        onUploadProgress: (progressEvent) => {
+          state.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100;
+        },
+      })
+      .then((response) => {
+        state.uploadProgress = 0;
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
 };
 
 // Мутации данных
@@ -659,6 +799,10 @@ const mutations = {
   setUsers(state, payload) {
     state.users = payload.users;
   },
+  // Установка списка страниц
+  setPages(state, payload) {
+    state.pages = payload.pages;
+  },
   // Установка организации
   setOrganization(state, payload) {
     state.organization = payload.organization;
@@ -680,6 +824,10 @@ const mutations = {
   // Установка структуры
   setStructure(state, payload) {
     state.structure = payload;
+  },
+  // Установка конечных разделов
+  setSectionsEnd(state, payload) {
+    state.sectionsEnd = payload;
   },
   // Установка зданий
   setBuildings(state, payload) {

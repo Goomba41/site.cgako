@@ -34,11 +34,12 @@ from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     AssociationPermission, AssociationPermissionSchema, user_role, \
     CmsStructure, CmsStructureSchema, CmsOrganization, \
     CmsOrganizationSchema, CmsOrganizationBuildings, \
-    CmsOrganizationBuildingsSchema
+    CmsOrganizationBuildingsSchema, SitePages, SitePagesSchema
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator, role_validator, \
     role_update_validator, section_validator, section_update_validator, \
-    organization_update_validator, organization_buildings_validator
+    organization_update_validator, organization_buildings_validator, \
+    page_validator, page_update_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -263,6 +264,45 @@ def cat_to_json(item):
         'addTreeNodeDisabled': True if not item.appendable else False,
         'dragDisabled': True if not item.movable else False
     }
+
+
+# Проверка размера файла
+def get_fsize(fobj):
+    if fobj.content_length:
+        return fobj.content_length
+
+    try:
+        pos = fobj.tell()
+        fobj.seek(0, 2)  # проход до конца
+        size = fobj.tell()
+        fobj.seek(pos)  # вернуться в начальную позицию
+        return size
+    except (AttributeError, IOError):
+        pass
+
+    # файлы в памяти, которые не поддерживают seeking или tell
+    return 0  # предположим, что достаточно мал
+
+
+#  Форматирование байтов в другие размеры
+def formatBytes(fbytes, decimals=2, power=None):
+    if (fbytes == 0):
+        return {'number': 0, 'measure': 'B'}
+
+    k = 1024
+    if decimals < 0:
+        dm = 0
+    else:
+        dm = decimals
+    sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+    i = 0
+
+    if (power):
+        i = power
+    else:
+        i = math.floor(math.log(fbytes) / math.log(k))
+
+    return {'number': float(round(fbytes / (k ** i), dm)), 'measure': sizes[i]}
 
 
 #  Генерация пароля с определенной длиной
@@ -1865,15 +1905,31 @@ def get_structure(current_user):
 
     try:
 
-        structure = CmsStructure.query.filter(CmsStructure.id == 1).first()
+        if request.args.get("end"):
+            structure_schema = CmsStructureSchema(many=True)
+            structure_ends = CmsStructure.query.filter(
+                CmsStructure.left == (CmsStructure.right - 1)).all()
+            structure_ends_filtered = []
+            for item in structure_ends:
+                if not item.pages.all() and item.page_adding or item.id == 51:
+                    structure_ends_filtered.append(item)
+            sdata = structure_schema.dump(structure_ends_filtered)
+            sdata = sdata.data
 
-        response = Response(
-            response=json.dumps(
-                structure.drilldown_tree(
-                    json=True, json_fields=cat_to_json)[0]),
-            status=200,
-            mimetype='application/json'
-        )
+            response = Response(
+                response=json.dumps(sdata),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            structure = CmsStructure.query.filter(CmsStructure.id == 1).first()
+            response = Response(
+                response=json.dumps(
+                    structure.drilldown_tree(
+                        json=True, json_fields=cat_to_json)[0]),
+                status=200,
+                mimetype='application/json'
+            )
 
     except Exception:
 
@@ -2708,3 +2764,487 @@ def delete_organization_buildings(current_user, bid):
 # ------------------------------------------------------------
 # Страницы
 # ------------------------------------------------------------
+
+
+@API0.route('/pages', methods=['GET'])
+@token_required
+def get_pages(current_user):
+    """ Получение полного списка страниц в json"""
+    try:
+
+        page_schema = SitePagesSchema(many=True)
+
+        pages = SitePages.query.all()
+        pdata = page_schema.dump(pages)
+        pdata = pdata.data
+
+        pdata = pagination_of_list(
+            pdata,
+            url_for('API0.get_pages',
+                    _external=True),
+            start=request.args.get('start', 1),
+            limit=request.args.get('limit',
+                                   SitePages.query.count())
+        )
+
+        response = Response(
+            response=json.dumps(pdata),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages/<int:pid>', methods=['DELETE'])
+@token_required
+def delete_pages(current_user, pid):
+    """ Удаление записи страницы из БД"""
+
+    try:
+        if CmsUsers.can(current_user.id, "delete", "pages"):
+
+            page = SitePages.query.get(pid)
+
+            #  if user.photo:
+            #  os.remove(os.path.join(
+            #  current_app.config['CMS_USERS_AVATARS'],
+            #  user.photo))
+
+            db.session.delete(page)
+            db.session.commit()
+
+            response = Response(
+                response=json.dumps({'type': 'success',
+                                     'text': 'Успешно удалено!'}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages', methods=['POST'])
+@token_required
+def post_pages(current_user):
+    """ Добавление страницы на сайт"""
+
+    try:
+        if CmsUsers.can(current_user.id, "post", "pages"):
+            post_data = request.get_json()
+            if not page_validator.is_valid(post_data):
+                errors = []
+                for error in sorted(
+                        page_validator.iter_errors(
+                            post_data), key=str):
+                    errors.append(error.message)
+
+                separator = '; '
+                error_text = separator.join(errors)
+
+                response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+            else:
+                if SitePages.query.filter(
+                            SitePages.uri == post_data['uri']
+                        ).first():
+                    response = Response(
+                        response=json.dumps({
+                            'type': 'danger',
+                            'text': 'Страница с таким URI существует! '
+                                    'Придумайте другой или сгенерируйте '
+                                    'новый URI!'
+                            }),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    new_page = SitePages(
+                        title=post_data['title'],
+                        text=post_data['text'],
+                        uri=post_data['uri'],
+                        seo_description=post_data['description'],
+                        seo_keywords=post_data['keywords'],
+                        available=post_data['available'],
+                        mainpage=post_data['mainpage']
+                    )
+                    if CmsStructure.query.filter(
+                                (CmsStructure.id == post_data['section']['id'])
+                                & (CmsStructure.left == CmsStructure.right - 1)
+                            ).first():
+                        new_page.structure_id = post_data['section']['id']
+
+                        db.session.add(new_page)
+                        db.session.commit()
+
+                        response = Response(
+                            response=json.dumps(
+                                {'type': 'success',
+                                 'text': 'Добавлена страница '
+                                         '«'+str(new_page.uri)+'»!'}),
+                            status=200,
+                            mimetype='application/json'
+                        )
+                    else:
+                        response = Response(
+                            response=json.dumps({
+                                'type': 'danger',
+                                'text': 'Выбран несуществующий или '
+                                        'не конечный раздел. '
+                                        'Выберите другой раздел и '
+                                        'отправьте форму заново!'
+                            }),
+                            status=422,
+                            mimetype='application/json'
+                        )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages/<int:pid>', methods=['PUT'])
+@token_required
+def update_pages(current_user, pid):
+    """ Изменение записи страницы в БД"""
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "pages"):
+
+            update_data = request.get_json()
+
+            for pop_item in [
+                    'files', 'gallery', 'cover', 'creation_date', 'id']:
+                update_data.pop(pop_item, None)
+
+            if not page_update_validator.is_valid(update_data):
+
+                errors = []
+                for error in sorted(page_update_validator.iter_errors(
+                                    update_data), key=str):
+                    errors.append(error.message)
+
+                separator = '; '
+                error_text = separator.join(errors)
+                response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': error_text}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+
+            else:
+                if SitePages.query.filter(
+                        (SitePages.uri == update_data['uri']) &
+                        (SitePages.id != pid)).first():
+                    response = Response(
+                        response=json.dumps({
+                            'type': 'danger',
+                            'text': 'Страница с таким URI существует! '
+                                    'Придумайте другой или '
+                                    'сгенерируйте новый URI!'
+                        }),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    old_data = SitePages.query.filter_by(id=pid)
+                    old_uri = old_data.first().uri
+
+                    new_structure = update_data.pop('structure', None)
+
+                    if CmsStructure.query.filter(
+                                (CmsStructure.id == new_structure['id'])
+                                & (CmsStructure.left == CmsStructure.right - 1)
+                            ).first():
+                        update_data['structure_id'] = new_structure['id']
+
+                        old_data.update(update_data)
+                        db.session.commit()
+
+                        response = Response(
+                            response=json.dumps(
+                                {'type': 'success',
+                                 'text': 'Изменена страница '
+                                         '/'+str(old_uri)+'!'}),
+                            status=200,
+                            mimetype='application/json'
+                        )
+                    else:
+                        response = Response(
+                            response=json.dumps({
+                                'type': 'danger',
+                                'text': 'Выбран несуществующий '
+                                        'или не конечный раздел. '
+                                        'Выберите другой раздел и '
+                                        'отправьте форму заново!'
+                            }),
+                            status=422,
+                            mimetype='application/json'
+                        )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages/<int:pid>/cover', methods=['DELETE'])
+@token_required
+def delete_page_cover(current_user, pid):
+    """ Удаление обложки страницы """
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "pages"):
+
+            page = SitePages.query.get(pid)
+            if page:
+                if page.cover:
+
+                    cover_filepath = os.path.join(
+                        current_app.config['CMS_PAGE_COVERS'],
+                        page.cover)
+
+                    if os.path.isfile(cover_filepath):
+                        os.remove(cover_filepath)
+
+                    page.cover = None
+                    db.session.commit()
+
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Успешно удалена '
+                                                     'обложка!'}),
+                        status=200,
+                        mimetype='application/json'
+                    )
+                else:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'К странице '
+                                                     'не прикреплена '
+                                                     'обложка!'}),
+                        status=404,
+                        mimetype='application/json'
+                    )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Страница не существует!'}),
+                    status=404,
+                    mimetype='application/json'
+                )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages/<int:pid>/cover', methods=['PUT'])
+@token_required
+def update_page_cover(current_user, pid):
+    """ Изменение обложки страницы"""
+
+    try:
+        page_query = SitePages.query.filter_by(id=pid)
+
+        if request.files.getlist('cover'):
+
+            if not len(request.files.getlist('cover')) > 1:
+
+                cover_image = request.files['cover']
+
+                if cover_image.content_type not in [
+                            'image/jpeg',
+                            'image/png',
+                            'image/gif'
+                        ]:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'Вы отправили'
+                                                     'файл без расширения'
+                                                     ' или это не изображение'
+                                                     ' (jpeg, png, gif)!'}),
+                        status=422,
+                        mimetype='application/json'
+                    )
+                else:
+                    if page_query.first().cover:
+                        img_extension = cover_image.content_type.split('/')[1]
+                        img_file_name = page_query.first().cover.split(
+                            '.')[0] + \
+                            '.' + img_extension
+                        cover_filepath = os.path.join(
+                            current_app.config['CMS_PAGE_COVERS'],
+                            page_query.first().cover)
+                        if os.path.isfile(cover_filepath):
+                            os.remove(cover_filepath)
+                    else:
+                        img_extension = cover_image.content_type.split('/')[1]
+                        img_file_name = uuid.uuid1().hex + '.' + img_extension
+
+                    page_query.update(
+                        {'cover': img_file_name})
+                    db.session.commit()
+
+                    cover_image.save(
+                        os.path.join(
+                            current_app.config['CMS_PAGE_COVERS'],
+                            img_file_name))
+
+                    response = Response(
+                        response=json.dumps({'type': 'success',
+                                             'text': 'Фотокарточка вклеена!'}),
+                        status=200,
+                        mimetype='application/json'
+                    )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Вы отправили'
+                                                 'более 1 файла!'}),
+                    status=422,
+                    mimetype='application/json'
+                )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Вы не отправили'
+                                             ' файла!'}),
+                status=422,
+                mimetype='application/json'
+            )
+
+        return response
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages/<int:pid>/files', methods=['PUT'])
+@token_required
+def update_page_files(current_user, pid):
+    """ Изменение файлов страницы"""
+
+    try:
+        page = SitePages.query.get(pid)
+        if request.files.getlist('file[]'):
+
+            page_files = request.files.getlist('file[]')
+            na_files = []
+            for pfile in page_files:
+                fsize_b = get_fsize(pfile)
+                # Еще можно считывать файл в память до заданного размера
+                # Но появляется проблема при записи файла,
+                # так как он уже считан
+                # MAX_FILE_SIZE = 1024 * 1024 + 1
+                # file_bytes = file.read(MAX_FILE_SIZE)
+                fsize_mb = formatBytes(fsize_b, power=2)['number']
+                if ((pfile.content_type not in [
+                            'application/vnd.openxmlformats-officedocument'
+                            '.wordprocessingml.document',
+                            'application/vnd.oasis.opendocument.text',
+                            'application/pdf',
+                            'application/zip',
+                            'application/msword'
+                        ]) or (fsize_mb > 5)):
+                    na_files.append("«" + pfile.filename + "»")
+                else:
+                    fsize = formatBytes(fsize_b)
+                    extension = pfile.filename.split(".")[-1]
+                    new_file_name = uuid.uuid1().hex + '.' + extension
+                    ud = {
+                        "name": pfile.filename,
+                        "size": str(fsize['number']) + ' ' + fsize['measure'],
+                        "fname": new_file_name,
+                        "extension": extension
+                    }
+                    page.files.append(ud)
+                    pfile.save(
+                        os.path.join(
+                            current_app.config['CMS_PAGE_FILES'],
+                            new_file_name))
+
+            flag_modified(page, 'files')
+            db.session.commit()
+
+            rtext = 'Файлы добавлены!'
+            rtype = 'success'
+            if na_files:
+                rtext = 'Файлы добавлены, но файлы: '
+                separator = ', '
+                rtext = rtext + separator.join(na_files)
+                rtext = rtext + ' были проигнорированы, т.к. ' \
+                    'либо превышен размер, либо не подходящий формат файла.'
+                rtype = 'warning'
+
+            response = Response(
+                response=json.dumps({'type': rtype,
+                                     'text': rtext}),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Вы не отправили'
+                                             ' ни одного файла!'}),
+                status=422,
+                mimetype='application/json'
+            )
+
+        return response
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response

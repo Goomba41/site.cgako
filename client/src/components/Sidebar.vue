@@ -55,12 +55,23 @@
                 </span>
               </b-list-group-item>
             </router-link>
+            <router-link :to="{ name: 'Pages' }">
+              <b-list-group-item class="noselect" @click="sidebarOff">
+                <span class="ml-4">
+                  <font-awesome-icon :icon="['fa', 'file-alt']"
+                    class="" fixed-width size="1x"/>
+                  {{$t('menu.menuItems.pages')}}
+                </span>
+              </b-list-group-item>
+            </router-link>
+<!--
             <b-list-group-item class="noselect" disabled @click="sidebarOff">
               <span class="ml-4">
                 <font-awesome-icon :icon="['fa', 'newspaper']" class="" fixed-width size="1x"/>
                 {{$t('menu.menuItems.news')}}
               </span>
             </b-list-group-item>
+-->
         </b-list-group>
       </b-collapse>
 
