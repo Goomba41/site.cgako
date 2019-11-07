@@ -9,7 +9,6 @@ export function imageType(value) {
 
 // Проверка mime файла
 export function docsType(value) {
-  console.log(value)
   if (!value) return false;
 
   const mimes = [
@@ -17,9 +16,8 @@ export function docsType(value) {
     'application/pdf',
     'application/vnd.oasis.opendocument.text',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/msword'
+    'application/msword',
   ];
-  console.log(mimes.includes(value));
   return mimes.includes(value);
 }
 

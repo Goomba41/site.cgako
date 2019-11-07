@@ -751,9 +751,8 @@ const actions = {
       });
   },
   // Добавить файлы страницы
-  updatePageFiles(context, dataUpdate) {
-    console.log(dataUpdate.formData)
-    return axios.put(`/api/pages/${dataUpdate.id}/files?dbg`, dataUpdate.formData,
+  postPageFiles(context, dataPost) {
+    return axios.post(`/api/pages/${dataPost.id}/files?dbg`, dataPost.formData,
       {
         headers: {
           Authorization: `Bearer: ${context.state.jwt}`,
@@ -764,6 +763,22 @@ const actions = {
       })
       .then((response) => {
         state.uploadProgress = 0;
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Удалить файлы страницы
+  deletePageFile(context, ids) {
+    return axios.delete(`/api/pages/${ids.pid}/files/${ids.fid}?dbg`,
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+      })
+      .then((response) => {
         EventBus.$emit('forceRerender');
         EventBus.$emit('message', response.data);
       })

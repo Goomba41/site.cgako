@@ -700,8 +700,7 @@
             :disabled="!$v.newUser.$anyDirty">
               <font-awesome-icon v-if="!formPending"
               :icon="['fa', 'times']" fixed-width />
-              <b-spinner small v-if="formPending"
-              label="Идет отправка досье..."></b-spinner>
+              <b-spinner small v-if="formPending"></b-spinner>
             </b-button>
           </b-col>
         </b-row>

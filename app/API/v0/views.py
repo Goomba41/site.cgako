@@ -3169,9 +3169,9 @@ def update_page_cover(current_user, pid):
     return response
 
 
-@API0.route('/pages/<int:pid>/files', methods=['PUT'])
+@API0.route('/pages/<int:pid>/files', methods=['POST'])
 @token_required
-def update_page_files(current_user, pid):
+def post_page_files(current_user, pid):
     """ Изменение файлов страницы"""
 
     try:
@@ -3200,9 +3200,11 @@ def update_page_files(current_user, pid):
                 else:
                     fsize = formatBytes(fsize_b)
                     extension = pfile.filename.split(".")[-1]
+                    separator = ' '
                     new_file_name = uuid.uuid1().hex + '.' + extension
                     ud = {
-                        "name": pfile.filename,
+                        "fid": str(uuid.uuid4().hex),
+                        "name": separator.join(pfile.filename.split(".")[:-1]),
                         "size": str(fsize['number']) + ' ' + fsize['measure'],
                         "fname": new_file_name,
                         "extension": extension
@@ -3242,6 +3244,81 @@ def update_page_files(current_user, pid):
             )
 
         return response
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages/<int:pid>/files/<string:fid>', methods=['DELETE'])
+@token_required
+def delete_page_file(current_user, pid, fid):
+    """ Удаление файла страницы """
+
+    try:
+        if CmsUsers.can(current_user.id, "put", "pages"):
+            page = SitePages.query.get(pid)
+            if page:
+                if page.files:
+                    file_found = next(
+                        (contact for contact in page.files if contact.get(
+                            'fid', None) == fid),
+                        None
+                    )
+                    if file_found:
+                        page.files = [i for i in page.files if not (
+                            i['fid'] == fid
+                        )]
+                        db.session.commit()
+
+                        filepath = os.path.join(
+                            current_app.config['CMS_PAGE_FILES'],
+                            file_found.get("fname"))
+                        if os.path.isfile(filepath):
+                            os.remove(filepath)
+
+                        response = Response(
+                            response=json.dumps({'type': 'success',
+                                                 'text': 'Успешно удален '
+                                                         'файл!'}),
+                            status=200,
+                            mimetype='application/json'
+                        )
+                    else:
+                        response = Response(
+                            response=json.dumps({'type': 'danger',
+                                                 'text': 'Указанный '
+                                                         'файл '
+                                                         'не существует!'}),
+                            status=404,
+                            mimetype='application/json'
+                        )
+
+                else:
+                    response = Response(
+                        response=json.dumps({'type': 'danger',
+                                             'text': 'К странице '
+                                                     'не прикреплены '
+                                                     'файлы!'}),
+                        status=404,
+                        mimetype='application/json'
+                    )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Страница не существует!'}),
+                    status=404,
+                    mimetype='application/json'
+                )
+        else:
+            response = Response(
+                response=json.dumps({'type': 'danger',
+                                     'text': 'Доступ запрещен (403)'}),
+                status=403,
+                mimetype='application/json'
+            )
 
     except Exception:
 

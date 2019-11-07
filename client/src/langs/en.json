@@ -938,8 +938,8 @@
             "coverDelete":"Delete cover",
             "editButton":"Edit page",
             "deleteButton":"Delete page",
-            "imageButton":"Added images",
-            "filesButton":"Added files",
+            "imageButton":"Managing images",
+            "filesButton":"Managing files",
             "acessible":"Accessible",
             "mainpage":"On main page",
             "filesCount":"Number of files",
@@ -1164,16 +1164,34 @@
             }
         },
         "formFiles":{
-            "formTitle":"Attach files",
-            "formDescription":"File must be in one of this formats: PDF, ODT, DOC, DOCX, ZIP. Maximum size of file is 10 MB.",
+            "formTitle":"Managing files",
+            "formDescription":"Files must be in one of this formats: PDF, ODT, DOC, DOCX, ZIP. Maximum size of file is 10 MB.",
             "saveButton":"Attach files",
+            "deleteButton":"Delete file",
+            "downloadButton":"Download file",
+            "deleteConfirm": {
+                "title": "Confirm file deletion",
+                "yes": "Yes",
+                "no": "No",
+                "description": "Please confirm that you want to delete this file."
+            },
             "formFields":{
                 "file":{
-                    "placeholder":"Choose file...",
+                    "placeholder":"Choose files...",
                     "browseButton":"Browse",
                     "errors":{
                         "maxValue":"File size exceeds 10 MB.",
                         "isFile":"Chosen file is not one of this formats: PDF, ODT, DOC, DOCX, ZIP."
+                    },
+                    "successText":"Okay!"
+                },
+                "name":{
+                    "placeholder":"File name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 255 charachers.",
+                        "alpha":"This field must contain only text charachers."
                     },
                     "successText":"Okay!"
                 }
