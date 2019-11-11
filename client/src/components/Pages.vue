@@ -906,38 +906,9 @@
       :header-bg-variant="'info'"
       :header-text-variant="'light'"
       v-if="can(user_perms, 'put', 'pages')"
+      @hidden="onResetFiles"
+      @close="onResetFiles"
     >
-<!--
-            @hidden="onResetImage"
-            @close="onResetImage"
--->
-
-<!--
-      <b-card
-        no-body
-        class="mb-3"
-        v-for="(file, fIndex) in $v.page.files.$each.$iter"
-        v-bind:key="fIndex"
-      >{{file}}
-        <b-card-header header-tag="header" class="p-0" role="tab">
-          <b-button-group class="w-100">
-            <b-button
-              block
-              v-b-toggle="'fileAccordion-' + fIndex"
-              class="text-left"
-              variant="info"
-            >
-              <font-awesome-icon icon="address-book" fixed-width />
-              {{file.name.$model}}
-            </b-button>
-            <b-button
-              variant="danger"
-              v-if="can(user_perms, 'put', 'pages')"
-              v-bind:title="$t(
-                'contacts.formEditBuildings.formFields.employee.deleteEmployeeButton')"
-              v-b-tooltip.hover
-            >
--->
       <b-card
         no-body
         class="mb-3"
@@ -971,63 +942,8 @@
               v-if="can(user_perms, 'put', 'pages')"
               v-bind:title="$t('sitePages.formFiles.deleteButton')"
               v-b-tooltip.hover
-              @click="confirmFileDeletion({ 'pid':page.id, 'fid':file.fid })"
+              @click="confirmFileDeletion({ 'pid':page.id, 'fid':file.fid }, fIndex)"
             >
-<!--
-              @click="buildings[bIndex].employee_contacts.splice(cIndex, 1);
-                building.$touch()"
--->
-<!--
-              <font-awesome-icon icon="trash" fixed-width />
-            </b-button>
-            <b-button
-              v-else
-              v-bind:title="$t(
-                'contacts.formEditBuildings.formFields.employee.deleteEmployeeButton')"
-              v-b-tooltip.hover
-            >
-              <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
-            </b-button>
-          </b-button-group>
-        </b-card-header>
-        <b-collapse
-          :id="`fileAccordion-${fIndex}`"
-          accordion="file"
-          role="tabpanel"
-        >
-          <b-list-group flush>
-            <b-list-group-item>
-              <b-form-group>
-                <b-form-input
-                  :type="'text'"
-                  v-model="file.name.$model"
-                  v-bind:placeholder="$t(
-                    'contacts.formEditBuildings.'
-                    +'formFields.employee.email.placeholder')"
-                  :state="file.name.$dirty ?
-                    !file.name.$error : null"
-                >
-                </b-form-input>
-
-                <b-form-invalid-feedback>
-                  <span v-if="!file.name.required">
-                    {{$t('contacts.formEditBuildings'+
-                        '.formFields.employee.email.errors.required')}}
-                  </span>
-                </b-form-invalid-feedback>
-              </b-form-group>
-              <b-form-group
-              :description="$t('sitePages.formFiles.formDescription')">
-
-                <b-form-file
-                  :ref="`filesInput-${fIndex}`"
-                  @input="onSelectFiles(fIndex)"
-                  lang="ru"
-                  v-bind:placeholder="$t('sitePages.formFiles.formFields.file.placeholder')"
-                  v-bind:browse-text="$t('sitePages.formFiles.formFields.file.browseButton')"
-                  accept=".odt, .doc, .docx, .zip, .pdf"
-                ></b-form-file>
--->
               <font-awesome-icon icon="trash" fixed-width />
             </b-button>
             <b-button
@@ -1043,21 +959,46 @@
           :id="`fileAccordion-${fIndex}`"
           accordion="file"
           role="tabpanel"
+          @shown="selectedPageFile=file"
+          @hide="selectedPageFile=null"
         >
           <b-list-group flush>
             <b-list-group-item>
               <b-form-group>
-                <b-form-input
-                  :type="'text'"
-                  v-model="file.name"
-                  v-bind:placeholder="$t('sitePages.formFiles.formFields.name.placeholder')"
+                <b-input-group class="mt-3">
+                  <b-form-input
+                    :type="'text'"
+                    v-model="$v.selectedPageFile.name.$model"
+                    v-bind:placeholder="$t('sitePages.formFiles.formFields.name.placeholder')"
+                    :state="$v.selectedPageFile.$dirty ? !$v.selectedPageFile.$anyError : null"
+                  >
+                  </b-form-input>
+                  <b-input-group-append>
+                    <b-button variant="outline-primary"
+                    @click="onSubmitUpdateFileData({ 'pid':page.id, 'fid':file.fid })"
+                    :disabled="!$v.selectedPageFile.$anyDirty || $v.selectedPageFile.$invalid
+                      || selectedPageFile == null"
+                    >
+                      <font-awesome-icon :icon="['fa', 'save']" fixed-width />
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+                <b-form-invalid-feedback
+                  :state="$v.selectedPageFile.$dirty ? !$v.selectedPageFile.$anyError : null"
                 >
-                </b-form-input>
-
-<!--
-                :state="$v.filesUpdate.$dirty ? !$v.filesUpdate.$anyError : null"
--->
-
+                  <span v-if="!$v.selectedPageFile.name.required">
+                    {{$t('sitePages.formNew.formFields.description.errors.required')}}
+                  </span>
+                  <span v-if="!$v.selectedPageFile.name.minLength">
+                    {{$t('sitePages.formNew.formFields.description.errors.minLength')}}
+                  </span>
+                  <span v-if="!$v.selectedPageFile.name.maxLength">
+                    {{$t('sitePages.formNew.formFields.description.errors.maxLength')}}
+                  </span>
+                  <span v-if="!$v.selectedPageFile.name.alpha">
+                    {{$t('sitePages.formNew.formFields.description.errors.alpha')}}
+                  </span>
+                </b-form-invalid-feedback>
               </b-form-group>
             </b-list-group-item>
 
@@ -1086,30 +1027,23 @@
                     v-bind:placeholder="$t('sitePages.formFiles.formFields.file.placeholder')"
                     v-bind:browse-text="$t('sitePages.formFiles.formFields.file.browseButton')"
                     accept=".odt, .doc, .docx, .zip, .pdf"
+                    :state="$v.filesUpdate.$dirty ? !$v.filesUpdate.$anyError : null"
                   ></b-form-file>
-        <!--
-                              :state="$v.filesUpdate.$dirty ? !$v.filesUpdate.$anyError : null"
-        -->
-        <!--
+
                   <b-form-invalid-feedback
-                  :state="$v.filesUpdate.$dirty ? !$v.filesUpdate.$anyError : null">
-                    <span v-if="!$v.filesUpdate.size.maxValue">
-                      {{$t('sitePages.formFiles.formFields.file.errors.maxValue')}}
-                    </span>
-                    <span v-if="!$v.filesUpdate.type.isFile">
-                      {{$t('sitePages.formFiles.formFields.file.errors.isFile')}}
-                    </span>
+                    :state="$v.filesUpdate.$dirty ? !$v.filesUpdate.$anyError : null"
+                    v-if="$v.filesUpdate.$anyError"
+                  >
+                      {{$t('sitePages.formFiles.formFields.file.error')}}
                   </b-form-invalid-feedback>
-        -->
 
                 </b-form-group>
 
-<!--
-:disabled="!$v.filesUpdate.$anyDirty || $v.filesUpdate.$invalid || this.pageFiles == null">
--->
                 <b-button class="mb-3" type="submit" block variant="info"
                 v-bind:title="$t('sitePages.formFiles.saveButton')" v-b-tooltip.hover
-                :disabled="this.pageFiles == null">
+                :disabled="!$v.filesUpdate.$anyDirty || $v.filesUpdate.$invalid
+                  || this.pageFiles == null"
+                >
                   <font-awesome-icon :icon="['fa', 'save']" fixed-width />
                 </b-button>
 
@@ -1156,6 +1090,7 @@ export default {
   data() {
     return {
       page: {},
+      selectedPageFile: null,
       deletePassphrase: '',
       deleteGroupPassphrase: '',
       selected: [],
@@ -1215,7 +1150,7 @@ export default {
         imageData: '',
       },
       pageFiles: null,
-      filesUpdate: [{ size: 0, type: '' }],
+      filesUpdate: [],
     };
   },
   validations: {
@@ -1300,23 +1235,6 @@ export default {
       structure: {
         required,
       },
-      // files: {
-      // required,
-      // $each: {
-      // name: {
-      // required,
-      // minLength: minLength(4),
-      // maxLength: maxLength(255),
-      // alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s\W]*$/i.test(val),
-      // },
-      // fsize: {
-      // maxValue: maxValue(10),
-      // },
-      // ftype: {
-      // isFile: docsType,
-      // },
-      // }
-      // }
     },
     coverUpdate: {
       size: {
@@ -1329,11 +1247,19 @@ export default {
     filesUpdate: {
       $each: {
         size: {
-          maxValue: maxValue(4),
+          maxValue: maxValue(10),
         },
         type: {
           isFile: docsType,
         },
+      },
+    },
+    selectedPageFile: {
+      name: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(255),
+        alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s\W]*$/i.test(val),
       },
     },
   },
@@ -1506,47 +1432,50 @@ export default {
       }
     },
     onSelectFiles() {
-      // const { files } = this.$refs['filesInput-' + fIndex][0].$refs.input;
       const { files } = this.$refs.filesInput.$refs.input;
-      // this.pageFiles.push(files);
-      // console.log(this.pageFiles)
+      this.filesUpdate = [];
       if (files && files[0]) {
-        const validationFilesList = [];
         Array.from(files).forEach((file) => {
-          validationFilesList.push({
+          this.filesUpdate.push({
             type: file.type,
             size: formatBytes(file.size, 2, 2).number,
             name: file.name,
           });
         });
-        this.pageFiles = files;
-        // this.filesUpdate.type = files[0].type;
-        // this.filesUpdate.size = formatBytes(files[0].size, 2, 2).number;
-        // this.$v.filesUpdate.$touch();
+
+        this.$v.filesUpdate.$touch();
+        if (!this.$v.filesUpdate.$invalid) {
+          this.pageFiles = files;
+        }
       }
+    },
+    onResetFiles(evt) {
+      evt.preventDefault();
+      this.page = {};
+      this.pageFiles = null;
+      this.filesUpdate = [];
+      this.isActiveProgress = false;
+      // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+      EventBus.$emit('forceRerender');
     },
     onSubmitFiles(id) {
-      // this.$v.page.files.$touch();
-
-      // if (!this.$v.page.files.$invalid) {
-      // const formData = new FormData();
-      // if (this.fileCover) {
-      // formData.append('cover', this.fileCover[0]);
-      // }
-      // this.isActiveProgress = true;
-      // this.$store.dispatch('updatePageCover', { formData, id });
-      // }
-
-      const formData = new FormData();
-      if (this.pageFiles) {
-        Array.from(this.pageFiles).forEach((f) => {
-          formData.append('file[]', f);
-        });
+      this.$v.filesUpdate.$touch();
+      if (!this.$v.filesUpdate.$invalid) {
+        const formData = new FormData();
+        if (this.pageFiles) {
+          Array.from(this.pageFiles).forEach((f) => {
+            formData.append('file[]', f);
+          });
+        }
+        this.isActiveProgress = true;
+        this.$store.dispatch('postPageFiles', { formData, id });
       }
-      this.isActiveProgress = true;
-      this.$store.dispatch('postPageFiles', { formData, id });
     },
-    confirmFileDeletion(ids) {
+    confirmFileDeletion(ids, fIndex) {
       this.boxTwo = '';
       this.$bvModal.msgBoxConfirm(this.$t('sitePages.formFiles.deleteConfirm.description'), {
         title: this.$t('sitePages.formFiles.deleteConfirm.title'),
@@ -1561,12 +1490,22 @@ export default {
       })
         .then((value) => {
           if (value) {
-            this.$store.dispatch('deletePageFile', ids);
+            this.$store.dispatch('deletePageFile', ids)
+              .then(() => {
+                this.page.files.splice(fIndex, 1);
+              });
           }
         })
         .catch((err) => {
           EventBus.$emit('message', err);
         });
+    },
+    onSubmitUpdateFileData(ids) {
+      this.$v.selectedPageFile.$touch();
+      if (!this.$v.selectedPageFile.$invalid) {
+        this.$store.dispatch('updatePageFileData', { ids, data: this.selectedPageFile });
+        this.$v.selectedPageFile.$reset();
+      }
     },
     listRows() {
       const newLimit = parseInt(parseInt(this.pages.count, 10)

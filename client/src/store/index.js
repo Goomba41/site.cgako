@@ -779,7 +779,23 @@ const actions = {
         },
       })
       .then((response) => {
-        EventBus.$emit('forceRerender');
+        // EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Обновить данные файла на странице
+  updatePageFileData(context, dataUpdate) {
+    return axios.put(`/api/pages/${dataUpdate.ids.pid}/files/${dataUpdate.ids.fid}?dbg`,
+      { name: dataUpdate.data.name },
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+      })
+      .then((response) => {
         EventBus.$emit('message', response.data);
       })
       .catch((error) => {

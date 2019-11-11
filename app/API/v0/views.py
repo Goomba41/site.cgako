@@ -39,7 +39,7 @@ from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator, role_validator, \
     role_update_validator, section_validator, section_update_validator, \
     organization_update_validator, organization_buildings_validator, \
-    page_validator, page_update_validator
+    page_validator, page_update_validator, filepage_update_validator
 
 API0 = Blueprint('API0', __name__)
 
@@ -3195,7 +3195,7 @@ def post_page_files(current_user, pid):
                             'application/pdf',
                             'application/zip',
                             'application/msword'
-                        ]) or (fsize_mb > 5)):
+                        ]) or (fsize_mb > 10)):
                     na_files.append("«" + pfile.filename + "»")
                 else:
                     fsize = formatBytes(fsize_b)
@@ -3263,7 +3263,7 @@ def delete_page_file(current_user, pid, fid):
             if page:
                 if page.files:
                     file_found = next(
-                        (contact for contact in page.files if contact.get(
+                        (pfile for pfile in page.files if pfile.get(
                             'fid', None) == fid),
                         None
                     )
@@ -3319,6 +3319,101 @@ def delete_page_file(current_user, pid, fid):
                 status=403,
                 mimetype='application/json'
             )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages/<int:pid>/files/<string:fid>', methods=['PUT'])
+@token_required
+def update_page_file_data(current_user, pid, fid):
+    """ Удаление файла страницы """
+
+    try:
+        update_data = request.get_json()
+
+        if not filepage_update_validator.is_valid(update_data):
+            errors = []
+            for error in sorted(filepage_update_validator.iter_errors(
+                                update_data), key=str):
+                errors.append(error.message)
+
+            separator = '; '
+            error_text = separator.join(errors)
+            response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': error_text}),
+                    status=422,
+                    mimetype='application/json'
+                )
+        else:
+            if CmsUsers.can(current_user.id, "put", "pages"):
+                page = SitePages.query.get(pid)
+                if page:
+                    if page.files:
+                        file_found = next(
+                            (pfile for pfile in page.files if pfile.get(
+                                'fid', None) == fid),
+                            None
+                        )
+                        if file_found:
+                            file_old_name = file_found.get('name', None)
+                            file_found['name'] = update_data['name']
+                            page.files = [i if not (
+                                i['fid'] == fid
+                            ) else file_found for i in page.files]
+                            flag_modified(page, 'files')
+                            db.session.commit()
+
+                            response = Response(
+                                response=json.dumps({
+                                    'type': 'success',
+                                    'text': 'Успешно изменен '
+                                    'файл «'+str(file_old_name)+'»!'
+                                }),
+                                status=200,
+                                mimetype='application/json'
+                            )
+                        else:
+                            response = Response(
+                                response=json.dumps({
+                                    'type': 'danger',
+                                    'text': 'Указанный '
+                                            'файл '
+                                            'не существует!'
+                                }),
+                                status=404,
+                                mimetype='application/json'
+                            )
+
+                    else:
+                        response = Response(
+                            response=json.dumps({'type': 'danger',
+                                                 'text': 'К странице '
+                                                         'не прикреплены '
+                                                         'файлы!'}),
+                            status=404,
+                            mimetype='application/json'
+                        )
+                else:
+                    response = Response(
+                        response=json.dumps({
+                            'type': 'danger',
+                            'text': 'Страница не существует!'
+                        }),
+                        status=404,
+                        mimetype='application/json'
+                    )
+            else:
+                response = Response(
+                    response=json.dumps({'type': 'danger',
+                                         'text': 'Доступ запрещен (403)'}),
+                    status=403,
+                    mimetype='application/json'
+                )
 
     except Exception:
 

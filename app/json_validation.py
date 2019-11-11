@@ -624,8 +624,7 @@ schema_page_data = {
                     "required": ["id", ],
                  },
     },
-    "required": ["title", "text", "uri", "description", "mainpage", "available", "section"],
-    "additionalProperties": False
+    "required": ["title", "text", "uri", "description", "mainpage", "available", "section"]
 }
 
 schema_page_update_data = {
@@ -679,8 +678,21 @@ schema_page_update_data = {
                     "required": ["id", ],
                  },
     },
-    "required": ["title", "text", "uri", "seo_description", "mainpage", "available", "structure"],
-    "additionalProperties": False
+    "required": ["title", "text", "uri", "seo_description", "mainpage", "available", "structure"]
+}
+
+schema_filepage_update_data = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "name": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я \W]{4,255}$",
+                    "minLength": 4,
+                    "maxLength": 255,
+                 },
+    },
+    "required": ["name"]
 }
 
 # ------------------------------------------------------------
@@ -776,3 +788,4 @@ organization_update_validator = MyValidator(schema_organization_update_data)
 organization_buildings_validator = MyValidator(schema_organization_buildings_data)
 page_validator = MyValidator(schema_page_data)
 page_update_validator = MyValidator(schema_page_update_data)
+filepage_update_validator = MyValidator(schema_filepage_update_data)

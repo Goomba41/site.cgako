@@ -1179,10 +1179,7 @@
                 "file":{
                     "placeholder":"Choose files...",
                     "browseButton":"Browse",
-                    "errors":{
-                        "maxValue":"File size exceeds 10 MB.",
-                        "isFile":"Chosen file is not one of this formats: PDF, ODT, DOC, DOCX, ZIP."
-                    },
+                    "error":"One of the selected files exceeds 10 MB or has wrong format!",
                     "successText":"Okay!"
                 },
                 "name":{
