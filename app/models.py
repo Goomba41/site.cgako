@@ -514,6 +514,12 @@ class SitePages(db.Model):
         nullable=False,
         comment="На главной"
     )
+    banner = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False,
+        comment="В баннер"
+    )
     structure_id = db.Column(
         db.Integer,
         db.ForeignKey('cms_structure.id'),
@@ -522,7 +528,7 @@ class SitePages(db.Model):
     )
 
     def __init__(self, title, uri, text, seo_description, seo_keywords,
-                 available, mainpage,
+                 available, mainpage, banner,
                  structure_id=None, creation_date=None,
                  files=None, gallery=None, cover=None):
         """Конструктор класса."""
@@ -533,6 +539,7 @@ class SitePages(db.Model):
         self.seo_keywords = seo_keywords
         self.available = available
         self.mainpage = mainpage
+        self.banner = banner
         self.structure_id = 51 if structure_id is None else structure_id
         self.creation_date = datetime.utcnow() if creation_date is None else creation_date
         self.files = [] if files is None else files
@@ -601,6 +608,35 @@ class CmsStructureSchema(ma.ModelSchema):
         """Мета модели, вносятся доп. параметры."""
 
         model = CmsStructure
+
+class BannerSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = SitePages
+        fields = ("id", "uri", "available", "cover", "seo_description", "text", "title", )
+
+class PageSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = SitePages
+        fields = ("id", "uri",)
+
+class MenuSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = CmsStructure
+        fields = ("id", "title", "enabled", "level", "pages")
+
+    pages = ma.Nested(PageSchema, many=True)
 
 
 class CmsOrganizationBuildingsSchema(ma.ModelSchema):

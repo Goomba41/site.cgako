@@ -11,6 +11,7 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "@chenfengyuan/vue-carousel": "^1.0.2",
     "@ckeditor/ckeditor5-build-classic": "^15.0.0",
     "@ckeditor/ckeditor5-link": "^15.0.0",
     "@ckeditor/ckeditor5-vue": "^1.0.0",
@@ -30,6 +31,7 @@
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
     "nprogress": "^0.2.0",
+    "owl.carousel": "^2.3.4",
     "quill-emoji": "^0.1.7",
     "shortid": "^2.2.15",
     "tiptap": "^1.26.4",
@@ -41,6 +43,7 @@
     "vue-lodash": "^2.0.2",
     "vue-moment": "^4.0.0",
     "vue-multiselect": "^2.1.6",
+    "vue-owl-carousel": "^2.0.3",
     "vue-phone-number-input": "^0.2.1",
     "vue-plugin-load-script": "^1.2.0",
     "vue-router": "^3.1.3",

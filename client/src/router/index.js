@@ -12,6 +12,7 @@ import Dashboard from '@/components/Dashboard';
 import AdminPanel from '@/components/AdminPanel';
 import Profile from '@/components/Profile';
 import Index from '@/components/Index';
+import SinglePage from '@/components/SinglePage';
 import store from '@/store';
 import { i18n } from '@/utils';
 
@@ -19,7 +20,6 @@ Vue.use(Router);
 
 // Объявление роутера с маршрутами
 const router = new Router({
-  saveScrollPosition: true,
   linkExactActiveClass: 'active',
   routes: [
     {
@@ -142,7 +142,25 @@ const router = new Router({
       meta: {
         title: 'Главная',
       },
+      children: [
+        {
+          path: '/:uri',
+          name: 'SinglePage',
+          component: SinglePage,
+          meta: {
+            title: 'Страница',
+          },
+        },
+      ],
     },
+    // {
+    // path: '/uri',
+    // name: 'SinglePage',
+    // component: SinglePage,
+    // meta: {
+    // title: 'Страница',
+    // },
+    // },
     {
       path: '*',
       component: Index,

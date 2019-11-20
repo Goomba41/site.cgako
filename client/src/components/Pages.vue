@@ -181,7 +181,7 @@
                 <font-awesome-icon
                   :icon="['fa', 'check-circle']"
                   fixed-width
-                  :class="page.mainpage ? 'text-success' : 'text-danger'"
+                  :class="page.available ? 'text-success' : 'text-danger'"
                 />
               </span>
               <span
@@ -191,7 +191,17 @@
               <font-awesome-icon
                 :icon="['fa', 'home']"
                 fixed-width
-                :class="page.available ? 'text-success' : 'text-danger'"
+                :class="page.mainpage ? 'text-success' : 'text-danger'"
+              />
+              </span>
+              <span
+                v-b-tooltip.hover
+                v-bind:title="$t('sitePages.tooltips.banner')"
+              >
+              <font-awesome-icon
+                :icon="['fa', 'ellipsis-h']"
+                fixed-width
+                :class="page.banner ? 'text-success' : 'text-danger'"
               />
               </span><br>
               <span
@@ -244,6 +254,7 @@
                 <b-button size="sm" v-bind:title="$t('sitePages.tooltips.imageButton')"
                 class="mb-1"
                 v-if="can(user_perms, 'put', 'pages')"
+                v-b-modal.images-modal
                 v-b-tooltip.hover variant="info"
                  @click="selectPage(page.id)"
                 :disabled="!(can(user_perms, 'put', 'pages'))">
@@ -574,6 +585,17 @@
               </b-form-checkbox>
             </b-form-group>
           </b-col>
+          <b-col cols="2">
+            <b-form-group>
+              <b-form-checkbox
+                name="mainpage"
+                switch size="md"
+                v-model="$v.newPage.banner.$model"
+              >
+                {{$t('sitePages.formNew.formFields.banner.placeholder')}}
+              </b-form-checkbox>
+            </b-form-group>
+          </b-col>
         </b-row>
 
         <b-row>
@@ -788,6 +810,17 @@
               </b-form-checkbox>
             </b-form-group>
           </b-col>
+          <b-col cols="2">
+            <b-form-group>
+              <b-form-checkbox
+                name="banner"
+                switch size="md"
+                v-model="$v.page.banner.$model"
+              >
+                {{$t('sitePages.formEdit.formFields.banner.placeholder')}}
+              </b-form-checkbox>
+            </b-form-group>
+          </b-col>
         </b-row>
 
         <b-row>
@@ -987,16 +1020,16 @@
                   :state="$v.selectedPageFile.$dirty ? !$v.selectedPageFile.$anyError : null"
                 >
                   <span v-if="!$v.selectedPageFile.name.required">
-                    {{$t('sitePages.formNew.formFields.description.errors.required')}}
+                    {{$t('sitePages.formFiles.formFields.name.errors.required')}}
                   </span>
                   <span v-if="!$v.selectedPageFile.name.minLength">
-                    {{$t('sitePages.formNew.formFields.description.errors.minLength')}}
+                    {{$t('sitePages.formFiles.formFields.name.errors.minLength')}}
                   </span>
                   <span v-if="!$v.selectedPageFile.name.maxLength">
-                    {{$t('sitePages.formNew.formFields.description.errors.maxLength')}}
+                    {{$t('sitePages.formFiles.formFields.name.errors.maxLength')}}
                   </span>
                   <span v-if="!$v.selectedPageFile.name.alpha">
-                    {{$t('sitePages.formNew.formFields.description.errors.alpha')}}
+                    {{$t('sitePages.formFiles.formFields.name.errors.alpha')}}
                   </span>
                 </b-form-invalid-feedback>
               </b-form-group>
@@ -1066,6 +1099,180 @@
 
     </b-modal>
 
+    <b-modal
+      id="images-modal"
+      v-bind:title="$t('sitePages.formImages.formTitle')"
+      hide-footer size="md" centered
+      :header-bg-variant="'info'"
+      :header-text-variant="'light'"
+      @hidden="onResetImages"
+      @close="onResetImages"
+      v-if="can(user_perms, 'put', 'pages')"
+    >
+
+      <b-card
+        no-body
+        class="mb-3"
+        v-for="(image, iIndex) in page.gallery"
+        v-bind:key="iIndex"
+      >
+        <b-card-header header-tag="header" class="p-0" role="tab">
+          <b-button-group class="w-100">
+            <b-button
+              block
+              v-b-toggle="'imageAccordion-' + iIndex"
+              class="text-left"
+              variant="info"
+              v-bind:title="image.name"
+              v-b-tooltip.hover
+            >
+              <b-img
+                width="20"
+                height="20"
+                :src="'/static/page_gallery/'+image.fname"
+                alt="Image 1"
+              >
+              </b-img>
+              {{(image.name.length &lt; 16) ? image.name : image.name.substr(0, 16) + '...'}}
+            </b-button>
+            <b-button
+              variant="secondary"
+              v-bind:title="$t('sitePages.formImages.downloadButton')"
+              :href="'/static/page_gallery/'+image.fname"
+              target="_blank"
+              v-b-tooltip.hover
+            >
+              <font-awesome-icon icon="download" fixed-width />
+            </b-button>
+            <b-button
+              variant="danger"
+              v-if="can(user_perms, 'put', 'pages')"
+              v-bind:title="$t('sitePages.formImages.deleteButton')"
+              v-b-tooltip.hover
+              @click="confirmImageDeletion({ 'pid':page.id, 'iid':image.iid }, iIndex)"
+            >
+              <font-awesome-icon icon="trash" fixed-width />
+            </b-button>
+            <b-button
+              v-else
+              v-bind:title="$t('sitePages.formImages.deleteButton')"
+              v-b-tooltip.hover
+            >
+              <font-awesome-icon :icon="['fa', 'lock']" fixed-width />
+            </b-button>
+          </b-button-group>
+        </b-card-header>
+        <b-collapse
+          :id="`imageAccordion-${iIndex}`"
+          accordion="image"
+          role="tabpanel"
+          @shown="selectedPageImage=image"
+          @hide="selectedPageImage=null"
+        >
+          <b-list-group flush>
+            <b-list-group-item>
+              <b-form-group>
+                <b-input-group class="mt-3">
+                  <b-form-input
+                    :type="'text'"
+                    v-model="$v.selectedPageImage.name.$model"
+                    v-bind:placeholder="$t('sitePages.formImages.formFields.name.placeholder')"
+                    :state="$v.selectedPageImage.$dirty ? !$v.selectedPageImage.$anyError : null"
+                  >
+                  </b-form-input>
+                  <b-input-group-append>
+                    <b-button variant="outline-primary"
+                    @click="onSubmitUpdateImageData({ 'pid':page.id, 'iid':image.iid })"
+                    :disabled="!$v.selectedPageImage.$anyDirty || $v.selectedPageImage.$invalid
+                      || selectedPageImage == null"
+                    >
+                      <font-awesome-icon :icon="['fa', 'save']" fixed-width />
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+                <b-form-invalid-feedback
+                  :state="$v.selectedPageImage.$dirty ? !$v.selectedPageImage.$anyError : null"
+                >
+                  <span v-if="!$v.selectedPageImage.name.required">
+                    {{$t('sitePages.formImages.formFields.name.errors.required')}}
+                  </span>
+                  <span v-if="!$v.selectedPageImage.name.minLength">
+                    {{$t('sitePages.formImages.formFields.name.errors.minLength')}}
+                  </span>
+                  <span v-if="!$v.selectedPageImage.name.maxLength">
+                    {{$t('sitePages.formImages.formFields.name.errors.maxLength')}}
+                  </span>
+                  <span v-if="!$v.selectedPageImage.name.alpha">
+                    {{$t('sitePages.formImages.formFields.name.errors.alpha')}}
+                  </span>
+                </b-form-invalid-feedback>
+              </b-form-group>
+            </b-list-group-item>
+
+          </b-list-group>
+        </b-collapse>
+
+      </b-card>
+
+      <b-col class="p-0">
+        <h3 class="mb-0 small">
+            {{$t('sitePages.formImages.saveButton')}}:
+        </h3>
+        <b-card no-body class="pt-3 mt-3">
+          <b-list-group flush>
+            <b-list-group-item class="flex-column align-items-start align-middle">
+              <b-form class="w-100" @submit.prevent="onSubmitImages(page.id)">
+                <b-form-group
+                :description="$t('sitePages.formImages.formDescription')">
+
+                  <b-form-file
+                    ref="imagesInput"
+                    @input="onSelectImages"
+                    lang="ru"
+                    multiple
+                    :file-name-formatter="formatNames"
+                    v-bind:placeholder="$t('sitePages.formImages.formFields.file.placeholder')"
+                    v-bind:browse-text="$t('sitePages.formImages.formFields.file.browseButton')"
+                    accept=".jpeg, .jpg, .png, .gif"
+                    :state="$v.imagesUpdate.$dirty ? !$v.imagesUpdate.$anyError : null"
+                  ></b-form-file>
+
+                  <b-form-invalid-feedback
+                    :state="$v.imagesUpdate.$dirty ? !$v.imagesUpdate.$anyError : null"
+                    v-if="$v.imagesUpdate.$anyError"
+                  >
+                      {{$t('sitePages.formImages.formFields.file.error')}}
+                  </b-form-invalid-feedback>
+
+                </b-form-group>
+
+                <b-button class="mb-3" type="submit" block variant="info"
+                v-bind:title="$t('sitePages.formImages.saveButton')" v-b-tooltip.hover
+                :disabled="!$v.imagesUpdate.$anyDirty || $v.imagesUpdate.$invalid
+                  || this.pageImages == null"
+                >
+                  <font-awesome-icon :icon="['fa', 'save']" fixed-width />
+                </b-button>
+
+                <b-row class="mx-auto pt-3 border-top" v-if="isActiveProgress">
+                  <b-progress :max="100" show-progress animated class="w-100">
+                    <b-progress-bar :value="progressValue" variant="success"
+                    :label="`${((progressValue / progressMax) * 100).toFixed(2)}%`">
+                    </b-progress-bar>
+                    <b-progress-bar :value="preloadValue" variant="primary"
+                    :label="`${preloadValue.toFixed(2)}%`">
+                    </b-progress-bar>
+                  </b-progress>
+                </b-row>
+              </b-form>
+
+            </b-list-group-item>
+          </b-list-group>
+        </b-card>
+      </b-col>
+
+    </b-modal>
+
   </main>
 </template>
 
@@ -1091,6 +1298,7 @@ export default {
     return {
       page: {},
       selectedPageFile: null,
+      selectedPageImage: null,
       deletePassphrase: '',
       deleteGroupPassphrase: '',
       selected: [],
@@ -1141,6 +1349,7 @@ export default {
         ],
         available: true,
         mainpage: true,
+        banner: false,
         section: '',
       },
       fileCover: null,
@@ -1150,7 +1359,9 @@ export default {
         imageData: '',
       },
       pageFiles: null,
+      pageImages: null,
       filesUpdate: [],
+      imagesUpdate: [],
     };
   },
   validations: {
@@ -1197,6 +1408,9 @@ export default {
       mainpage: {
         required,
       },
+      banner: {
+        required,
+      },
       section: {
         required,
       },
@@ -1232,6 +1446,9 @@ export default {
       mainpage: {
         required,
       },
+      banner: {
+        required,
+      },
       structure: {
         required,
       },
@@ -1255,6 +1472,24 @@ export default {
       },
     },
     selectedPageFile: {
+      name: {
+        required,
+        minLength: minLength(4),
+        maxLength: maxLength(255),
+        alpha: val => /^[а-яёa-zА-ЯЁA-Z0-9\s\W]*$/i.test(val),
+      },
+    },
+    imagesUpdate: {
+      $each: {
+        size: {
+          maxValue: maxValue(1),
+        },
+        type: {
+          isImage: imageType,
+        },
+      },
+    },
+    selectedPageImage: {
       name: {
         required,
         minLength: minLength(4),
@@ -1449,11 +1684,42 @@ export default {
         }
       }
     },
+    onSelectImages() {
+      const { files } = this.$refs.imagesInput.$refs.input;
+      this.imagesUpdate = [];
+      if (files && files[0]) {
+        Array.from(files).forEach((file) => {
+          this.imagesUpdate.push({
+            type: file.type,
+            size: formatBytes(file.size, 2, 2).number,
+            name: file.name,
+          });
+        });
+
+        this.$v.imagesUpdate.$touch();
+        if (!this.$v.imagesUpdate.$invalid) {
+          this.pageImages = files;
+        }
+      }
+    },
     onResetFiles(evt) {
       evt.preventDefault();
       this.page = {};
       this.pageFiles = null;
       this.filesUpdate = [];
+      this.isActiveProgress = false;
+      // Trick to reset/clear native browser form validation state
+      this.show = false;
+      this.$nextTick(() => {
+        this.show = true;
+      });
+      EventBus.$emit('forceRerender');
+    },
+    onResetImages(evt) {
+      evt.preventDefault();
+      this.page = {};
+      this.pageImages = null;
+      this.imagesUpdate = [];
       this.isActiveProgress = false;
       // Trick to reset/clear native browser form validation state
       this.show = false;
@@ -1473,6 +1739,19 @@ export default {
         }
         this.isActiveProgress = true;
         this.$store.dispatch('postPageFiles', { formData, id });
+      }
+    },
+    onSubmitImages(id) {
+      this.$v.imagesUpdate.$touch();
+      if (!this.$v.imagesUpdate.$invalid) {
+        const formData = new FormData();
+        if (this.pageImages) {
+          Array.from(this.pageImages).forEach((f) => {
+            formData.append('image[]', f);
+          });
+        }
+        this.isActiveProgress = true;
+        this.$store.dispatch('postPageImages', { formData, id });
       }
     },
     confirmFileDeletion(ids, fIndex) {
@@ -1500,11 +1779,43 @@ export default {
           EventBus.$emit('message', err);
         });
     },
+    confirmImageDeletion(ids, iIndex) {
+      this.boxTwo = '';
+      this.$bvModal.msgBoxConfirm(this.$t('sitePages.formImages.deleteConfirm.description'), {
+        title: this.$t('sitePages.formImages.deleteConfirm.title'),
+        size: 'sm',
+        buttonSize: 'sm',
+        okVariant: 'danger',
+        okTitle: this.$t('sitePages.formImages.deleteConfirm.yes'),
+        cancelTitle: this.$t('sitePages.formImages.deleteConfirm.no'),
+        footerClass: 'p-2',
+        hideHeaderClose: false,
+        centered: true,
+      })
+        .then((value) => {
+          if (value) {
+            this.$store.dispatch('deletePageImage', ids)
+              .then(() => {
+                this.page.gallery.splice(iIndex, 1);
+              });
+          }
+        })
+        .catch((err) => {
+          EventBus.$emit('message', err);
+        });
+    },
     onSubmitUpdateFileData(ids) {
       this.$v.selectedPageFile.$touch();
       if (!this.$v.selectedPageFile.$invalid) {
         this.$store.dispatch('updatePageFileData', { ids, data: this.selectedPageFile });
         this.$v.selectedPageFile.$reset();
+      }
+    },
+    onSubmitUpdateImageData(ids) {
+      this.$v.selectedPageImage.$touch();
+      if (!this.$v.selectedPageImage.$invalid) {
+        this.$store.dispatch('updatePageImageData', { ids, data: this.selectedPageImage });
+        this.$v.selectedPageImage.$reset();
       }
     },
     listRows() {

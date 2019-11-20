@@ -605,6 +605,9 @@ schema_page_data = {
         "mainpage": {
                     "type": "boolean",
                 },
+        "banner": {
+                    "type": "boolean",
+                },
         "keywords": {
                     "type": "array",
                     "items": {
@@ -658,6 +661,9 @@ schema_page_update_data = {
         "mainpage": {
                     "type": "boolean",
                 },
+        "banner": {
+                    "type": "boolean",
+                },
         "seo_keywords": {
                     "type": "array",
                     "items": {
@@ -682,6 +688,20 @@ schema_page_update_data = {
 }
 
 schema_filepage_update_data = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "name": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9а-яА-Я \W]{4,255}$",
+                    "minLength": 4,
+                    "maxLength": 255,
+                 },
+    },
+    "required": ["name"]
+}
+
+schema_imagepage_update_data = {
     "type": "object",
     "additionalProperties": False,
     "properties": {
@@ -789,3 +809,4 @@ organization_buildings_validator = MyValidator(schema_organization_buildings_dat
 page_validator = MyValidator(schema_page_data)
 page_update_validator = MyValidator(schema_page_update_data)
 filepage_update_validator = MyValidator(schema_filepage_update_data)
+imagepage_update_validator = MyValidator(schema_imagepage_update_data)

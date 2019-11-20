@@ -942,6 +942,7 @@
             "filesButton":"Managing files",
             "acessible":"Accessible",
             "mainpage":"On main page",
+            "banner":"Banner on main page",
             "filesCount":"Number of files",
             "imagesCount":"Number of images"
         },
@@ -1060,6 +1061,13 @@
                         "required":"This field is required."
                     },
                     "successText":"Ok!"
+                },
+                "banner":{
+                    "placeholder":"Banner on mainpage",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
                 }
             }
         },
@@ -1144,6 +1152,13 @@
                         "required":"This field is required."
                     },
                     "successText":"Ok!"
+                },
+                "banner":{
+                    "placeholder":"Banner on mainpage",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
                 }
             }
         },
@@ -1184,6 +1199,37 @@
                 },
                 "name":{
                     "placeholder":"File name",
+                    "errors":{
+                        "required":"This field is required.",
+                        "minLength":"This field must contain minimum 4 charachers.",
+                        "maxLength":"This field must contain maximum 255 charachers.",
+                        "alpha":"This field must contain only text charachers."
+                    },
+                    "successText":"Okay!"
+                }
+            }
+        },
+        "formImages":{
+            "formTitle":"Managing images",
+            "formDescription":"Images must be in one of this formats: JPEG, JPG, PNG, GIF. Maximum size of image is 1 MB.",
+            "saveButton":"Attach images",
+            "deleteButton":"Delete image",
+            "downloadButton":"Download image",
+            "deleteConfirm": {
+                "title": "Confirm image deletion",
+                "yes": "Yes",
+                "no": "No",
+                "description": "Please confirm that you want to delete this image."
+            },
+            "formFields":{
+                "file":{
+                    "placeholder":"Choose images...",
+                    "browseButton":"Browse",
+                    "error":"One of the selected images exceeds 1 MB or has wrong format!",
+                    "successText":"Okay!"
+                },
+                "name":{
+                    "placeholder":"Name/description of image",
                     "errors":{
                         "required":"This field is required.",
                         "minLength":"This field must contain minimum 4 charachers.",

@@ -15,11 +15,17 @@ const state = {
   organization: [], // информация об организации
   buildings: [], // здания организации
   structure: {}, // структура сайта
+  menu: {}, // меню сайта
+  banners: [], // баннеры
+  lastPages: [], // последние страницы
+  pagesNews: [], // новостные страницы
   permissions: [], // список разрешений CMS
   roles: [], // список ролей CMS
   sectionsEnd: [], // список конечных разделов сайта
   users: [], // список пользователей CMS
   pages: [], // список страниц сайта
+  pageData: [], // информация страницы для внешней части
+  contactsData: [], // контактная информация для внешней части
   uid: '', // id текущего пользователя
   profile: {}, // профиль текущего пользователя
   user_perms: [], // разрешения текущего пользователя
@@ -444,6 +450,53 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  // Загрузить меню
+  loadMenu(context) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/menu?dbg')
+      .then((response) => {
+        context.commit('setMenu', response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Загрузить баннеры
+  loadBanners(context) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/banners?dbg')
+      .then((response) => {
+        context.commit('setBanners', response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Загрузить последние страницы
+  loadLastPages(context, payload) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/pages/last?dbg',
+      {
+        params: {
+          limit: payload.limit || undefined,
+        },
+      })
+      .then((response) => {
+        context.commit('setLastPages', response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        EventBus.$emit('message', error.response.data);
+      });
+  },
   // Загрузить конечные разделы
   loadSectionsEnd(context) {
     context.commit('setFormPending');
@@ -802,6 +855,106 @@ const actions = {
         EventBus.$emit('message', error.response.data);
       });
   },
+  // Удалить изображение из галереи страницы
+  deletePageImage(context, ids) {
+    return axios.delete(`/api/pages/${ids.pid}/images/${ids.iid}?dbg`,
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+      })
+      .then((response) => {
+        // EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Добавить изображения к галерее страницы
+  postPageImages(context, dataPost) {
+    return axios.post(`/api/pages/${dataPost.id}/images?dbg`, dataPost.formData,
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+        onUploadProgress: (progressEvent) => {
+          state.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100;
+        },
+      })
+      .then((response) => {
+        state.uploadProgress = 0;
+        EventBus.$emit('forceRerender');
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Обновить данные изображения галереи на странице
+  updatePageImageData(context, dataUpdate) {
+    return axios.put(`/api/pages/${dataUpdate.ids.pid}/images/${dataUpdate.ids.iid}?dbg`,
+      { name: dataUpdate.data.name },
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+      })
+      .then((response) => {
+        EventBus.$emit('message', response.data);
+      })
+      .catch((error) => {
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Загрузить данные страницы
+  loadPageData(context, payload) {
+    context.commit('setFormPending');
+    return axios.get(`/api/pages/${payload.uri}`)
+      .then((response) => {
+        context.commit('setPageData', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+      });
+  },
+  // Загрузить контактные данные
+  loadContactsData(context) {
+    context.commit('setFormPending');
+    return axios.get('/api/contacts')
+      .then((response) => {
+        context.commit('setContactsData', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+      });
+  },
+  // Загрузить контактные данные
+  loadPagesNews(context, payload) {
+    context.commit('setFormPending');
+    return axios.get('/api/pages/news',
+      {
+        params: {
+          limit: payload.limit || undefined,
+          start: payload.start || 1,
+        },
+      })
+      .then((response) => {
+        context.commit('setPagesNews', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+      });
+  },
 };
 
 // Мутации данных
@@ -856,6 +1009,18 @@ const mutations = {
   setStructure(state, payload) {
     state.structure = payload;
   },
+  // Установка меню
+  setMenu(state, payload) {
+    state.menu = payload;
+  },
+  // Установка баннеров
+  setBanners(state, payload) {
+    state.banners = payload;
+  },
+  // Установка баннеров
+  setLastPages(state, payload) {
+    state.lastPages = payload;
+  },
   // Установка конечных разделов
   setSectionsEnd(state, payload) {
     state.sectionsEnd = payload;
@@ -863,6 +1028,18 @@ const mutations = {
   // Установка зданий
   setBuildings(state, payload) {
     state.buildings = payload.buildings;
+  },
+  // Установка данных страницы
+  setPageData(state, payload) {
+    state.pageData = payload;
+  },
+  // Установка контактных данных
+  setContactsData(state, payload) {
+    state.contactsData = payload;
+  },
+  // Установка контактных данных
+  setPagesNews(state, payload) {
+    state.pagesNews = payload;
   },
 };
 

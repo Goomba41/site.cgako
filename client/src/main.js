@@ -11,6 +11,7 @@ import BootstrapVueTreeview from 'bootstrap-vue-treeview';
 import Vuelidate from 'vuelidate';
 import VueLodash from 'vue-lodash';
 import FlagIcon from 'vue-flag-icon';
+import VueCarousel from '@chenfengyuan/vue-carousel';
 
 // Импортирование fontawesome и отдельных иконок из него
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -22,7 +23,7 @@ import {
   faListOl, faListUl, faList, faUsers, faSort, faPhone, faBan, faDesktop, faMobileAlt, faTabletAlt,
   faBriefcase, faClock, faCheckCircle, faEnvelope, faIdCard, faUserCheck, faHome, faFileImage,
   faLanguage, faLongArrowAltRight, faProjectDiagram, faAddressBook, faMoneyCheckAlt,
-  faBusinessTime, faBuilding, faFileAlt, faImages, faDownload,
+  faBusinessTime, faBuilding, faFileAlt, faImages, faDownload, faEllipsisH,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   faCopyright as farCopyright, faEye as farEye, faEyeSlash as farEyeSlash, faEdit as farEdit,
@@ -52,7 +53,8 @@ library.add(faTrash, faPencilAlt, faInfo, faPlus, faPowerOff,
   faBan, farWindowMaximize, faDesktop, faTabletAlt, faMobileAlt, faLinux, faWindows,
   faApple, faBriefcase, faClock, faCheckCircle, faEnvelope, farFile, faIdCard, faUserCheck,
   faHome, faFileImage, faLanguage, faLongArrowAltRight, faProjectDiagram, faAddressBook,
-  faMoneyCheckAlt, faBusinessTime, faBuilding, faFileAlt, faImages, faDownload);
+  faMoneyCheckAlt, faBusinessTime, faBuilding, faFileAlt, faImages, faDownload,
+  faEllipsisH);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('font-awesome-layers', FontAwesomeLayers);
 Vue.component('font-awesome-layers-text', FontAwesomeLayersText);
@@ -64,6 +66,7 @@ Vue.use(BootstrapVueTreeview);
 Vue.use(VueLodash);
 Vue.use(Vuelidate);
 Vue.use(FlagIcon);
+Vue.use(VueCarousel);
 
 // Объявление moment.js с русской локалью
 const moment = require('moment');
@@ -94,6 +97,17 @@ Vue.filter('declension', (value, words) => {
     }
   }
   return word;
+});
+
+Vue.directive('scroll', {
+  inserted(el, binding) {
+    const f = function Scroll(evt) {
+      if (binding.value(evt, el)) {
+        window.removeEventListener('scroll', f);
+      }
+    };
+    window.addEventListener('scroll', f);
+  },
 });
 
 /* eslint-disable no-new */
