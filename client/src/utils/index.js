@@ -125,3 +125,29 @@ export function dateDiffNow(date, period) {
   }
   return true;
 }
+
+const API_ID = 5747691; // код свой;
+
+export function injectVKOpenApi() {
+  return new Promise((resolve, reject) => {
+    try {
+      const fjs = document.getElementsByTagName('script')[0];
+      if (document.getElementById('vk_openapi_js')) {
+        resolve();
+        return;
+      }
+      const js = document.createElement('script');
+      js.id = 'vk_openapi_js';
+      js.src = '//vk.com/js/api/openapi.js?162';
+      js.onload = resolve;
+      js.onerror = reject;
+
+      fjs.parentNode.insertBefore(js, fjs);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/* global VK */
+export const initVK = (onlyWidgets = false) => () => VK.init({ apiId: API_ID, onlyWidgets });

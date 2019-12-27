@@ -4,6 +4,7 @@ import NProgress from 'nprogress';
 import Activation from '@/components/Activation';
 import Users from '@/components/Users';
 import Pages from '@/components/Pages';
+import Mainpage from '@/components/Mainpage';
 import Roles from '@/components/Roles';
 import Structure from '@/components/Structure';
 import Contacts from '@/components/Contacts';
@@ -13,6 +14,7 @@ import AdminPanel from '@/components/AdminPanel';
 import Profile from '@/components/Profile';
 import Index from '@/components/Index';
 import SinglePage from '@/components/SinglePage';
+import SearchResult from '@/components/SearchResult';
 import store from '@/store';
 import { i18n } from '@/utils';
 
@@ -102,6 +104,16 @@ const router = new Router({
           },
         },
         {
+          path: 'mainpage',
+          name: 'Mainpage',
+          component: Mainpage,
+          meta: {
+            requiresAuth: true,
+            breadCrumb: 'mainpage',
+            title: 'CMS - Настройки главной',
+          },
+        },
+        {
           path: '',
           component: Dashboard,
         },
@@ -143,6 +155,14 @@ const router = new Router({
         title: 'Главная',
       },
       children: [
+        {
+          path: '/search',
+          name: 'SearchResult',
+          component: SearchResult,
+          meta: {
+            title: 'Результаты поиска',
+          },
+        },
         {
           path: '/:uri',
           name: 'SinglePage',

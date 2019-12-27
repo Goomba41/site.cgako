@@ -172,6 +172,14 @@
             <td>
               {{page.title}}
               <br><b>/{{page.uri}}</b>
+              <router-link
+                :to="{ name: 'SinglePage', params: { uri: page.uri }}"
+              >
+                <font-awesome-icon
+                  :icon="['far', 'eye']"
+                  fixed-width
+                />
+              </router-link>
             </td>
             <td>
               <span
@@ -202,6 +210,16 @@
                 :icon="['fa', 'ellipsis-h']"
                 fixed-width
                 :class="page.banner ? 'text-success' : 'text-danger'"
+              />
+              </span>
+              <span
+                v-b-tooltip.hover
+                v-bind:title="$t('sitePages.tooltips.announcement')"
+              >
+              <font-awesome-icon
+                :icon="['fa', 'bullhorn']"
+                fixed-width
+                :class="page.announcement ? 'text-success' : 'text-danger'"
               />
               </span><br>
               <span
@@ -596,6 +614,17 @@
               </b-form-checkbox>
             </b-form-group>
           </b-col>
+          <b-col cols="2">
+            <b-form-group>
+              <b-form-checkbox
+                name="mainpage"
+                switch size="md"
+                v-model="$v.newPage.announcement.$model"
+              >
+                {{$t('sitePages.formNew.formFields.announcement.placeholder')}}
+              </b-form-checkbox>
+            </b-form-group>
+          </b-col>
         </b-row>
 
         <b-row>
@@ -818,6 +847,17 @@
                 v-model="$v.page.banner.$model"
               >
                 {{$t('sitePages.formEdit.formFields.banner.placeholder')}}
+              </b-form-checkbox>
+            </b-form-group>
+          </b-col>
+          <b-col cols="2">
+            <b-form-group>
+              <b-form-checkbox
+                name="announcement"
+                switch size="md"
+                v-model="$v.page.announcement.$model"
+              >
+                {{$t('sitePages.formEdit.formFields.announcement.placeholder')}}
               </b-form-checkbox>
             </b-form-group>
           </b-col>
@@ -1310,8 +1350,8 @@ export default {
         start: 1,
         limit: 20,
         orderBy: {
-          field: 'text',
-          asc: true,
+          field: 'creation_date',
+          asc: false,
         },
       },
       customToolbar: [
@@ -1350,6 +1390,7 @@ export default {
         available: true,
         mainpage: true,
         banner: false,
+        announcement: false,
         section: '',
       },
       fileCover: null,
@@ -1411,6 +1452,9 @@ export default {
       banner: {
         required,
       },
+      announcement: {
+        required,
+      },
       section: {
         required,
       },
@@ -1447,6 +1491,9 @@ export default {
         required,
       },
       banner: {
+        required,
+      },
+      announcement: {
         required,
       },
       structure: {

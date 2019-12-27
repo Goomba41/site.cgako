@@ -520,6 +520,12 @@ class SitePages(db.Model):
         nullable=False,
         comment="В баннер"
     )
+    announcement = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False,
+        comment="Анонс"
+    )
     structure_id = db.Column(
         db.Integer,
         db.ForeignKey('cms_structure.id'),
@@ -528,7 +534,7 @@ class SitePages(db.Model):
     )
 
     def __init__(self, title, uri, text, seo_description, seo_keywords,
-                 available, mainpage, banner,
+                 available, mainpage, banner, announcement,
                  structure_id=None, creation_date=None,
                  files=None, gallery=None, cover=None):
         """Конструктор класса."""
@@ -540,6 +546,7 @@ class SitePages(db.Model):
         self.available = available
         self.mainpage = mainpage
         self.banner = banner
+        self.announcement = announcement
         self.structure_id = 51 if structure_id is None else structure_id
         self.creation_date = datetime.utcnow() if creation_date is None else creation_date
         self.files = [] if files is None else files
@@ -549,6 +556,24 @@ class SitePages(db.Model):
     def __repr__(self):
         """Форматирование представления экземпляра класса."""
         return "Страница: «%s»" % (self.title)
+
+
+class HistoryEvents(db.Model):
+    """Модель страниц сайта."""
+    id = db.Column(db.Integer, primary_key=True) # noqa: ignore=A003
+    event_title = db.Column(db.String(100), comment="Заголовок")
+    description_text = db.Column(db.Text(), comment="Описательный текст")
+    event_date = db.Column(db.DateTime, comment="Дата")
+
+    def __init__(self, event_title, description_text, event_date):
+        """Конструктор класса."""
+        self.event_title = title
+        self.description_text = text
+        self.event_date = creation_date
+
+    def __repr__(self):
+        """Форматирование представления экземпляра класса."""
+        return "Памятная дата: «%s»" % (self.event_title)
 
 # ------------------------------------------------------------
 # Схемы
@@ -618,6 +643,15 @@ class BannerSchema(ma.ModelSchema):
         model = SitePages
         fields = ("id", "uri", "available", "cover", "seo_description", "text", "title", )
 
+class AnnouncementsSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = SitePages
+        fields = ("id", "uri", "available", "cover", "seo_description", "text", "title", )
+
 class PageSchema(ma.ModelSchema):
     """Marshmallow-схема для перегона модели в json формат."""
 
@@ -676,6 +710,15 @@ class SitePagesSchema(ma.ModelSchema):
 
         model = SitePages
     structure = ma.Nested(CmsStructureSchema)
+
+
+class HistoryEventsSchema(ma.ModelSchema):
+    """Marshmallow-схема для перегона модели в json формат."""
+
+    class Meta:
+        """Мета модели, вносятся доп. параметры."""
+
+        model = HistoryEvents
 
 
 class CmsProfileSchema(ma.ModelSchema):

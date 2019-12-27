@@ -383,6 +383,7 @@ export default {
 
       if (!this.$v.section.$invalid) {
         delete this.section.parent;
+        delete this.section.children;
         this.$store.dispatch('updateSection', this.section);
       }
     },

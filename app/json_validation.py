@@ -608,6 +608,9 @@ schema_page_data = {
         "banner": {
                     "type": "boolean",
                 },
+        "announcement": {
+                    "type": "boolean",
+                },
         "keywords": {
                     "type": "array",
                     "items": {
@@ -662,6 +665,9 @@ schema_page_update_data = {
                     "type": "boolean",
                 },
         "banner": {
+                    "type": "boolean",
+                },
+        "announcement": {
                     "type": "boolean",
                 },
         "seo_keywords": {

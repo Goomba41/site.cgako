@@ -14,10 +14,10 @@ import requests
 import dateutil
 from random import SystemRandom
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 from itsdangerous import TimedJSONWebSignatureSerializer
-from sqlalchemy import func
+from sqlalchemy import func, extract
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import flag_modified
 from urllib.parse import urljoin
@@ -35,7 +35,7 @@ from app.models import CmsUsers, CmsUsersSchema, CmsProfileSchema, \
     CmsStructure, CmsStructureSchema, CmsOrganization, \
     CmsOrganizationSchema, CmsOrganizationBuildings, \
     CmsOrganizationBuildingsSchema, SitePages, SitePagesSchema, MenuSchema, \
-    BannerSchema
+    BannerSchema, AnnouncementsSchema, HistoryEvents, HistoryEventsSchema
 from app.json_validation import profile_validator, password_validator, \
     user_validator, user_update_validator, role_validator, \
     role_update_validator, section_validator, section_update_validator, \
@@ -166,7 +166,7 @@ def send_email(to, subject, template):
 
 
 #  Пагинация получаемого с API списка
-def pagination_of_list(query_result, url, start, limit):
+def pagination_of_list(query_result, url, start, limit, q=None):
     """ Пагинация результатов запроса. Принимает параметры:
     результат запроса (json), URL API для генерации ссылок, стартовая позиция,
     количество выводимых записей"""
@@ -206,18 +206,25 @@ def pagination_of_list(query_result, url, start, limit):
     else:
         start_copy = max(1, start - limit)  # Странный просчет последней стр
         limit_copy = start - 1
-        response_obj['previous'] = urljoin(url,
-                                           '?start=%d&limit=%d'
-                                           % (start_copy, limit_copy))
+        params = '?start=%d&limit=%d' % (start_copy, limit_copy)
+        if q:
+            params = params + '&q=%s' % (q)
+        new_url = urljoin(url,
+                          params)
+        response_obj['previous'] = new_url
+        print(new_url)
 
     # Создаем URL на следующую страницу
     if start + limit > records_count:
         response_obj['next'] = ''
     else:
         start_copy = start + limit
-        response_obj['next'] = urljoin(url,
-                                       '?start=%d&limit=%d'
-                                       % (start_copy, limit))
+        params = '?start=%d&limit=%d' % (start_copy, limit)
+        if q:
+            params = params + '&q=%s' % (q)
+        new_url = urljoin(url,
+                          params)
+        response_obj['next'] = new_url
 
     # Отсеивание результатов запроса
     response_obj['results'] = query_result[(start - 1):(start - 1 + limit)]
@@ -386,7 +393,7 @@ def login():
                          "value": mail_item['value'],
                          "type": mail_item['type']
                         }, expiration=3600)
-                    confirm_url = 'http://192.168.0.91:8080/verify' \
+                    confirm_url = 'http://192.168.0.89:8080/verify' \
                                   '/mail/' + token.decode("utf-8")
                     html = render_template(
                         'confirmation_mail.html',
@@ -677,7 +684,7 @@ def update_profile_data(current_user, uid):
                                  "value": mail_item['value'],
                                  "type": mail_item['type']
                                 }, expiration=3600)
-                            confirm_url = 'http://192.168.0.91:8080/verify' \
+                            confirm_url = 'http://192.168.0.89:8080/verify' \
                                           '/mail/' + token.decode("utf-8")
                             html = render_template(
                                 'confirmation_mail.html',
@@ -938,7 +945,7 @@ def verify_mail_send(current_user, uid):
                      "value": request.args.get('value'),
                      "type": request.args.get('type')
                     }, expiration=86400)
-                confirm_url = 'http://192.168.0.91:8080/verify' \
+                confirm_url = 'http://192.168.0.89:8080/verify' \
                               '/mail/' + token.decode("utf-8")
                 html = render_template(
                     'confirmation_mail.html',
@@ -1140,7 +1147,7 @@ def post_users(current_user):
                          "value": primary_mail,
                          "type": "primary"
                         }, expiration=3600)
-                    confirm_url = 'http://192.168.0.91:8080/verify' \
+                    confirm_url = 'http://192.168.0.89:8080/verify' \
                                   '/mail/' + token.decode("utf-8")
                     html = render_template(
                         'user_created.html',
@@ -1270,7 +1277,7 @@ def update_users(current_user, uid):
                                          "value": mail_item['value'],
                                          "type": mail_item['type']
                                         }, expiration=3600)
-                                    confirm_url = 'http://192.168.0.91:8080/' \
+                                    confirm_url = 'http://192.168.0.89:8080/' \
                                                   'verify/mail/' + \
                                                   token.decode(
                                                     "utf-8")
@@ -2833,7 +2840,8 @@ def get_pages(current_user):
 
         page_schema = SitePagesSchema(many=True)
 
-        pages = SitePages.query.all()
+        pages = SitePages.query.order_by(
+                SitePages.creation_date.desc()).all()
         pdata = page_schema.dump(pages)
         pdata = pdata.data
 
@@ -2906,13 +2914,38 @@ def get_page_as_banners():
     return response
 
 
+@API0.route('/announcements', methods=['GET'])
+def get_page_as_announcements():
+    """ Получение страниц для анонсов json"""
+    try:
+        page_schema = AnnouncementsSchema(many=True)
+
+        t = True
+        announcements = SitePages.query.filter(
+            SitePages.announcement == t).all()
+        adata = page_schema.dump(announcements)
+        adata = adata.data
+
+        response = Response(
+            response=json.dumps(adata),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
 @API0.route('/pages/last', methods=['GET'])
 def get_last_pages():
     """ Получение последних страниц в json"""
     try:
         page_schema = SitePagesSchema(many=True)
 
-        llimit = int(request.args.get('limit', 10))
+        llimit = int(request.args.get('limit', 6))
         if (llimit % 2 != 0):
             llimit += 1
         t = True
@@ -3060,7 +3093,8 @@ def post_pages(current_user):
                         seo_keywords=post_data['keywords'],
                         available=post_data['available'],
                         mainpage=post_data['mainpage'],
-                        banner=post_data['banner']
+                        banner=post_data['banner'],
+                        announcement=post_data['announcement']
                     )
                     if CmsStructure.query.filter(
                                 (CmsStructure.id == post_data['section']['id'])
@@ -3840,6 +3874,158 @@ def update_page_image_data(current_user, pid, iid):
                     status=403,
                     mimetype='application/json'
                 )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/pages/search', methods=['GET'])
+def get_page_search():
+    """ Поиск страницы по заголовку"""
+
+    try:
+        page_schema = SitePagesSchema(many=True)
+
+        llimit = int(request.args.get('limit', 20))
+        if (llimit % 20 != 0):
+            while llimit % 20 != 0:
+                llimit += 1
+
+        query = request.args.get('q', None)
+
+        if query:
+            db_query = "%{}%".format(query)
+            pages = SitePages.query.filter(
+                ((SitePages.title.like(db_query)) |
+                    (SitePages.seo_description.like(db_query))) &
+                (SitePages.available)).order_by(
+                    SitePages.creation_date.desc()).all()
+
+            pdata = page_schema.dump(pages)
+            pdata = pdata.data
+
+            pdata = pagination_of_list(
+                pdata,
+                url_for('API0.get_page_search',
+                        _external=True),
+                start=request.args.get('start', 1),
+                limit=llimit,
+                q=query
+            )
+
+            response = Response(
+                response=json.dumps(pdata),
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            response = Response(
+                response=json.dumps({
+                    'type': 'danger',
+                    'text': 'Данных по Вашему запросу не найдено!'
+                }),
+                status=404,
+                mimetype='application/json'
+            )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+# ------------------------------------------------------------
+# Памятные даты
+# ------------------------------------------------------------
+
+
+@API0.route('/history/events/closest', methods=['GET'])
+def get_history_events_closest():
+    """ Получение полного списка страниц в json"""
+    try:
+
+        event_schema = HistoryEventsSchema(many=True)
+        datef = datetime.today()
+        further_date = datef + timedelta(days=14)
+        if further_date.year > datetime.today().year:
+            further_date = date(year=datetime.today().year, month=12, day=31)
+
+        events = HistoryEvents.query.filter(
+            extract('month', HistoryEvents.event_date) <= further_date.month,
+            extract('month', HistoryEvents.event_date) >= datef.month,
+            extract('day', HistoryEvents.event_date) <= further_date.day,
+            extract('day', HistoryEvents.event_date) >= datef.day,
+        )
+
+        edata = event_schema.dump(events)
+        edata = edata.data
+
+        response = Response(
+            response=json.dumps(edata),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/history/events', methods=['GET'])
+@token_required
+def get_history_events(current_user):
+    """ Получение полного списка страниц в json"""
+    try:
+
+        event_schema = HistoryEventsSchema(many=True)
+
+        events = HistoryEvents.query.all()
+        edata = event_schema.dump(events)
+        edata = edata.data
+
+        edata = pagination_of_list(
+            edata,
+            url_for('API0.get_history_events',
+                    _external=True),
+            start=request.args.get('start', 1),
+            limit=request.args.get('limit',
+                                   HistoryEvents.query.count())
+        )
+
+        response = Response(
+            response=json.dumps(edata),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception:
+
+        response = server_error(request.args.get("dbg"))
+
+    return response
+
+
+@API0.route('/history/events/<int:eid>', methods=['GET'])
+def get_history_event(eid):
+    """ Получение информации о странице в json"""
+    try:
+        event_schema = HistoryEventsSchema()
+
+        event = HistoryEvents.query.filter(HistoryEvents.id == eid).first()
+        edata = event_schema.dump(event)
+        edata = edata.data
+
+        response = Response(
+            response=json.dumps(edata),
+            status=200,
+            mimetype='application/json'
+        )
 
     except Exception:
 

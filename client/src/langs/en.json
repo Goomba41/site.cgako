@@ -14,7 +14,8 @@
             "materials":"Materials",
             "contacts":"Contacts",
             "structure":"Site structure",
-            "pages":"Site pages"
+            "pages":"Site pages",
+            "mainpage":"Mainpage settings"
         }
     },
     "navbar":{
@@ -62,7 +63,8 @@
             "permissions":"Roles and Permissions",
             "contacts":"Contacts",
             "structure":"Site structure",
-            "pages":"Site pages"
+            "pages":"Site pages",
+            "mainpage":"Mainpage settings"
         }
     },
     "dashboard":{
@@ -943,6 +945,7 @@
             "acessible":"Accessible",
             "mainpage":"On main page",
             "banner":"Banner on main page",
+            "announcement":"Announcement on main page",
             "filesCount":"Number of files",
             "imagesCount":"Number of images"
         },
@@ -1068,6 +1071,13 @@
                         "required":"This field is required."
                     },
                     "successText":"Ok!"
+                },
+                "announcement":{
+                    "placeholder":"Announcement on mainpage",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
                 }
             }
         },
@@ -1155,6 +1165,13 @@
                 },
                 "banner":{
                     "placeholder":"Banner on mainpage",
+                    "errors":{
+                        "required":"This field is required."
+                    },
+                    "successText":"Ok!"
+                },
+                "announcement":{
+                    "placeholder":"Announcement on mainpage",
                     "errors":{
                         "required":"This field is required."
                     },

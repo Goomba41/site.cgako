@@ -7,29 +7,30 @@
         <h2>{{contactsData.full_company_name}} ({{contactsData.company_name}})</h2>
       </header>
 
-      <section>
-        <h2>Реквизиты учреждения</h2>
-        <ul class="requisites">
-          <li
-            v-for="(requisite, rIndex) in contactsData.requisites"
-            v-bind:key="rIndex"
-          >
-            <b>{{requisite.title}}:</b> {{requisite.value}}
-          </li>
-        </ul>
-      </section>
-
       <section class="contacts">
         <h2>Адреса и телефоны архива</h2>
 
-        <b-tabs content-class="mt-3">
+        <b-tabs content-class="mt-0 box">
           <b-tab
             v-for="(building, bIndex) in contactsData.buildings"
             v-bind:key="building.id"
             :title="building.name"
             :active="bIndex === 0"
           >
-            <iframe :src="building.road_map" width="100%" height="500" frameborder="0"></iframe>
+            <b-row>
+              <b-col>
+                <iframe :src="building.road_map" width="100%" height="500" frameborder="0">
+                </iframe>
+              </b-col>
+              <b-col>
+                <ul>
+                  <li><b>Адрес: </b>610027, г. Киров, ул. Карла Маркса, д. 142</li>
+                  <li><b>Приемная: </b>+7 (8332) 67-51-05</li>
+                  <li><b>Справочная: </b>+7 (8332) 67-36-89</li>
+                  <li><b>Email: </b>cgako-b1@cgako.ru</li>
+                </ul>
+              </b-col>
+            </b-row>
 
             <div class="table-wrapper pt-3">
               <h3>Режимы работы:</h3>
@@ -86,6 +87,18 @@
           </b-tab>
         </b-tabs>
 
+      </section>
+
+      <section class="box">
+        <h2>Реквизиты учреждения</h2>
+        <ul class="requisites">
+          <li
+            v-for="(requisite, rIndex) in contactsData.requisites"
+            v-bind:key="rIndex"
+          >
+            <b>{{requisite.title}}:</b> {{requisite.value}}
+          </li>
+        </ul>
       </section>
 
     </section>

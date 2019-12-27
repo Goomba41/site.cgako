@@ -55,6 +55,15 @@
                 </span>
               </b-list-group-item>
             </router-link>
+            <router-link :to="{ name: 'Mainpage' }">
+              <b-list-group-item class="noselect" @click="sidebarOff">
+                <span class="ml-4">
+                  <font-awesome-icon :icon="['fa', 'home']"
+                    class="" fixed-width size="1x"/>
+                  {{$t('menu.menuItems.mainpage')}}
+                </span>
+              </b-list-group-item>
+            </router-link>
             <router-link :to="{ name: 'Pages' }">
               <b-list-group-item class="noselect" @click="sidebarOff">
                 <span class="ml-4">

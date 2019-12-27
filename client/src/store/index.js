@@ -17,6 +17,7 @@ const state = {
   structure: {}, // структура сайта
   menu: {}, // меню сайта
   banners: [], // баннеры
+  announcements: [], // анонсы
   lastPages: [], // последние страницы
   pagesNews: [], // новостные страницы
   permissions: [], // список разрешений CMS
@@ -24,6 +25,9 @@ const state = {
   sectionsEnd: [], // список конечных разделов сайта
   users: [], // список пользователей CMS
   pages: [], // список страниц сайта
+  historyEvents: [], // список памятных дат
+  historyEventsClosest: [], // список ближайших памятных дат
+  searchResults: [], // результаты поиска
   pageData: [], // информация страницы для внешней части
   contactsData: [], // контактная информация для внешней части
   uid: '', // id текущего пользователя
@@ -471,6 +475,20 @@ const actions = {
     return axios.get('/api/banners?dbg')
       .then((response) => {
         context.commit('setBanners', response.data);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        EventBus.$emit('message', error.response.data);
+      });
+  },
+  // Загрузить анонсы
+  loadАnnouncements(context) {
+    context.commit('setFormPending');
+
+    return axios.get('/api/announcements?dbg')
+      .then((response) => {
+        context.commit('setАnnouncements', response.data);
       })
       .catch((error) => {
         // eslint-disable-next-line
@@ -955,6 +973,65 @@ const actions = {
         context.commit('setFormPending');
       });
   },
+  // Загрузить контактные данные
+  loadSearchResult(context, payload) {
+    context.commit('setFormPending');
+    return axios.get('/api/pages/search',
+      {
+        params: {
+          limit: payload.limit || undefined,
+          start: payload.start || 1,
+          q: payload.q || undefined,
+        },
+      })
+      .then((response) => {
+        context.commit('setSearchResults', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setSearchResults', []);
+        context.commit('setFormPending');
+      });
+  },
+  // Загрузить контактные данные
+  loadHistoryEvents(context, payload) {
+    context.commit('setFormPending');
+    return axios.get('/api/history/events',
+      {
+        headers: {
+          Authorization: `Bearer: ${context.state.jwt}`,
+        },
+        params: {
+          limit: payload.limit || undefined,
+          start: payload.start || 1,
+        },
+      })
+      .then((response) => {
+        context.commit('setHistoryEvents', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+      });
+  },
+  // Загрузить контактные данные
+  loadHistoryEventsClosest(context) {
+    context.commit('setFormPending');
+    return axios.get('/api/history/events/closest')
+      .then((response) => {
+        context.commit('setHistoryEventsClosest', response.data);
+        context.commit('setFormPending');
+      })
+      .catch((error) => {
+        // eslint-disable-next-line
+        console.error(error);
+        context.commit('setFormPending');
+      });
+  },
 };
 
 // Мутации данных
@@ -1017,7 +1094,11 @@ const mutations = {
   setBanners(state, payload) {
     state.banners = payload;
   },
-  // Установка баннеров
+  // Установка анонсов
+  setАnnouncements(state, payload) {
+    state.announcements = payload;
+  },
+  // Установка последних страниц
   setLastPages(state, payload) {
     state.lastPages = payload;
   },
@@ -1037,9 +1118,21 @@ const mutations = {
   setContactsData(state, payload) {
     state.contactsData = payload;
   },
-  // Установка контактных данных
+  // Установка новостных страниц
   setPagesNews(state, payload) {
     state.pagesNews = payload;
+  },
+  // Установка результатов поиска
+  setSearchResults(state, payload) {
+    state.searchResults = payload;
+  },
+  // Установка памятных дат
+  setHistoryEvents(state, payload) {
+    state.historyEvents = payload;
+  },
+  // Установка ближайших памятных дат
+  setHistoryEventsClosest(state, payload) {
+    state.historyEventsClosest = payload;
   },
 };
 
