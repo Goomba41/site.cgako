@@ -466,6 +466,10 @@ class CmsOrganizationBuildings(db.Model):
         db.JSON(none_as_null=True),
         comment="Контакты сотрудников"
     )
+    additional_info = db.Column(
+        db.JSON(none_as_null=True),
+        comment="Дополнительная информация"
+    )
     organization_id = db.Column(db.Integer, db.ForeignKey('cms_organization.id'), nullable=False)
 
     def __repr__(self):

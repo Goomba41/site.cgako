@@ -163,7 +163,9 @@
                             </template>
                             <template v-else>
                               {{$options.filters.moment(
-                                  dateHistoryHandler(event.event_date), 'from', dateHistoryHandler(new Date())
+                                  dateHistoryHandler(event.event_date),
+                                  'from',
+                                  dateHistoryHandler(new Date())
                                 )}}
                             </template>
                             ({{$options.filters.moment(event.event_date, 'from', true)}})
@@ -325,23 +327,23 @@ export default {
     dateHistoryIsToday(date) {
       const today = new Date();
       const da = new Date(date);
-      return da.getDate() == today.getDate() &&
-        da.getMonth() == today.getMonth()
+      return da.getDate() === today.getDate()
+        && da.getMonth() === today.getMonth();
     },
     dateHistoryHandler(date) {
       const md = moment(date);
       return (`${moment().format('YYYY')}-${md.format('MM')}-${md.format('DD')}`);
     },
     fetchData() {
-      injectVKOpenApi()
-        .then(initVK(true))
-        .then(() => {
-          // console.log("1");
-          /* global VK */
-          VK.Widgets.Group('vk_groups', { mode: 3, width: 'auto' }, 21880083);
-        });
       this.$store.dispatch('loadMenu');
       if (this.$route.name === 'Index') {
+        injectVKOpenApi()
+          .then(initVK(true))
+          .then(() => {
+            // console.log("1");
+            /* global VK */
+            VK.Widgets.Group('vk_groups', { mode: 3, width: 'auto' }, 21880083);
+          });
         this.$store.dispatch('loadBanners');
         this.$store.dispatch('loadHistoryEventsClosest');
         this.$store.dispatch('loadАnnouncements');

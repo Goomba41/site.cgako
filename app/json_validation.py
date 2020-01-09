@@ -567,6 +567,28 @@ schema_organization_buildings_data = {
                         "required": ["post", "name", "surname", "patronymic", "email", "phone"],
                     },
                  },
+        "additional_info": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                'properties': {
+                    "title": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,50}$",
+                        "minLength": 1,
+                        "maxLength": 50,
+                    },
+                    "value": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9а-яА-Я \W]{1,200}$",
+                        "minLength": 1,
+                        "maxLength": 200,
+                    },
+                },
+                "required": ["title", "value"],
+            },
+         },
     },
     "required": ["name", "road_map"],
     "additionalProperties": False

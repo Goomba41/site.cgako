@@ -2506,7 +2506,7 @@ def update_organization_building(current_user, bid):
                 for key in list(update_data.keys()):
                     if key not in [
                             'name', 'road_map', 'work_time',
-                            'employee_contacts']:
+                            'employee_contacts', 'additional_info']:
                         del update_data[key]
 
                 for item in update_data['employee_contacts']:
@@ -2548,6 +2548,9 @@ def update_organization_building(current_user, bid):
                     building.road_map = update_data['road_map']
                     if 'work_time' in update_data:
                         building.work_time = update_data['work_time']
+                    if 'additional_info' in update_data:
+                        building.additional_info = update_data[
+                                'additional_info']
                     if 'employee_contacts' in update_data:
                         building.employee_contacts = update_data[
                             'employee_contacts']

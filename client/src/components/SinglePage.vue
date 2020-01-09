@@ -22,12 +22,11 @@
                 <iframe :src="building.road_map" width="100%" height="500" frameborder="0">
                 </iframe>
               </b-col>
-              <b-col>
+              <b-col v-if="building.additional_info && building.additional_info.length > 0">
                 <ul>
-                  <li><b>Адрес: </b>610027, г. Киров, ул. Карла Маркса, д. 142</li>
-                  <li><b>Приемная: </b>+7 (8332) 67-51-05</li>
-                  <li><b>Справочная: </b>+7 (8332) 67-36-89</li>
-                  <li><b>Email: </b>cgako-b1@cgako.ru</li>
+                  <li v-for="(info, iIndex) in building.additional_info" v-bind:key="iIndex">
+                    <b>{{info.title}}: </b>{{info.value}}
+                  </li>
                 </ul>
               </b-col>
             </b-row>
