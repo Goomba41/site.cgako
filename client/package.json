@@ -27,7 +27,7 @@
     "bootstrap-vue": "^2.0.0",
     "bootstrap-vue-treeview": "^1.0.8",
     "jquery": "^3.4.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
     "nprogress": "^0.2.0",
