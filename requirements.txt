@@ -60,7 +60,7 @@ snowballstemmer==1.2.1
 SQLAlchemy==1.3.3
 stevedore==1.30.1
 ua-parser==0.8.0
-urllib3==1.25.3
+urllib3==1.26.5
 user-agents==2.0
 validate-email==1.3
 Werkzeug==0.15.6
